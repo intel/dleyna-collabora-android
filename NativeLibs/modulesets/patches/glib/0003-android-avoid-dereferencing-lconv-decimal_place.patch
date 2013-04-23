@@ -1,0 +1,69 @@
+From d0d42f3f3ae2d7325c143ab82c75603b0b20668c Mon Sep 17 00:00:00 2001
+From: Lionel Landwerlin <llandwerlin@gmail.com>
+Date: Wed, 23 May 2012 10:10:46 +0100
+Subject: [PATCH 3/9] android: avoid dereferencing lconv->decimal_place
+
+Android's shim locale.h simply declares the lconv struct as:
+struct lconv { };
+
+When building on android we simply define the decimal point character to
+be "."
+
+From Robert Bragg <robert@linux.intel.com>
+---
+ glib/gstrfuncs.c |   12 ++++++++++++
+ 1 file changed, 12 insertions(+)
+
+diff --git a/glib/gstrfuncs.c b/glib/gstrfuncs.c
+index 9d192a3..cd32878 100644
+--- a/glib/gstrfuncs.c
++++ b/glib/gstrfuncs.c
+@@ -703,7 +703,9 @@ g_ascii_strtod (const gchar *nptr,
+ 
+   gchar *fail_pos;
+   gdouble val;
++# ifndef __ANDROID__
+   struct lconv *locale_data;
++# endif
+   const char *decimal_point;
+   int decimal_point_len;
+   const char *p, *decimal_point_pos;
+@@ -714,8 +716,12 @@ g_ascii_strtod (const gchar *nptr,
+ 
+   fail_pos = NULL;
+ 
++# ifndef __ANDROID__
+   locale_data = localeconv ();
+   decimal_point = locale_data->decimal_point;
++# else
++  decimal_point = ".";
++# endif
+   decimal_point_len = strlen (decimal_point);
+ 
+   g_assert (decimal_point_len != 0);
+@@ -907,7 +913,9 @@ g_ascii_formatd (gchar       *buffer,
+ 
+   return buffer;
+ #else
++# ifndef __ANDROID__
+   struct lconv *locale_data;
++# endif
+   const char *decimal_point;
+   int decimal_point_len;
+   gchar *p;
+@@ -938,8 +946,12 @@ g_ascii_formatd (gchar       *buffer,
+ 
+   _g_snprintf (buffer, buf_len, format, d);
+ 
++# ifndef __ANDROID__
+   locale_data = localeconv ();
+   decimal_point = locale_data->decimal_point;
++# else
++  decimal_point = ".";
++# endif
+   decimal_point_len = strlen (decimal_point);
+ 
+   g_assert (decimal_point_len != 0);
+-- 
+1.7.9.5
+

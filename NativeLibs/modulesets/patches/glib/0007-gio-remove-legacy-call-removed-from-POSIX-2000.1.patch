@@ -1,0 +1,28 @@
+From ae262604d0024c9e10a509388cc89c8317ef42cc Mon Sep 17 00:00:00 2001
+From: Lionel Landwerlin <llandwerlin@gmail.com>
+Date: Wed, 23 May 2012 11:23:31 +0100
+Subject: [PATCH 7/9] gio: remove legacy call (removed from POSIX 2000.1)
+
+---
+ gio/tests/gtlsconsoleinteraction.c |    4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/gio/tests/gtlsconsoleinteraction.c b/gio/tests/gtlsconsoleinteraction.c
+index 0fc5a34..7937df7 100644
+--- a/gio/tests/gtlsconsoleinteraction.c
++++ b/gio/tests/gtlsconsoleinteraction.c
+@@ -75,7 +75,11 @@ g_tls_console_interaction_ask_password (GTlsInteraction    *interaction,
+   gchar *prompt;
+ 
+   prompt = g_strdup_printf ("Password \"%s\"': ", g_tls_password_get_description (password));
++#ifndef __ANDROID__
+   value = getpass (prompt);
++#else
++  value = "";
++#endif
+   g_free (prompt);
+ 
+   if (g_cancellable_set_error_if_cancelled (cancellable, error))
+-- 
+1.7.9.5
+

@@ -1,0 +1,40 @@
+From e9fde3543a51bd63a5e4de48fbb9b9350d9de74d Mon Sep 17 00:00:00 2001
+From: Lionel Landwerlin <llandwerlin@gmail.com>
+Date: Wed, 8 Aug 2012 11:15:29 +0100
+Subject: [PATCH 2/5] websocket: use 64bits marshaller
+
+---
+ libsoup/soup-websocket.c |    6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/libsoup/soup-websocket.c b/libsoup/soup-websocket.c
+index 813a19b..566d292 100644
+--- a/libsoup/soup-websocket.c
++++ b/libsoup/soup-websocket.c
+@@ -145,7 +145,7 @@ soup_websocket_class_init (SoupWebsocketClass *klass)
+                   G_SIGNAL_RUN_FIRST,
+                   0,
+                   NULL, NULL,
+-                  _soup_marshal_NONE__POINTER_UINT,
++                  _soup_marshal_NONE__POINTER_UINT64,
+                   G_TYPE_NONE, 2, G_TYPE_POINTER, G_TYPE_UINT64);
+ 
+   /**
+@@ -358,12 +358,12 @@ read_payload (SoupWebsocket *socket)
+   priv->read_offset += priv->payload_len;
+   priv->frame_state = SOUP_WEBSOCKET_FRAME_STATE_IDLE;
+ 
+-  g_message ("OLD read offset = %lu/%lu/%i",
++  g_message ("OLD read offset = %llu/%llu/%i",
+              priv->read_offset, priv->write_offset, priv->read_buf->len);
+   g_byte_array_remove_range (priv->read_buf, 0, priv->read_offset);
+   priv->write_offset -= priv->read_offset;
+   priv->read_offset = 0;
+-  g_message ("NEW read offset = %lu/%lu/%i",
++  g_message ("NEW read offset = %llu/%llu/%i",
+              priv->read_offset, priv->write_offset, priv->read_buf->len);
+ 
+   return TRUE;
+-- 
+1.7.9.5
+

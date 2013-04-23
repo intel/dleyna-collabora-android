@@ -1,0 +1,8 @@
+checkoutroot = os.environ['PWD'] + '/sources'
+prefix = os.environ['PREFIX']
+build_policy = 'updated'
+use_lib64 = False
+use_local_modulesets = True
+partial_build = False
+autogenargs = '--disable-shared --disable-gtk-doc gl_cv_header_working_stdint_h=yes --disable-introspection --build=x86_64-unknown-linux-gnu --host=' + os.environ['TOOLCHAIN_NAME']
+makeargs = '-j 4'

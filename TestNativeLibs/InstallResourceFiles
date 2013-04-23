@@ -1,0 +1,52 @@
+#!/bin/sh
+
+# dLeyna
+#
+# Copyright (C) 2013 Intel Corporation. All rights reserved.
+#
+# This program is free software; you can redistribute it and/or modify it
+# under the terms and conditions of the GNU Lesser General Public License,
+# version 2.1, as published by the Free Software Foundation.
+#
+# This program is distributed in the hope it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+# for more details.
+#
+# You should have received a copy of the GNU Lesser General Public License
+# along with this program; if not, write to the Free Software Foundation, Inc.,
+# 51 Franklin St - Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Tom Keel <thomas.keel@intel.com>
+#
+
+# Install resource files on the target test device.
+#
+# Usage: <thisprog> [ <device> ]
+#
+# where <device> is the name of the device as reported by "adb devices"
+# (only required if more than one device is visible to adb).
+#
+# Presumes the resource files are at ../NativeLibs/sources
+
+# The on-device directory under which we put the resource files.
+SRCDIR=/data/data/com.intel.dleyna.testnativelibs/files/SRCDIR
+
+DEVICE=''
+DEVICE_ARG=''
+[ $# -gt 0 ] && DEVICE="$1"
+[ $# -gt 0 ] && DEVICE_ARG="-s $1"
+
+echo "Waiting for device ${DEVICE}..."
+adb $DEVICE_ARG wait-for-device
+
+echo "Cleaning $SRCDIR ..."
+adb $DEVICE_ARG shell rm -r $SRCDIR > /dev/null
+adb $DEVICE_ARG shell mkdir $SRCDIR
+
+echo "Installing ..."
+for src in `cat ResourceFiles`; do
+    dest=${src#*/tests/}
+    echo -n "${src} "
+    adb $DEVICE_ARG push ../NativeLibs/sources/$src $SRCDIR/$dest
+done

@@ -1,0 +1,9 @@
+NativeLibs/jhbuild
+NativeLibs/sources
+NativeLibs/sources-*
+NativeLibs/toolchain-*
+NativeLibs/install-*
+TestNativeLibs/bin
+TestNativeLibs/gen
+TestNativeLibs/libs
+TestNativeLibs/obj

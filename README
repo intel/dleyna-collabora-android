@@ -1,0 +1,61 @@
++-------------------+
+| dLeyna in Android |
++-------------------+
+
+This is (1) a collection of native libraries ported for use in Android
+applications, (2) an Android application that runs various unit tests of the
+native libraries, and (3) an Android application that demonstrates dLeyna
+functionality.
+
+Native Libraries
+----------------
+
+Dleyna depends directly or indirectly upon the following native libraries:
+
+    gupnp-dlna
+    gupnp-av
+    gupnp
+    gssdp
+    libsoup
+    libxml2
+    glib (glib, gio, gmodule, gobject, gthread)
+    gettext (libintl)
+    iconv
+    libffi
+
+The remote locations of the library sources, the dependencies between them,
+how to configure and build them are all described using JHBuild. See
+modulesets/android-native.modules. The "standalone toolchain" from the Android
+NDK is used to build the libraries.
+
+A convenient script allows you to specify the target architecture (arm
+or x86) and Android API level you want to build for, as well as the
+version of the cross-compiler from the Android NDK to use:
+
+    [ARCH=<arch>] [API_LEVEL=<level>] build.sh [<cmd>...]
+
+where
+
+    <arch>    is 'x86' or 'armeabi' (default 'x86')
+    <level>   is an Android API level: 3,4,5,8,9, or 14 (default '9')
+    <cmd>...  is a JHBuild command and args (default 'build libsoup') 
+
+The result of the build will be left in a subdirectory named
+
+    install-<arch>-android-<level>
+
+
+Test Native Libraries
+---------------------
+
+This is an Android app that incorporates a large number of the unit tests
+from the native libraries. It allows the user to select which tests to run,
+the then sequentially runs them, each in a pristine process. While a test is
+running, the user can abort it and skip to the next one, or abort all the
+tests.
+
+Dleyna Demo App
+---------------
+
+Work in progress...
+

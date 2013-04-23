@@ -1,0 +1,31 @@
+From ed26dbcb52bda0436c73aad9e95ec967379e2227 Mon Sep 17 00:00:00 2001
+From: Tom Keel <thomas.keel@intel.com>
+Date: Wed, 27 Mar 2013 11:04:05 +0100
+Subject: [PATCH] Fix a bug in a gobject test program.
+
+This fixes two cases of failure to apply G_TYPE_MAKE_FUNDAMENTAL()
+to a type before using it as a fundamental type.
+---
+ gobject/testgobject.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/gobject/testgobject.c b/gobject/testgobject.c
+index 411fb35..f76f358 100644
+--- a/gobject/testgobject.c
++++ b/gobject/testgobject.c
+@@ -391,10 +391,10 @@ main (int   argc,
+   /* test new fundamentals */
+   g_assert (G_TYPE_MAKE_FUNDAMENTAL (G_TYPE_RESERVED_USER_FIRST) == g_type_fundamental_next ());
+   type = g_type_register_fundamental (g_type_fundamental_next (), "FooShadow1", &info, &finfo, 0);
+-  g_assert (type == G_TYPE_RESERVED_USER_FIRST);
++  g_assert (type == G_TYPE_MAKE_FUNDAMENTAL (G_TYPE_RESERVED_USER_FIRST));
+   g_assert (G_TYPE_MAKE_FUNDAMENTAL (G_TYPE_RESERVED_USER_FIRST + 1) == g_type_fundamental_next ());
+   type = g_type_register_fundamental (g_type_fundamental_next (), "FooShadow2", &info, &finfo, 0);
+-  g_assert (type == G_TYPE_RESERVED_USER_FIRST + 1);
++  g_assert (type == G_TYPE_MAKE_FUNDAMENTAL (G_TYPE_RESERVED_USER_FIRST + 1));
+   g_assert (G_TYPE_MAKE_FUNDAMENTAL (G_TYPE_RESERVED_USER_FIRST + 2) == g_type_fundamental_next ());
+   g_assert (g_type_from_name ("FooShadow1") == G_TYPE_MAKE_FUNDAMENTAL (G_TYPE_RESERVED_USER_FIRST));
+   g_assert (g_type_from_name ("FooShadow2") == G_TYPE_MAKE_FUNDAMENTAL (G_TYPE_RESERVED_USER_FIRST + 1));
+-- 
+1.7.9.5
+

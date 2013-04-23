@@ -1,0 +1,50 @@
+From 4056f06183e34a36818490ba08bbbe443faa7c7e Mon Sep 17 00:00:00 2001
+From: Lionel Landwerlin <llandwerlin@gmail.com>
+Date: Wed, 23 May 2012 10:03:24 +0100
+Subject: [PATCH 1/9] android: don't pass -pthreads to the toolchain
+
+The android toolchain doesn't recognize the -pthreads argument so we
+skip the check as done for cygwin and darwin already.
+
+From Robert Bragg <robert@linux.intel.com>
+---
+ configure.ac |   10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
+
+diff --git a/configure.ac b/configure.ac
+index 1ac41cc..7bdc787 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -1997,10 +1997,10 @@ AS_IF([ test x"$have_threads" = xposix], [
+   # First we test for posix, whether -pthread or -pthreads do the trick as 
+   # both CPPFLAG and LIBS. 
+   # One of them does for most gcc versions and some other platforms/compilers
+-  # too and could be considered as the canonical way to go. 
++  # too and could be considered as the canonical way to go.
+   case $host in
+-    *-*-cygwin*|*-*-darwin*)
+-       # skip cygwin and darwin -pthread or -pthreads test
++    *-*-cygwin*|*-*-darwin*|*android*)
++       # skip cygwin/darwin/android -pthread or -pthreads test
+        ;;
+     *-solaris*)
+       # These compiler/linker flags work with both Sun Studio and gcc
+@@ -2300,13 +2300,13 @@ fi
+ 
+ #
+ # Hack to deal with:
+-# 
++#
+ #  a) GCC < 3.3 for Linux doesn't include -lpthread when
+ #     building shared libraries with linux.
+ #  b) FreeBSD doesn't do this either.
+ #
+ case $host in
+-  *-*-freebsd*|*-*-linux*)
++  *-*-freebsd*|*-*-linux*|*-*-android*)
+     G_THREAD_LIBS_FOR_GTHREAD="`echo $G_THREAD_LIBS | sed s/-pthread/-lpthread/`"
+     ;;
+   *-*-openbsd*)
+-- 
+1.7.9.5
+

@@ -1,0 +1,38 @@
+From 66f97e9d9aab16c71811faec1cf5d070357fa31f Mon Sep 17 00:00:00 2001
+From: Lionel Landwerlin <llandwerlin@gmail.com>
+Date: Wed, 23 May 2012 11:22:53 +0100
+Subject: [PATCH 6/9] gio: deactivate domain name resolution
+
+---
+ gio/gresolver.c         |    2 ++
+ gio/gthreadedresolver.c |    1 +
+ 2 files changed, 3 insertions(+)
+
+diff --git a/gio/gresolver.c b/gio/gresolver.c
+index 4ca4e00..6b95a50 100644
+--- a/gio/gresolver.c
++++ b/gio/gresolver.c
+@@ -33,6 +33,8 @@
+ #include "gsrvtarget.h"
+ #include "gthreadedresolver.h"
+ 
++#undef G_OS_UNIX
++
+ #ifdef G_OS_UNIX
+ #include <sys/stat.h>
+ #endif
+diff --git a/gio/gthreadedresolver.c b/gio/gthreadedresolver.c
+index 73cb6e8..edd3566 100644
+--- a/gio/gthreadedresolver.c
++++ b/gio/gthreadedresolver.c
+@@ -34,6 +34,7 @@
+ #include "gsimpleasyncresult.h"
+ #include "gsocketaddress.h"
+ 
++#undef G_OS_UNIX
+ 
+ G_DEFINE_TYPE (GThreadedResolver, g_threaded_resolver, G_TYPE_RESOLVER)
+ 
+-- 
+1.7.9.5
+

@@ -1,0 +1,85 @@
+<?xml version="1.0" ?>
+<moduleset>
+
+    <repository name="github.com" type="git" href="git://github.com/"/>
+    <repository name="gnome.org" type="tarball" href="http://ftp.gnome.org/pub/GNOME/sources/"/>
+    <repository name="gnu.org" type="tarball" href="http://ftp.gnu.org/pub/gnu/"/>
+    <repository name="xmlsoft.org" type="tarball" href="ftp://xmlsoft.org/"/>
+
+    <!-- GLib and it's dependencies -->
+
+    <autotools id="glib" autogenargs="glib_cv_stack_grows=no glib_cv_uscore=no ac_cv_func_posix_getpwuid_r=no ac_cv_func_posix_getgrgid_r=no --with-libiconv=gnu --disable-modular-tests">
+        <branch repo="gnome.org" module="glib/2.34/glib-2.34.3.tar.xz" version="2.34.3">
+            <patch file="glib/0001-android-don-t-pass-pthreads-to-the-toolchain.patch" strip="1" />
+            <patch file="glib/0002-Include-missing-headers-when-checking-res_query-from.patch" strip="1" />
+            <patch file="glib/0003-android-avoid-dereferencing-lconv-decimal_place.patch" strip="1" />
+            <patch file="glib/0004-utils-avoid-redundant-set-endpwent-around-getpwuid.patch" strip="1" />
+            <patch file="glib/0005-android-avoid-dereferencing-pw_gecos-passwd-member.patch" strip="1" />
+            <patch file="glib/0006-gio-deactivate-domain-name-resolution.patch" strip="1" />
+            <patch file="glib/0007-gio-remove-legacy-call-removed-from-POSIX-2000.1.patch" strip="1" />
+            <patch file="glib/0008-glib-don-t-add-pthread-for-android.patch" strip="1" />
+            <patch file="glib/0009-gio-add-missing-libraries-for-tools.patch" strip="1" />
+            <patch file="glib/0010-Inform-glib-of-android-home-and-temp-dirs.patch" strip="1" />
+        </branch>
+        <dependencies>
+            <dep package="gettext"/>
+            <dep package="iconv"/>
+            <dep package="libffi"/>
+        </dependencies>
+    </autotools>
+
+    <autotools id="gettext" autogen-sh="autoreconf" autogenargs="--without-included-regex --disable-java --disable-openmp --without-libiconv-prefix --without-libintl-prefix --without-libglib-2.0-prefix --without-libcroco-0.6-prefix --with-included-libxml --without-libncurses-prefix --without-libtermcap-prefix --without-libcurses-prefix --without-libexpat-prefix --without-emacs">
+        <branch repo="gnu.org" module="gettext/gettext-0.18.2.tar.gz" source-subdir="gettext-tools" version="0.18.2" subdir="intl">
+            <patch file="gettext/disable-everything-except-intl.patch" strip="1" />
+            <patch file="gettext/0001-intl-dont-hard-code-shell.patch" strip="1" />
+        </branch>
+        <dependencies>
+            <dep package="iconv"/>
+        </dependencies>
+    </autotools>
+
+    <autotools id="iconv" autogen-sh="configure">
+        <branch repo="gnu.org" module="libiconv/libiconv-1.14.tar.gz" version="1.14">
+            <patch file="libiconv/update-config.patch" strip="1" />
+        </branch>
+    </autotools>
+
+    <tarball id="libffi" version="3.0.11">
+        <source href="ftp://sourceware.org/pub/libffi/libffi-3.0.11.tar.gz" />
+    </tarball>
+
+    <!-- libsoup and libxml2 -->
+
+    <autotools id="libsoup" autogenargs="--disable-tls-check --without-gnome --without-apache-httpd">
+        <branch repo="gnome.org" module="libsoup/2.40/libsoup-2.40.3.tar.xz" version="2.40.3">
+        <!-- patches to libsoup that we don't need?
+            <patch file="libsoup/0001-initial-websocket-support-only-supports-incoming-dat.patch" strip="1" />
+            <patch file="libsoup/0002-websocket-use-64bits-marshaller.patch" strip="1" />
+            <patch file="libsoup/0003-websocket-handle-connection-problems.patch" strip="1" />
+            <patch file="libsoup/0004-websocket-manage-socket-disconnection.patch" strip="1" />
+            <patch file="libsoup/0005-websocket-make-reading-more-robust.patch" strip="1" />
+        -->
+        </branch>
+        <dependencies>
+            <dep package="glib"/>
+            <dep package="libxml2"/>
+        </dependencies>
+    </autotools>
+
+    <autotools id="libxml2" autogen-sh="autoreconf" autogenargs="--without-python --without-debug --without-legacy --without-catalog --without-docbook --with-c14n --with-gnu-ld --disable-tests">
+        <branch repo="xmlsoft.org" module="libxml2/libxml2-2.9.0.tar.gz" version="2.9.0">
+            <patch file="libxml2/0001-add-option-to-disable-tests-build.patch" strip="1"/>
+        </branch>
+    </autotools>
+
+    <!-- gssdp -->
+
+    <autotools id="gssdp" autogen-sh="autoreconf">
+        <branch repo="gnome.org" module="gssdp/0.14/gssdp-0.14.2.tar.xz" version="0.14.2">
+        </branch>
+        <dependencies>
+            <dep package="libsoup"/>
+        </dependencies>
+    </autotools>
+
+</moduleset>

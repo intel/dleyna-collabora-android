@@ -1,0 +1,1068 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN"
+      "http://www.w3.org/TR/html4/strict.dtd">
+<?xml version="1.0" encoding="UTF-8"?>
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <title>Native Library Tests</title>
+  <meta name="generator" content="Amaya, see http://www.w3.org/Amaya/">
+  <style type="text/css" title="Amaya theme">
+/* Modern style for Amaya Editor Lite */
+
+/* default rules for the whole document */
+body {
+    font-size: 12pt;
+    font-family: Helvetica, Arial, sans-serif;
+    font-weight: normal;
+    font-style: normal;
+    color: black;
+    background-color: white;
+    line-height: 1.2em;
+    margin-left: 4em;
+    margin-right: 2em;
+   }
+
+/* paragraphs */
+p  {
+    padding: 0;
+    margin-top: 1em;
+    margin-bottom: 1em;
+    text-align: left;
+   }
+
+/* headings */
+h1 {
+    font-size: 180%;
+    font-weight: bold;
+    font-style: normal;
+    font-variant: small-caps;
+    text-align: left;
+    padding: 0;
+    margin-top: 1.7em;
+    margin-bottom: 1.7em;
+   }
+h2 {
+    font-size: 150%;
+    font-weight: bold;
+    font-style: normal;
+    padding: 0;
+    margin-top: 1.5em;
+    margin-bottom: 1.1em;
+   }
+h3 {
+    font-size: 130%;
+    font-weight: bold;
+    font-style: normal;
+    padding: 0;
+    margin-top: 1.3em;
+    margin-bottom: 1.1em;
+   }
+h4 {
+    font-size: 110%;
+    font-weight: bold;
+    font-style: normal;
+    padding: 0;
+    margin-top: 1.1em;
+    margin-bottom: 1.1em;
+   }
+h5 {
+    font-size: 100%;
+    font-weight: bold;
+    font-style: italic;
+    padding: 0;
+    margin-top: 1em;
+    margin-bottom: 1em;
+   }
+h6 {
+    font-size: 100%;
+    font-weight: normal;
+    font-style: italic;
+    padding: 0;
+    margin-top: 1em;
+    margin-bottom: 1em;
+   }
+
+/* divisions */
+div {
+    padding: 0;
+    margin-top: 0em;
+    margin-bottom: 0em;
+   }
+
+/* lists */
+ul, ol {
+    padding: 0 0 0 3em;
+    margin-top: 1em;
+    margin-bottom: 1em;
+   }
+ul ul, ol ol, ul ol, ol ul {
+    margin-top: 1em;
+    margin-bottom: 1em;
+   }
+li {
+    padding: 0;
+    margin-top: 1em;
+    margin-bottom: 1em;
+    text-align: left;
+   }
+li p {
+    margin-top: 1em;
+    margin-bottom: 1em;
+   }
+dl {
+    padding: 0;
+    margin-top: 1em;
+    margin-bottom: 1em;
+    margin-left: 1em;
+   }
+dl dl {
+    margin-top: 0em;
+    margin-bottom: 0em;
+   }
+dt {
+    padding: 0;
+    font-weight: bold;
+    margin-top: .3em;
+    margin-bottom: .3em;
+   }
+dd {
+    padding: 0;
+    margin-top: .3em;
+    margin-left: 3em;
+    margin-bottom: .3em;
+   }
+dl p {
+    margin-top: .3em;
+    margin-bottom: .3em;
+   }
+
+/* inline */
+strong {
+    font-weight: bold;
+   }
+em {
+    font-style: italic;
+   }
+code {
+    font-family: Courier New, Courier, monospace;
+   }
+ins {
+    background-color: yellow;
+    text-decoration: underline;
+   }
+del {
+    text-decoration: line-through;
+   }
+
+/* anchors */
+a[href] {
+    color: blue;
+    text-decoration: underline;
+   }
+
+/* end */
+  </style>
+</head>
+
+<body>
+
+<table border="0" style="width: 100%">
+  <col>
+  <col>
+  <col>
+  <col>
+  <tbody style="border: none thin Grey;">
+    <tr>
+      <th
+        style="text-align:center;margin-left:auto;margin-right:auto;"><strong></strong>Name
+        in UI</th>
+      <th style="text-align:center;margin-left:auto;margin-right:auto;">File
+        (.c)</th>
+      <th
+        style="text-align:center;margin-left:auto;margin-right:auto;"><strong>Result</strong></th>
+      <th
+      style="text-align:center;margin-left:auto;margin-right:auto;">Details</th>
+    </tr>
+    <tr>
+      <td>glib_array_test</td>
+      <td>glib/glib/tests/array-test</td>
+      <td>OK</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>gllb_asyncqueue</td>
+      <td>glib/glib/tests/asyncqueue</td>
+      <td>FAIL</td>
+      <td>g_async_queue_timeout_pop() returns much sooner than the specified
+        timeout, but all other tests pass.</td>
+    </tr>
+    <tr>
+      <td>glib_asyncqueue_test</td>
+      <td>glib/tests/asyncqueue-test</td>
+      <td>OK</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>glib_atomic</td>
+      <td>glib/tests/tests/atomic</td>
+      <td>OK</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>glib_atomic_test</td>
+      <td>glib/tests/atomic-test</td>
+      <td>OK</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>glib_base64</td>
+      <td>glib/tests/tests/base64</td>
+      <td>OK</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>glib_bit_test</td>
+      <td>glib/tests/bit-test</td>
+      <td>OK</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>glib_bytes</td>
+      <td>glib/glib/tests/bytes</td>
+      <td>OK</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>glib_checksum</td>
+      <td>glib/glib/tests/checksum</td>
+      <td>OK</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>glib_child_test</td>
+      <td>glib/tests/child-test</td>
+      <td>OK</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>glib_cond</td>
+      <td>glib/glib/tests/cond</td>
+      <td>OK</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>glib_convert</td>
+      <td>glib/glib/tests/convert</td>
+      <td>OK</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>glib_dataset</td>
+      <td>glib/glib/tests/dataset</td>
+      <td>OK</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>glib_date</td>
+      <td>glib/glib/tests/date</td>
+      <td>FAIL</td>
+      <td>Exits in a call to g_date_strftime() after reporting "GLib-WARNING
+        **: gdate.c:2481Error converting format to locale encoding: Conversion
+        from character set 'UTF-8' to 'en_US.utf-8' is not supported"</td>
+    </tr>
+    <tr>
+      <td>glib_dir</td>
+      <td>glib/glib/tests/dir</td>
+      <td>OK</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>glib_dirname_test</td>
+      <td>glib/tests/dirname-test</td>
+      <td>OK</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>glib_environment</td>
+      <td>glib/glib/tests/environment</td>
+      <td>OK</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>glib_env_test</td>
+      <td>glib/tests/env-test</td>
+      <td>OK</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>glib_error</td>
+      <td>glib/glib/tests/error</td>
+      <td>FAIL</td>
+      <td>Exits very early in first call to g_test_expect_message() with no
+        clue. </td>
+    </tr>
+    <tr>
+      <td>glib_fileutils</td>
+      <td>glib/glib/tests/fileutils</td>
+      <td>OK</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>glib_file_test</td>
+      <td>glib/tests/file-test</td>
+      <td>OK</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>glib_gdatetime</td>
+      <td>glib/glib/tests/gdatetime</td>
+      <td>FAIL</td>
+      <td>"assertion failed (g_date_time_get_utc_offset (dt1) / G_USEC_PER_SEC
+        == (-3 * 3600)): (NaN == 0)"</td>
+    </tr>
+    <tr>
+      <td>glib_gvariant</td>
+      <td>glib/glib/tests/gvariant</td>
+      <td>FAIL</td>
+      <td>During test_format_string(): "(glib_gvariant:2032): GLib-CRITICAL **:
+        g_test_expect_message: assertion `log_domain != NULL' failed"</td>
+    </tr>
+    <tr>
+      <td>glib_gwakeuptest</td>
+      <td>glib/glib/tests/gwakeuptest</td>
+      <td>OK</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>glib_hash</td>
+      <td>glib/glib/tests/hash</td>
+      <td>OK</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>glib_hmac</td>
+      <td>glib/glib/tests/hmac</td>
+      <td>OK</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>glib_hostutils</td>
+      <td>glib/glib/tests/hostutils</td>
+      <td>OK</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>glib_keyfile</td>
+      <td>glib/glib/tests/keyfile</td>
+      <td>OK</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>glib_list</td>
+      <td>glib/glib/tests/list</td>
+      <td>OK</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>glib_mainloop</td>
+      <td>glib/glib/tests/mainloop</td>
+      <td>FAIL</td>
+      <td>In test_maincontext_basic(), a call to g_test_expect_message()
+      exits.</td>
+    </tr>
+    <tr>
+      <td>glib_mainloop_test</td>
+      <td>glib/tests/mainloop-test</td>
+      <td>OK</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>glib_mappedfile</td>
+      <td>glib/glib/tests/mappedfile</td>
+      <td>OK</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>glib_mapping_test</td>
+      <td>glib/tests/mapping-test</td>
+      <td>OK</td>
+      <td>Able to create mapped file, but fails trying to do g_spawn_async()
+        (of course)</td>
+    </tr>
+    <tr>
+      <td>glib_mutex</td>
+      <td>glib/glib/tests/mutex</td>
+      <td>OK</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>glib_node</td>
+      <td>glib/glib/tests/node</td>
+      <td>OK</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>glib_once</td>
+      <td>glib/glib/tests/once</td>
+      <td>OK</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>glib_qsort_test</td>
+      <td>glib/tests/qsort-test</td>
+      <td>OK</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>glib_rand</td>
+      <td>glib/glib/tests/rand</td>
+      <td>OK</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>glib_rec_mutex</td>
+      <td>glib/glib/tests/rec-mutex</td>
+      <td>OK</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>glib_regex</td>
+      <td>glib/glib/tests/regex</td>
+      <td>OK</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>glib_relation_test</td>
+      <td>glib/tests/relation-test</td>
+      <td>OK</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>glib_rwlock</td>
+      <td>glib/glib/tests/rwlock</td>
+      <td>FAIL</td>
+      <td>test_rwlock3 fails: can obtain writer lock while holding writer lock.
+        test_rwlock6 fails: can obtain reader lock while holding writer
+      lock</td>
+    </tr>
+    <tr>
+      <td>glib_scannerapi</td>
+      <td>glib/glib/tests/scannerapi</td>
+      <td>OK</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>glib_sequence</td>
+      <td>glib/glib/tests/sequence</td>
+      <td>OK</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>glib_slice_test</td>
+      <td>glib/tests/slice-test</td>
+      <td>OK</td>
+      <td>Slow (takes 10 min on Redridge tablet!)</td>
+    </tr>
+    <tr>
+      <td>glib_slist</td>
+      <td>glib/glib/tests/slist</td>
+      <td>OK</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>glib_sort</td>
+      <td>glib/glib/tests/sort</td>
+      <td>OK</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>glib_spawn_test</td>
+      <td>glib/tests/spawn-test</td>
+      <td>FAIL</td>
+      <td>g_spawn_command_line_sync() fails (of course)</td>
+    </tr>
+    <tr>
+      <td>glib_strfuncs</td>
+      <td>glib/glib/tests/strfuncs</td>
+      <td>FAIL</td>
+      <td>Exits in a call to g_test_undefined() with no clue.</td>
+    </tr>
+    <tr>
+      <td>glib_string</td>
+      <td>glib/glib/tests/string</td>
+      <td>OK</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>glib_testglib</td>
+      <td>glib/tests/testglib</td>
+      <td>OK</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>glib_testing</td>
+      <td>glib/glib/tests/testing</td>
+      <td>FAIL</td>
+      <td>All test cases pass execept the last one, "test_expected_messages".
+        Fails on a g_test_trap_assert_stderr ("*should not be reached*").</td>
+    </tr>
+    <tr>
+      <td>glib_test_printf</td>
+      <td>glib/glib/tests/test-printf</td>
+      <td>OK</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>glib_threadpool_test</td>
+      <td>glib/tests/threadpool-test</td>
+      <td>FAIL</td>
+      <td>OK on emulator, but on Redridge tablet: "threadpool-test.c: 224:
+        test_thread_sort_entry_func: assertion failed: (last_thread_id &lt;=
+        thread_id)</td>
+    </tr>
+    <tr>
+      <td>glib_thread_test</td>
+      <td>glib/tests/thread-test</td>
+      <td>OK</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>glib_type_test</td>
+      <td>glib/tests/type-test</td>
+      <td>OK</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>gobj_dynamictests</td>
+      <td>glib/gobject/tests/dynamictests</td>
+      <td>OK</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>gobj_gvalue_test</td>
+      <td>glib/tests/gobject/gvalue-test</td>
+      <td>OK</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>gobj_paramspec_test</td>
+      <td>glib/tests/gobject/paramspec-test</td>
+      <td>OK</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>gobj_testgobject</td>
+      <td>glib/gobject/testgobject</td>
+      <td>OK</td>
+      <td>OK after fixing a bug in the test program -- failure to apply
+        G_TYPE_MAKE_FUNDAMENTAL() where necessary.</td>
+    </tr>
+    <tr>
+      <td>gobj_threadtests</td>
+      <td>glib/gobject/tests/threadtests</td>
+      <td>OK</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>gio_async_close_output_stream</td>
+      <td>glib/gio/tests/async-close-output-stream</td>
+      <td>OK</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>gio_buffered_input_stream</td>
+      <td>glib/gio/tests/buffered-input-stream</td>
+      <td>OK</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>gio_buffered_output_stream</td>
+      <td>glib/gio/tests/buffered-output-stream.c</td>
+      <td>OK</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>gio_cancellable</td>
+      <td>glib/gio/tests/cancellable</td>
+      <td>OK</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>gio_contenttype</td>
+      <td>glib/gio/tests/contenttype</td>
+      <td>FAIL</td>
+      <td>Fails to guess "foo.txt" is of mime type "text/plain"</td>
+    </tr>
+    <tr>
+      <td>gio_contexts</td>
+      <td>glib/gio/tests/contexts</td>
+      <td>FAIL</td>
+      <td>Fails in idle_start_test1_thread() because g_cond_wait_until()
+        returns false</td>
+    </tr>
+    <tr>
+      <td>gio_converter_stream</td>
+      <td>glib/gio/tests/converter-stream</td>
+      <td>OK</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>gio_data_input_stream</td>
+      <td>glib/gio/tests/data-input-stream</td>
+      <td>OK</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>gio_data_output_stream</td>
+      <td>glib/gio/tests/data-output-stream.c</td>
+      <td>OK</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>gio_echo_server</td>
+      <td>glib/gio/tests/echo-server</td>
+      <td>OK</td>
+      <td>See [1] below for setup. Fails with g_socket_listener_add_inet_port()
+        reporting "Error binding to address: Address already in use". See [2]
+        below for more info.</td>
+    </tr>
+    <tr>
+      <td>gio_fileattributematcher</td>
+      <td>glib/gio/tests/fileattributematcher</td>
+      <td>OK</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>gio_file</td>
+      <td>glib/gio/tests/file</td>
+      <td>OK</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>gio_filter_cat</td>
+      <td>glib/gio/tests/filter-cat</td>
+      <td>?</td>
+      <td>Not clear how to run the test.</td>
+    </tr>
+    <tr>
+      <td>gio_filter_streams</td>
+      <td>glib/gio/tests/filter-streams</td>
+      <td>OK</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>gio_g_file</td>
+      <td>glib/gio/tests/g-file</td>
+      <td>OK</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>gio_g_file_info</td>
+      <td>glib/gio/tests/g-file-info</td>
+      <td>OK</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>gio_g_icon</td>
+      <td>glib/gio/tests/g-icon</td>
+      <td>OK</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>gio_gio_test</td>
+      <td>glib/tests/gio-test</td>
+      <td>FAIL</td>
+      <td>system() fails (of course)</td>
+    </tr>
+    <tr>
+      <td>gio_gschema_compile</td>
+      <td>glib/gio/tests/gschema-compile</td>
+      <td>?</td>
+      <td>Not sure how to run this.</td>
+    </tr>
+    <tr>
+      <td>gio_gsettings</td>
+      <td>glib/gio/tests/gsettings</td>
+      <td>FAIL</td>
+      <td>g_spawn_command_line_sync() fails</td>
+    </tr>
+    <tr>
+      <td>gio_httpd</td>
+      <td>glib/gio/tests/httpd</td>
+      <td>FAIL</td>
+      <td>See [1] below for setup. Fails with g_socket_listener_add_inet_port()
+        reporting "Error binding to address: Address already in use". See [2]
+        below for more info.</td>
+    </tr>
+    <tr>
+      <td>gio_inet_address</td>
+      <td>glib/gio/tests/inet-address</td>
+      <td>OK</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>gio_io_stream</td>
+      <td>glib/gio/tests/io-stream</td>
+      <td>OK</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>gio_live_g_file</td>
+      <td>glib/gio/tests/live-g-file</td>
+      <td>OK</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>gio_memory_input_stream</td>
+      <td>glib/gio/tests/memory-input-stream</td>
+      <td>OK</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>gio_memory_output_stream</td>
+      <td>glib/gio/tests/memory-output-stream</td>
+      <td>OK</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>gio_network_address</td>
+      <td>glib/gio/tests/network-address</td>
+      <td>OK</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>gio_network_monitor</td>
+      <td>glib/gio/tests/network-monitor</td>
+      <td>OK</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>gio_permission</td>
+      <td>glib/gio/tests/permission</td>
+      <td>OK</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>gio_pollable</td>
+      <td>glib/gio/tests/pollable</td>
+      <td>OK</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>gio_proxy</td>
+      <td>glib/gio/tests/proxy</td>
+      <td>FAIL</td>
+      <td>Crash in g_test_run() between test "file/type" and test
+        "/file/async-create-delete/0": Fatal signal 11 (SIGSEGV) at 0x00000000
+        (code=1), thread 25480 (AsyncTask #1)</td>
+    </tr>
+    <tr>
+      <td>gio_proxy_test</td>
+      <td>glib/gio/tests/proxy-test</td>
+      <td>OK</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>gio_readwrite</td>
+      <td>glib/gio/tests/readwrite</td>
+      <td>OK</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>gio_resolver</td>
+      <td>glib/gio/tests/resolver</td>
+      <td>OK</td>
+      <td>Doesn't report anything on stdout (but see
+      gio_simple_async_result)</td>
+    </tr>
+    <tr>
+      <td>gio_resources</td>
+      <td>glib/gio/tests/resources</td>
+      <td>FAIL</td>
+      <td>g_resource_load ("test.gresource",...) fails. I don't see any such
+        resource in the source files...</td>
+    </tr>
+    <tr>
+      <td>gio_send_data</td>
+      <td>glib/gio/tests/send-data</td>
+      <td>?</td>
+      <td>Invocation is &lt;progname&gt; &lt;hostname&gt;[:&lt;port&gt;] so
+        need to set up a server to accept the connection and receive the
+      data</td>
+    </tr>
+    <tr>
+      <td>gio_simple_async_result</td>
+      <td>glib/gio/tests/simple-async-result</td>
+      <td>OK</td>
+      <td>discovered that invoking this just after invoking gio_resolver will
+        report the results of the :DNS query done by the latter!</td>
+    </tr>
+    <tr>
+      <td>gio_sleepy_stream</td>
+      <td>glib/gio/tests/sleepy-stream</td>
+      <td>OK</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>gio_socket</td>
+      <td>glib/gio/tests/socket</td>
+      <td>OK</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>gio_socket_client</td>
+      <td>glib/gio/tests/socket-client</td>
+      <td>OK</td>
+      <td>See [1] below for setup.</td>
+    </tr>
+    <tr>
+      <td>gio_socket_server</td>
+      <td>glib/gio/tests/socket-server</td>
+      <td>OK</td>
+      <td>See [1] below for setup.</td>
+    </tr>
+    <tr>
+      <td>gio_srvtarget</td>
+      <td>glib/gio/tests/srvtarget</td>
+      <td>OK</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>gio_tls_certificate</td>
+      <td>glib/gio/tests/tls-certificate</td>
+      <td>OK</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>gio_tls_interaction</td>
+      <td>glib/gio/tests/tls-interaction</td>
+      <td>OK</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>gio_unix_fd</td>
+      <td>glib/gio/tests/unix-fd</td>
+      <td>OK</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>gio_unix_streams</td>
+      <td>glib/gio/tests/unix-streams</td>
+      <td>OK</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>gio_vfs</td>
+      <td>glib/gio/tests/vfs</td>
+      <td>OK</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>gio_volumemonitor</td>
+      <td>glib/gio/tests/volumemonitor</td>
+      <td>OK</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>soup_chunk_test</td>
+      <td>libsoup/tests/chunk-test</td>
+      <td>FAIL</td>
+      <td>1 error "g_object_unref: assertion `G_IS_OBJECT (object)' failed"</td>
+    </tr>
+    <tr>
+      <td>soup_coding-test</td>
+      <td>libsoup/tests/coding-test</td>
+      <td>FAIL</td>
+      <td>3 errors "g_object_unref: assertion `G_IS_OBJECT (object)'
+      failed"</td>
+    </tr>
+    <tr>
+      <td>soup_connection_test</td>
+      <td>libsoup/tests/connection-test</td>
+      <td>FAIL</td>
+      <td>11 errors "g_object_unref: assertion `G_IS_OBJECT (object)'
+      failed"</td>
+    </tr>
+    <tr>
+      <td>soup_context_test</td>
+      <td>libsoup/tests/context-test</td>
+      <td>FAIL</td>
+      <td>2 errors where the main thread impedes another thread (timeout). 5
+        errors "g_object_unref: assertion `G_IS_OBJECT (object)' failed"</td>
+    </tr>
+    <tr>
+      <td>soup_continue_test</td>
+      <td>libsoup/tests/continue-test</td>
+      <td>FAIL</td>
+      <td>12 errors "g_object_unref: assertion `G_IS_OBJECT (object)'
+      failed"</td>
+    </tr>
+    <tr>
+      <td>soup_cookies_test</td>
+      <td>libsoup/tests/cookies-test</td>
+      <td>FAIL</td>
+      <td>2 errors "g_object_unref: assertion `G_IS_OBJECT (object)'
+      failed"</td>
+    </tr>
+    <tr>
+      <td>soup_date</td>
+      <td>libsoup/tests/date</td>
+      <td>OK</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>soup_dns</td>
+      <td>libsoup/tests/dns</td>
+      <td>OK</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>soup_forms_test</td>
+      <td>libsoup/tests/forms-test</td>
+      <td>FAIL</td>
+      <td>24 errors, only one of type "g_object_unref: assertion `G_IS_OBJECT
+        (object)' failed"</td>
+    </tr>
+    <tr>
+      <td>soup_get</td>
+      <td>libsoup/tests/get</td>
+      <td>OK</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>soup_header_parsing</td>
+      <td>libsoup/tests/header-parsing</td>
+      <td>OK</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>soup_misc_test</td>
+      <td>libsoup/tests/misc-test</td>
+      <td>FAIL</td>
+      <td>Exits after reporting "Could not read SSL certificate from
+        '/data/data/com.intel.dleyna.testnativelibs/files/SRCDIR/test-cert.pem'"
+        but that file is there and accessible to the app!</td>
+    </tr>
+    <tr>
+      <td>soup_multipart_test</td>
+      <td>libsoup/tests/multipart-test</td>
+      <td>FAIL</td>
+      <td>1 error "g_object_unref: assertion `G_IS_OBJECT (object)' failed"</td>
+    </tr>
+    <tr>
+      <td>soup_ntlm_test</td>
+      <td>libsoup/tests/ntlm-test</td>
+      <td>FAIL</td>
+      <td>4 errors "g_object_unref: assertion `G_IS_OBJECT (object)'
+      failed"</td>
+    </tr>
+    <tr>
+      <td>soup_redirect_test</td>
+      <td>libsoup/tests/redirect-test</td>
+      <td>FAIL</td>
+      <td>3 errors "g_object_unref: assertion `G_IS_OBJECT (object)'
+      failed"</td>
+    </tr>
+    <tr>
+      <td>soup_requester_test</td>
+      <td>libsoup/tests/requester-test</td>
+      <td>FAIL</td>
+      <td>4 errors "g_object_unref: assertion `G_IS_OBJECT (object)'
+      failed"</td>
+    </tr>
+    <tr>
+      <td>soup_server_auth_test</td>
+      <td>libsoup/tests/server-auth-test</td>
+      <td>FAIL</td>
+      <td>140 errors of various sorts</td>
+    </tr>
+    <tr>
+      <td>soup_simple_httpd</td>
+      <td>libsoup/tests/simple-httpd</td>
+      <td>OK</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>soup_simple_proxy</td>
+      <td>libsoup/tests/simple-proxy</td>
+      <td>OK</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>soup_sniffing_test</td>
+      <td>libsoup/tests/sniffing-test</td>
+      <td>FAIL</td>
+      <td>Exits with no clue.</td>
+    </tr>
+    <tr>
+      <td>soup_socket_test</td>
+      <td>libsoup/tests/socket-test</td>
+      <td>OK</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>soup_ssl_test</td>
+      <td>libsoup/tests/ssl-test</td>
+      <td>OK</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>soup_streaming_test</td>
+      <td>libsoup/tests/streaming-test</td>
+      <td>FAIL</td>
+      <td>1 error "g_object_unref: assertion `G_IS_OBJECT (object)'
+      failed".</td>
+    </tr>
+    <tr>
+      <td>soup_timeout_test</td>
+      <td>libsoup/tests/timeout-test</td>
+      <td>FAIL</td>
+      <td>5 errors "g_object_unref: assertion `G_IS_OBJECT (object)'
+      failed"</td>
+    </tr>
+    <tr>
+      <td>soup_tld_test</td>
+      <td>libsoup/tests/tdl-test</td>
+      <td>OK</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>soup_uri_parsing</td>
+      <td>libsoup/tests/uri-parsing</td>
+      <td>OK</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td><hr>
+      </td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+  </tbody>
+</table>
+
+<p>[1] For tests involving a tcp connection from one emulator instance to
+another one, a bit of setup ("port redirection") is required. Pick two distinct
+port numbers for the applications to use: &lt;port1&gt; and &lt;port2&gt;.
+Telnet into the emulated server device by doing</p>
+
+<p style="margin-left:4em">telnet localhost 5554</p>
+
+<p>(the port may vary -- it's the number that "adb devices" reports) and then
+type</p>
+
+<p style="margin-left:4em">redir add tcp:&lt;port1&gt;:&lt;port2&gt;</p>
+
+<p>Now the client can use "10.0.2.2:&lt;port1&gt;" to connect to the server who
+is listening on &lt;port2&gt;. Note that you can also connect from your host
+machine to the emulated server device by doing "telnet localhost
+&lt;port1&gt;". More info about emulator networking <a
+href="http://developer.android.com/tools/devices/emulator.html#emulatornetworking">here</a>.</p>
+
+<p>[2] Test programs gio_echo_server and gio_httpd both fail with
+g_socket_listener_add_inet_port() reporting "Error binding to address: Address
+already in use". On the other hand, test program gio_socket_server works fine
+using g_socket_bind() and g_socket_listen().</p>
+</body>
+</html>

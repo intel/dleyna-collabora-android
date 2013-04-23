@@ -1,0 +1,111 @@
+From b1e9687fe2a87635f86ed2b4e13f515339f3d43e Mon Sep 17 00:00:00 2001
+From: Lionel Landwerlin <llandwerlin@gmail.com>
+Date: Thu, 9 Aug 2012 11:54:26 +0100
+Subject: [PATCH 3/5] websocket: handle connection problems
+
+---
+ libsoup/soup-websocket.c |   52 +++++++++++++++++++++++++++++++++++++++-------
+ 1 file changed, 45 insertions(+), 7 deletions(-)
+
+diff --git a/libsoup/soup-websocket.c b/libsoup/soup-websocket.c
+index 566d292..d50f878 100644
+--- a/libsoup/soup-websocket.c
++++ b/libsoup/soup-websocket.c
+@@ -179,6 +179,39 @@ soup_websocket_new (void)
+ 
+ /**/
+ 
++static void
++_soup_websocket_disconnect (SoupWebsocket *socket)
++{
++  SoupWebsocketPrivate *priv = socket->priv;
++
++  g_message ("\tprocessing disconnect");
++
++  if (priv->state == SOUP_WEBSOCKET_STATE_CLOSED)
++    return;
++
++  priv->state = SOUP_WEBSOCKET_STATE_CLOSED;
++
++  if (priv->read_source)
++    {
++      g_source_destroy (priv->read_source);
++      priv->read_source = NULL;
++    }
++  if (priv->write_source)
++    {
++      g_source_destroy (priv->write_source);
++      priv->write_source = NULL;
++    }
++
++  g_clear_object (&priv->istream);
++  priv->ostream = NULL;
++
++  g_clear_object (&priv->connection);
++
++  g_signal_emit (socket, signals[CLOSED], 0);
++}
++
++/**/
++
+ static gboolean
+ handle_control_frame (SoupWebsocket *socket)
+ {
+@@ -674,6 +707,7 @@ got_read_data (GIOChannel *source,
+       break;
+ 
+     case SOUP_WEBSOCKET_STATE_CLOSED:
++      _soup_websocket_disconnect (socket);
+       return G_SOURCE_REMOVE;
+     }
+ 
+@@ -755,6 +789,7 @@ got_write_data (GIOChannel *source,
+       break;
+ 
+     case SOUP_WEBSOCKET_STATE_CLOSED:
++      _soup_websocket_disconnect (socket);
+       return G_SOURCE_REMOVE;
+     }
+ 
+@@ -772,7 +807,12 @@ got_connection (SoupConnection *conn, guint status, SoupWebsocket *socket)
+ 
+   g_message ("got connection s=%p status=%i!", socket, status);
+ 
+-  /* TODO: check status */
++  if (status != SOUP_STATUS_OK)
++    {
++      soup_connection_disconnect (priv->connection);
++      _soup_websocket_disconnect (socket);
++      return;
++    }
+ 
+   /* TODO: get the context from the soup connection */
+   async_context = g_main_context_default ();
+@@ -796,7 +836,11 @@ got_connection (SoupConnection *conn, guint status, SoupWebsocket *socket)
+ static void
+ got_disconnected (SoupConnection *conn, SoupWebsocket *socket)
+ {
++  SoupWebsocketPrivate *priv = socket->priv;
++
+   g_message ("DISCONNECTED!!!!!!");
++
++  _soup_websocket_disconnect (socket);
+ }
+ 
+ /**/
+@@ -998,12 +1042,6 @@ soup_websocket_send_internal (SoupWebsocket *socket, SoupWebsocketMessage *msg)
+   return TRUE;
+ }
+ 
+-/* void */
+-/* soup_websocket_send_string (SoupWebsocket *socket, const gchar *string) */
+-/* { */
+-
+-/* } */
+-
+ gboolean
+ soup_websocket_send (SoupWebsocket *socket, gpointer data, guint length)
+ {
+-- 
+1.7.9.5
+

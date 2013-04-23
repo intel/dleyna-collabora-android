@@ -1,0 +1,25 @@
+From 57d9f8ff369294354b5a778f6a11d7456ee6e29d Mon Sep 17 00:00:00 2001
+From: Lionel Landwerlin <llandwerlin@gmail.com>
+Date: Wed, 23 May 2012 18:18:49 +0100
+Subject: [PATCH 8/9] glib: don't add -pthread for android
+
+---
+ glib/tests/Makefile.am |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/glib/tests/Makefile.am b/glib/tests/Makefile.am
+index 983259b..38055b7 100644
+--- a/glib/tests/Makefile.am
++++ b/glib/tests/Makefile.am
+@@ -267,7 +267,7 @@ gwakeup_fallback_LDADD    = $(progs_ldadd)
+ endif
+ 
+ if OS_UNIX
+-private_LDFLAGS = -pthread
++#private_LDFLAGS = -pthread
+ 
+ TEST_PROGS += unix-multithreaded
+ unix_multithreaded_SOURCES = $(top_srcdir)/glib/tests/unix.c
+-- 
+1.7.9.5
+
