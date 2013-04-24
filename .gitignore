@@ -3,6 +3,7 @@ NativeLibs/sources
 NativeLibs/sources-*
 NativeLibs/toolchain-*
 NativeLibs/install-*
+TestNativeLibs/.project
 TestNativeLibs/bin
 TestNativeLibs/gen
 TestNativeLibs/libs
