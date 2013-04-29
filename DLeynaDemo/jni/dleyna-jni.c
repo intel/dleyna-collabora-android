@@ -19,11 +19,11 @@
  * Tom Keel <thomas.keel@intel.com>
  */
 
-#include <stdio.h>
-#include <unistd.h>
 
 #include <jni.h>
-#include <android/log.h>
+#include <stddef.h>
+
+#include "dleyna-jni.h"
 
 // Added to glib to allow us to inform it about dir names.
 extern void set_dir_names(const char*, const char*);
@@ -37,15 +37,13 @@ jint JNI_OnLoad(JavaVM* vm, void* reserved)
 {
     JNIEnv* env;
 
-    __android_log_print(ANDROID_LOG_INFO, "DLeynaDemo", "JNI_OnLoad: version = 0x%08x\n", MY_JNI_VERSION);
-    printf("JNI_OnLoad: version = 0x%08x\n", MY_JNI_VERSION);
+    LOGI("JNI_OnLoad: version = 0x%08x\n", MY_JNI_VERSION);
 
     if ((*vm)->GetEnv(vm, (void**)&env, MY_JNI_VERSION) != JNI_OK) {
-        printf("JNI_OnLoad: FAIL\n");
+        LOGE("JNI_OnLoad: FAIL\n");
         return -1;
     }
 
-    // printf("JNI_OnLoad: OK\n");
     return MY_JNI_VERSION;
 }
 
@@ -57,12 +55,12 @@ void Java_com_intel_dleyna_JNI_setDirNames(JNIEnv* env, jclass clazz, jstring ho
     const char *homeC = (*env)->GetStringUTFChars(env, homeJ, NULL);
     const char *tempC = (*env)->GetStringUTFChars(env, tempJ, NULL);
 
-    printf("setDirNames: home: %s\n", homeC);
-    printf("setDirNames: temp: %s\n", tempC);
+    LOGI("setDirNames: home: %s\n", homeC);
+    LOGI("setDirNames: temp: %s\n", tempC);
     set_android_dir_names(homeC, tempC);
 
     if (chdir(homeC) < 0) {
-        fprintf(stderr, "setDirNames: ERROR can't chdir to %s\n", homeC);
+        LOGE("setDirNames: ERROR can't chdir to %s\n", homeC);
     }
 
     (*env)->ReleaseStringUTFChars(env, homeJ, homeC);
