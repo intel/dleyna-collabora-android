@@ -5,6 +5,7 @@
     <repository name="gnome.org" type="tarball" href="http://ftp.gnome.org/pub/GNOME/sources/"/>
     <repository name="gnu.org" type="tarball" href="http://ftp.gnu.org/pub/gnu/"/>
     <repository name="xmlsoft.org" type="tarball" href="ftp://xmlsoft.org/"/>
+    <repository name="01org" type="git" href="git://github.com/01org/"/>
 
     <!-- GLib and it's dependencies -->
 
@@ -79,6 +80,16 @@
         </branch>
         <dependencies>
             <dep package="libsoup"/>
+        </dependencies>
+    </autotools>
+
+    <!-- dleyna -->
+
+    <autotools id="dleyna-core" autogen-sh="bootstrap-configure">
+        <branch repo="01org" module="dleyna-core.git">
+        </branch>
+        <dependencies>
+            <dep package="gupnp"/>
         </dependencies>
     </autotools>
 
