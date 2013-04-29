@@ -90,9 +90,13 @@ LOCAL_MODULE := dleyna-jni
 LOCAL_C_INCLUDES := \
     ../../NativeLibs/install-$(TARGET_ARCH_ABI)-$(TARGET_PLATFORM)/include \
     ../../NativeLibs/install-$(TARGET_ARCH_ABI)-$(TARGET_PLATFORM)/include/glib-2.0 \
+    ../../NativeLibs/install-$(TARGET_ARCH_ABI)-$(TARGET_PLATFORM)/include/glib-2.0/glib \
+    ../../NativeLibs/install-$(TARGET_ARCH_ABI)-$(TARGET_PLATFORM)/lib/glib-2.0/include \
+    ../../NativeLibs/sources/dleyna-core/libdleyna/core \
 
 LOCAL_SRC_FILES := \
     dleyna-jni.c \
+    connector.c \
 
 LOCAL_LDLIBS := -llog -landroid -lz
 LOCAL_STATIC_LIBRARIES := libsoup libxml2 gthread gio gobject gmodule glib iconv libintl ffi
