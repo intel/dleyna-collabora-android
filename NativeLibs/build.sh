@@ -27,12 +27,12 @@ API_LEVEL=${API_LEVEL:-9}
 TOOLCHAIN_VERSION=${TOOLCHAIN_VERSION:-4.6}
 
 # Where the Android NDK lives.
-NDK_NAME=android-ndk-r8d
-NDK_DIR=$HOME/$NDK_NAME
+NDK_NAME=${NDK_NAME:-android-ndk-r8d}
+NDK_DIR=${NDK_DIR:-$HOME}/$NDK_NAME
 
 # Where the Android SDK lives.
-SDK_NAME=android-sdk-linux
-SDK_DIR=$HOME/$SDK_NAME
+SDK_NAME=${SDK_NAME:-android-sdk-linux}
+SDK_DIR=${SDK_DIR:-$HOME}/$SDK_NAME
 
 # Download the Android NDK if necessary.
 if ! test -d $NDK_DIR; then
