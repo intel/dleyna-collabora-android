@@ -35,8 +35,8 @@
             </intent-filter>
         </activity>
         <service
-            android:name="com.intel.dleyna.dleynademo.DLeynaService"
-            android:process=":DLeyna"
+            android:name="com.intel.dleyna.RendererService"
+            android:process=":Renderer"
             >
         </service>
         </application>

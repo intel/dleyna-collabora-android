@@ -26,7 +26,7 @@ import java.io.File;
 import com.intel.dleyna.dleynademo.App;
 
 /**
- * Everything for accessing native code.
+ * Native library initialization stuff.
  */
 public class JNI {
 

@@ -17,34 +17,11 @@
  * 51 Franklin St - Fifth Floor, Boston, MA 02110-1301 USA.
  *
  * Tom Keel <thomas.keel@intel.com>
+ *
  */
 
-package com.intel.dleyna.dleynademo;
+package com.intel.dleyna;
 
-import android.app.Service;
-import android.content.Intent;
-import android.os.IBinder;
-import android.os.RemoteException;
-import android.util.Log;
+interface RendererInterface {
 
-import com.intel.dleyna.JNI;
-
-public class DLeynaService extends Service {
-
-    public DLeynaService() {
-        JNI.initialize();
-        JNI.cleanTempDir();
-    }
-
-    private final IBinder binder = new DLeynaInterface.Stub() {
-
-        public void doSomething(String name) throws RemoteException {
-            if (App.LOG) Log.i(App.TAG, "DLeynaService: doSomething: " + name);
-        }
-
-    };
-
-    public IBinder onBind(Intent intent) {
-        return binder;
-    }
 }

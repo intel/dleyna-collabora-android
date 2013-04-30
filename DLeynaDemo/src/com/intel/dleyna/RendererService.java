@@ -17,13 +17,26 @@
  * 51 Franklin St - Fifth Floor, Boston, MA 02110-1301 USA.
  *
  * Tom Keel <thomas.keel@intel.com>
- *
  */
 
-package com.intel.dleyna.dleynademo;
+package com.intel.dleyna;
 
-interface DLeynaInterface {
+import android.app.Service;
+import android.content.Intent;
+import android.os.IBinder;
 
-    void doSomething(String name);
-    
+public class RendererService extends Service {
+
+    public RendererService() {
+        JNI.initialize();
+        JNI.cleanTempDir();
+    }
+
+    private final IBinder binder = new RendererInterface.Stub() {
+
+    };
+
+    public IBinder onBind(Intent intent) {
+        return binder;
+    }
 }
