@@ -38,7 +38,7 @@ where
 
     <arch>    is 'x86' or 'armeabi' (default 'x86')
     <level>   is an Android API level: 3,4,5,8,9, or 14 (default '9')
-    <cmd>...  is a JHBuild command and args (default 'build libsoup') 
+    <cmd>...  is a JHBuild command and args (default 'build gssdp')
 
 The result of the build will be left in a subdirectory named
 
