@@ -21,6 +21,9 @@
 
 package com.intel.dleyna.dleynademo;
 
+import com.intel.dleyna.RendererInterface;
+import com.intel.dleyna.RendererService;
+
 import android.app.Activity;
 import android.content.ComponentName;
 import android.content.Context;
@@ -51,8 +54,8 @@ public class MainActivity extends Activity {
     private TextView ttyTextView;
     private Button clearButton;
 
-    /** The binder handle to dLeyna services. */
-    private DLeynaInterface dLeynaService;
+    /** The binder handle to Renderer service. */
+    private RendererInterface rendererService;
 
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -68,8 +71,8 @@ public class MainActivity extends Activity {
     protected void onStart() {
         super.onStart();
         if (App.LOG) Log.i(TAG, "MainActivity: onStart");
-        bindService(new Intent(MainActivity.this, DLeynaService.class),
-                dLeynaConnection, Context.BIND_AUTO_CREATE);
+        bindService(new Intent(MainActivity.this, RendererService.class),
+                RendererConnection, Context.BIND_AUTO_CREATE);
     }
 
     protected void onResume() {
@@ -90,6 +93,9 @@ public class MainActivity extends Activity {
 
     protected void onDestroy() {
         super.onDestroy();
+        if (rendererService != null) {
+            unbindService(RendererConnection);
+        }
         if (App.LOG) Log.i(TAG, "MainActivity: onDestroy");
     }
 
@@ -119,16 +125,16 @@ public class MainActivity extends Activity {
         }
     };
 
-    private final ServiceConnection dLeynaConnection = new ServiceConnection() {
+    private final ServiceConnection RendererConnection = new ServiceConnection() {
 
         public void onServiceConnected(ComponentName className, IBinder b) {
             if (App.LOG) Log.i(TAG, "MainActivity: onServiceConnected");
-            dLeynaService = DLeynaInterface.Stub.asInterface(b);
+            rendererService = RendererInterface.Stub.asInterface(b);
         }
 
         public void onServiceDisconnected(ComponentName arg0) {
             if (App.LOG) Log.i(TAG, "MainActivity: onServiceDisconnected");
-            dLeynaService = null;
+            rendererService = null;
         }
     };
 

@@ -36,14 +36,6 @@ static void shutdown(void)
 {
 }
 
-static void connected_cb(dleyna_connector_id_t connection)
-{
-}
-
-static void disconnected_cb_(dleyna_connector_id_t connection)
-{
-}
-
 static void connect(
     const gchar *server_name,
     dleyna_connector_connected_cb_t connected_cb,
@@ -52,14 +44,6 @@ static void connect(
 }
 
 static void disconnect(void)
-{
-}
-
-static void client_new_cb(const gchar *client_name)
-{
-}
-
-static void client_lost_cb(const gchar *client_name)
 {
 }
 
@@ -73,25 +57,6 @@ static void unwatch_client(const gchar *client_name)
 
 static void set_client_lost_cb(dleyna_connector_client_lost_cb_t lost_cb)
 {
-}
-
-static void dispatch_cb(
-    dleyna_connector_id_t connection,
-    const gchar *sender,
-    const gchar *object_id,
-    const gchar *interface,
-    const gchar *method,
-    GVariant *parameters,
-    dleyna_connector_msg_id_t message_id)
-{
-}
-
-static gboolean interface_filter_cb(
-    const gchar *object_path,
-    const gchar *node,
-    const gchar *interface)
-{
-    return FALSE;
 }
 
 static guint publish_object(
@@ -150,23 +115,23 @@ static gboolean notify(
 }
 
 static dleyna_connector_t connector = {
-	initialize,
-	shutdown,
-	connect,
-	disconnect,
-	watch_client,
-	unwatch_client,
-	set_client_lost_cb,
-	publish_object,
-	publish_subtree,
-	unpublish_object,
-	unpublish_subtree,
-	return_response,
-	return_error,
-	notify,
+	.initialize = initialize,
+	.shutdown = shutdown,
+	.connect = connect,
+	.disconnect = disconnect,
+	.watch_client = watch_client,
+	.unwatch_client = unwatch_client,
+	.set_client_lost_cb = set_client_lost_cb,
+	.publish_object = publish_object,
+	.publish_subtree = publish_subtree,
+	.unpublish_object = unpublish_object,
+	.unpublish_subtree = unpublish_subtree,
+	.return_response = return_response,
+	.return_error = return_error,
+	.notify = notify,
 };
 
-static const dleyna_connector_t *get_interface(void)
+extern const dleyna_connector_t *dleyna_connector_get_interface(void)
 {
     return &connector; 
 }
