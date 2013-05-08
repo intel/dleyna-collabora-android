@@ -1,0 +1,79 @@
+From c7c849df97e22451799c5f54a9493d5fa46285c9 Mon Sep 17 00:00:00 2001
+From: "Reynaldo H. Verdejo Pinochet" <reynaldo@collabora.com>
+Date: Mon, 6 May 2013 22:14:57 -0400
+Subject: [PATCH 2/3] Port get_host_ip() to Android/Bionic [pass 1]
+
+Add code for host address discovery.
+Single device use case. No enumeration.
+---
+ libgssdp/gssdp-client.c |   46 +++++++++++++++++++++++++++++++++++++++++++++-
+ 1 file changed, 45 insertions(+), 1 deletion(-)
+
+diff --git a/libgssdp/gssdp-client.c b/libgssdp/gssdp-client.c
+index b6387d7..e8fb77b 100644
+--- a/libgssdp/gssdp-client.c
++++ b/libgssdp/gssdp-client.c
+@@ -56,6 +56,11 @@ typedef unsigned long in_addr_t;
+ #include <net/if.h>
+ #ifndef __BIONIC__
+ #include <ifaddrs.h>
++#else
++#include <sys/ioctl.h>
++#include <net/if.h>
++#include <stdlib.h>
++//#include <linux/netlink.h>
+ #endif
+ #endif
+ #include <libsoup/soup-headers.h>
+@@ -1243,8 +1248,47 @@ get_host_ip (GSSDPNetworkDevice *device)
+ 
+         return TRUE;
+ #elif __BIONIC__
+-        /* REYNALDO: Implement needed Anroid code here */
++        struct ifreq *iface;
++        int sock;
++
++
++        if ((sock = socket (AF_INET, SOCK_STREAM, 0)) < 0)
++                return FALSE;
++
++        if (device->iface_name != NULL) {
++                /* We have an actual interface request */
++                iface = calloc (1, sizeof (struct ifreq));
++                strncpy (iface->ifr_name, device->iface_name, IFNAMSIZ);
++
++                if (ioctl (sock, SIOCGIFADDR, iface) == -1)
++                        goto cleanup_and_fail;
++
++                memcpy (&device->mask, &iface->ifr_addr,
++                        sizeof (struct sockaddr_in));
++
++                /* FIXME: is IPv4 all we need?
++                 * Should also check buffer size against INET_ADDRSTRLEN */
++                if (inet_ntop (AF_INET, &device->mask.sin_addr, device->host_ip,
++                        INET_ADDRSTRLEN) == NULL) {
++                        goto cleanup_and_fail;
++                }
++
++                goto cleanup;
++
++        } else {
++        /* No interface name was passed on as query. Need
++         * to figure out address of the first active/configured
++         * device and pass that over
++         */
++
++        }
++
++cleanup:
++        free (iface);
+         return TRUE;
++cleanup_and_fail: /* Maybe print meaningfull message or smth? */
++        free (iface);
++        return FALSE;
+ #else
+         struct ifaddrs *ifa_list, *ifa;
+         GList *up_ifaces, *ifaceptr;
+-- 
+1.7.10.4
+

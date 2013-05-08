@@ -71,13 +71,19 @@ case $ARCH in
         TOOLCHAIN_ARG=x86-$TOOLCHAIN_VERSION
         ;;
 esac
+
+HOST_SYSTEM=`uname -m`
+if [[ $HOST_SYSTEM = "x86_64" ]]
+    then EXTRA_SYSTEM_FLAG="--system=linux-x86_64"
+fi
+    
 TOOLCHAIN_DIR=$PWD/toolchain-$ARCH-$TOOLCHAIN_VERSION
 
 # Create the standalone toolchain.
 $NDK_DIR/build/tools/make-standalone-toolchain.sh \
     --toolchain=$TOOLCHAIN_ARG \
     --platform=android-$API_LEVEL \
-    --install-dir=$TOOLCHAIN_DIR
+    --install-dir=$TOOLCHAIN_DIR $EXTRA_SYSTEM_FLAG
 
 # Set up patched version of jhbuild
 JHB_PREFIX=$PWD/jhbuild/.local
