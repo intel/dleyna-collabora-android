@@ -78,6 +78,8 @@
     <autotools id="gssdp" autogen-sh="configure">
         <branch repo="gnome.org" module="gssdp/0.14/gssdp-0.14.2.tar.xz" version="0.14.2">
         <patch file="gssdp/0001-WIP-Android-make-it-build.-Should-properly-implement.patch" strip="1" />
+        <patch file="gssdp/0002-Port-get_host_ip-to-Android-Bionic-pass-1.patch" strip="1" />
+        <patch file="gssdp/0003-Port-get_host_ip-to-Android-Bionic-pass-2.patch" strip="1" />
         </branch>
         <dependencies>
             <dep package="libsoup"/>
