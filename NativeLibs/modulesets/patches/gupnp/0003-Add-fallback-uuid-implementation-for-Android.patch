@@ -1,0 +1,50 @@
+From b208c3fd202485035bb3ff4da7214166a967ea86 Mon Sep 17 00:00:00 2001
+From: "Reynaldo H. Verdejo Pinochet" <reynaldo@collabora.com>
+Date: Wed, 22 May 2013 22:13:40 -0400
+Subject: [PATCH 3/3] Add fallback uuid implementation for Android
+
+Android lacks a libuuid implementation. This change
+adds a simple UUID v4 generator fallback as described
+by http://www.ietf.org/rfc/rfc4122.txt
+---
+ libgupnp/gupnp-service.c |   23 ++++++++++++++++++++---
+ 1 file changed, 20 insertions(+), 3 deletions(-)
+
+diff --git a/libgupnp/gupnp-service.c b/libgupnp/gupnp-service.c
+index 7436ea2..00446b2 100644
+--- a/libgupnp/gupnp-service.c
++++ b/libgupnp/gupnp-service.c
+@@ -1099,10 +1099,27 @@ generate_sid (void)
+ 
+         return ret;
+ #elif __BIONIC__
+-        char *ret = NULL;
+ 
+-        /* FIXME: Implement this */
+-        ret = g_strdup_printf ("uuid:thisisatemporaryplaceholderforarealone");
++        /**
++         * Basic implementation of an UUIDv4 generator
++         * using a PRNG as described by:
++         * http://www.ietf.org/rfc/rfc4122.txt
++         */
++
++        GRand *rand;
++        char *ret = g_malloc (5 + 37);
++
++        rand = g_rand_new();
++
++        sprintf (uuid_str,"uuid:%08x-%04x-%04x-%04x-%08x%04x",
++                g_rand_int (rand) & 0xffffffff,
++                g_rand_int (rand) & 0xffff,
++                (g_rand_int (rand) & 0x0fff) | 0x4 << 12, /* Version field */
++                (g_rand_int (rand) & 0x3fff) | 0x8 << 12, /* 10 on the MSB */
++                g_rand_int (rand) & 0xffffffff,
++                g_rand_int rand() & 0xffff);
++
++        g_rand_free (rand);
+ 
+         return ret;
+ #else
+-- 
+1.7.10.4
+

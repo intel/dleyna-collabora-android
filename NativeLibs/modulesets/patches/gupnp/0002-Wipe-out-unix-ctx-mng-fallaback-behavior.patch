@@ -1,0 +1,111 @@
+From 2a1d698e3b4357bb74a675c1078c9913900bdcd3 Mon Sep 17 00:00:00 2001
+From: "Reynaldo H. Verdejo Pinochet" <reynaldo@collabora.com>
+Date: Wed, 15 May 2013 10:14:17 -0400
+Subject: [PATCH 2/3] Wipe out unix ctx mng fallaback behavior
+
+---
+ libgupnp/Makefile.am             |   33 +++++++++++++++------------------
+ libgupnp/gupnp-context-manager.c |   20 ++++++++++----------
+ 2 files changed, 25 insertions(+), 28 deletions(-)
+
+diff --git a/libgupnp/Makefile.am b/libgupnp/Makefile.am
+index 2843d68..fc329aa 100644
+--- a/libgupnp/Makefile.am
++++ b/libgupnp/Makefile.am
+@@ -1,37 +1,34 @@
+ LTVERSION = 4:0:0
+ 
++NETLINK_CFLAGS =
++
+ if OS_WIN32
+ CONTEXT_MANAGER_IMPL = gupnp-windows-context-manager.c \
+-		       gupnp-windows-context-manager.h
++               gupnp-windows-context-manager.h
+ CONTEXT_MANAGER_CFLAGS =
+ CONTEXT_MANAGER_LIBS = -lws2_32 -liphlpapi
+ WIN32_LDFLAGS = -no-undefined
+ else
+-CONTEXT_MANAGER_IMPL = gupnp-unix-context-manager.c \
+-					   gupnp-unix-context-manager.h
++if USE_NETLINK
++CONTEXT_MANAGER_IMPL = gupnp-linux-context-manager.c \
++                       gupnp-linux-context-manager.h
++NETLINK_CFLAGS += -DUSE_NETLINK
++else
+ if USE_NETWORK_MANAGER
+-CONTEXT_MANAGER_IMPL += gupnp-network-manager.c  \
+-		        gupnp-network-manager.h
++CONTEXT_MANAGER_IMPL = gupnp-network-manager.c  \
++                gupnp-network-manager.h
+ CONTEXT_MANAGER_CFLAGS = -DUSE_NETWORK_MANAGER
+ else
+ if USE_CONNMAN
+-CONTEXT_MANAGER_IMPL += gupnp-connman-manager.c  \
+-			gupnp-connman-manager.h
++CONTEXT_MANAGER_IMPL = gupnp-connman-manager.c  \
++                       gupnp-connman-manager.h
+ CONTEXT_MANAGER_CFLAGS = -DUSE_CONNMAN
++else
++CONTEXT_MANAGER_IMPL = gupnp-unix-context-manager.c \
++                       gupnp-unix-context-manager.h
+ endif
+ endif
+ endif
+-
+-if HAVE_NETLINK
+-CONTEXT_MANAGER_IMPL += \
+-	gupnp-linux-context-manager.c \
+-	gupnp-linux-context-manager.h
+-endif
+-
+-if USE_NETLINK
+-NETLINK_CFLAGS = -DUSE_NETLINK
+-else
+-NETLINK_CFLAGS =
+ endif
+ 
+ AM_CFLAGS = $(LIBGUPNP_CFLAGS) \
+diff --git a/libgupnp/gupnp-context-manager.c b/libgupnp/gupnp-context-manager.c
+index 709f6d5..5f9c6a4 100644
+--- a/libgupnp/gupnp-context-manager.c
++++ b/libgupnp/gupnp-context-manager.c
+@@ -43,7 +43,7 @@
+ #include "gupnp.h"
+ #include "gupnp-marshal.h"
+ 
+-#include "gupnp-unix-context-manager.h"
++//#include "gupnp-unix-context-manager.h"
+ 
+ G_DEFINE_ABSTRACT_TYPE (GUPnPContextManager,
+                         gupnp_context_manager,
+@@ -354,18 +354,18 @@ gupnp_context_manager_create (guint port)
+ 
+        if (gupnp_connman_manager_is_available ())
+                 impl_type = GUPNP_TYPE_CONNMAN_MANAGER;
+-#endif
+-
+-        if (impl_type == G_TYPE_INVALID)
+-            /* Either user requested us to use the Linux CM explicitly or we
+-             * are using one of the DBus managers but it's not available, so we
+-             * fall-back to it. */
+-#if defined (USE_NETLINK) || defined (HAVE_LINUX_RTNETLINK_H)
+-                impl_type = GUPNP_TYPE_LINUX_CONTEXT_MANAGER;
++#elif defined (USE_NETLINK) || defined (HAVE_LINUX_RTNETLINK_H)
++#include "gupnp-linux-context-manager.h"
++        impl_type = GUPNP_TYPE_LINUX_CONTEXT_MANAGER;
+ #else
+-                impl_type = GUPNP_TYPE_UNIX_CONTEXT_MANAGER;
++#include "gupnp-unix-context-manager.h"
++        impl_type = GUPNP_TYPE_UNIX_CONTEXT_MANAGER;
+ #endif
+ #endif /* G_OS_WIN32 */
++
++        if (impl_type == G_TYPE_INVALID)
++                return NULL;
++
+         impl = g_object_new (impl_type,
+                              "port", port,
+                              NULL);
+-- 
+1.7.10.4
+
