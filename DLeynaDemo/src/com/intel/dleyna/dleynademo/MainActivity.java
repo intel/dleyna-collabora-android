@@ -21,6 +21,7 @@
 
 package com.intel.dleyna.dleynademo;
 
+import com.intel.dleyna.RendererCallbackInterface;
 import com.intel.dleyna.RendererInterface;
 import com.intel.dleyna.RendererService;
 
@@ -31,6 +32,7 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.os.RemoteException;
 import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
 import android.view.Menu;
@@ -54,7 +56,7 @@ public class MainActivity extends Activity {
     private TextView ttyTextView;
     private Button clearButton;
 
-    /** The binder handle to Renderer service. */
+    /** The Binder interface to the Renderer service. */
     private RendererInterface rendererService;
 
     public void onCreate(Bundle savedInstanceState) {
@@ -130,6 +132,11 @@ public class MainActivity extends Activity {
         public void onServiceConnected(ComponentName className, IBinder b) {
             if (App.LOG) Log.i(TAG, "MainActivity: onServiceConnected");
             rendererService = RendererInterface.Stub.asInterface(b);
+            try {
+                rendererService.registerCallback(rendererCallback);
+            } catch (RemoteException e) {
+                 e.printStackTrace();
+            }
         }
 
         public void onServiceDisconnected(ComponentName arg0) {
@@ -137,6 +144,14 @@ public class MainActivity extends Activity {
             rendererService = null;
         }
     };
+
+    /**
+     * Callbacks from the Renderer service via Binder are handled here.
+     */
+    private final RendererCallbackInterface rendererCallback =
+            new RendererCallbackInterface.Stub() {
+    };
+
 
     private void setEnabledStateOfWidgets(boolean enabled) {
         clearButton.setEnabled(enabled);

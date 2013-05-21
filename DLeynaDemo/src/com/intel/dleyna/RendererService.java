@@ -24,6 +24,10 @@ package com.intel.dleyna;
 import android.app.Service;
 import android.content.Intent;
 import android.os.IBinder;
+import android.os.RemoteCallbackList;
+import android.util.Log;
+
+import com.intel.dleyna.dleynademo.App;
 
 public class RendererService extends Service {
 
@@ -34,6 +38,26 @@ public class RendererService extends Service {
 
     private final IBinder binder = new RendererInterface.Stub() {
 
+        private RemoteCallbackList<RendererCallbackInterface> callbacks =
+                new RemoteCallbackList<RendererCallbackInterface>();
+
+        public void registerCallback(RendererCallbackInterface cb) {
+            if (App.LOG) Log.i(App.TAG, "RendererService: registerCallback");
+            callbacks.register(cb);
+        }
+
+//      How to broadcast callbacks:
+//      {
+//          int n = callbacks.beginBroadcast();
+//          for (int i = 0; i < n; i++) {
+//              try {
+//                  callbacks.getBroadcastItem(i).aMethod();
+//              } catch (RemoteException e) {
+//                  // The RemoteCallbackList removes dead objects.
+//              }
+//          }
+//          callbacks.finishBroadcast();
+//      }
     };
 
     public IBinder onBind(Intent intent) {
