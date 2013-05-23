@@ -86,6 +86,22 @@
         </dependencies>
     </autotools>
 
+    <!-- gupnp -->
+
+    <autotools id="gupnp" autogen-sh="autoreconf" autogenargs="--with-context-manager=linux">
+        <branch repo="gnome.org" module="gupnp/0.20/gupnp-0.20.2.tar.xz" version="0.20.2">
+        <patch file="gupnp/0001-Preliminary-make-it-build-Android-port.patch" strip="1" />
+        <patch file="gupnp/0002-Wipe-out-unix-ctx-mng-fallaback-behavior.patch" strip="1" />
+        <patch file="gupnp/0003-Add-fallback-uuid-implementation-for-Android.patch" strip="1" />
+        </branch>
+        <dependencies>
+            <dep package="gssdp"/>
+            <dep package="libsoup"/>
+            <dep package="libxml2"/>
+        </dependencies>
+    </autotools>
+
+
     <!-- dleyna -->
 
     <autotools id="dleyna-core" autogen-sh="bootstrap-configure">
