@@ -112,6 +112,16 @@
         </dependencies>
     </autotools>
 
+    <!-- gupnp-dlna -->
+
+    <autotools id="gupnp-dlna" autogen-sh="autoreconf">
+        <branch repo="gnome.org" module="gupnp-dlna/0.10/gupnp-dlna-0.10.1.tar.xz" version="0.10.1">
+        </branch>
+        <dependencies>
+            <dep package="gupnp"/>
+            <dep package="libxml2"/>
+        </dependencies>
+    </autotools>
 
     <!-- dleyna -->
 
