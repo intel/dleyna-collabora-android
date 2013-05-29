@@ -33,17 +33,17 @@ JNIEXPORT jlong JNICALL Java_com_intel_dleyna_GVariantType_newBasicNative(
 
     type[0] = (char)basicType;
     type[1] = '\0';
-    return (jlong)g_variant_type_new(type);
+    return PTR_TO_JLONG(g_variant_type_new(type));
 }
 
 JNIEXPORT jlong JNICALL Java_com_intel_dleyna_GVariantType_newArrayNative(
     JNIEnv* env, jclass clazz, jlong elementType)
 {
-    return (jlong)g_variant_type_new_array((const GVariantType*)elementType);
+    return PTR_TO_JLONG(g_variant_type_new_array(JLONG_TO_PTR(elementType)));
 }
 
 JNIEXPORT void JNICALL Java_com_intel_dleyna_GVariantType_free(
     JNIEnv* env, jclass clazz, jlong type)
 {
-    g_variant_type_free((GVariantType*)type);
+    g_variant_type_free(JLONG_TO_PTR(type));
 }
