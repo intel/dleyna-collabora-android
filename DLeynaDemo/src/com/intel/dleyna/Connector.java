@@ -42,7 +42,8 @@ package com.intel.dleyna;
  * {@link #returnError(long, int)},
  * {@link #notify(long, String, String, String, Object, int)}
  * <p>
- * The exception is {@link #disconnect()} which will be called on the main thread
+ * The exceptions are {@link #disconnect()} and {@link #shutdown()}
+ * which will be called, in that order, on the main thread,
  * just after the main loop exits.
  * <p>
  * Some of the functions of this interface supply us with callbacks.
@@ -67,7 +68,8 @@ public interface Connector {
     public boolean initialize(String serverInfo, String rootInfo, int errorQuark, long userData);
 
     /**
-     * Called after the main loop exits, on the main thread.
+     * Called after the main loop exits, and after {@link #disconnect()} has been called,
+     * on the main thread.
      * Clean up.
      */
     public void shutdown();

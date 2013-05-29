@@ -97,6 +97,8 @@ LOCAL_C_INCLUDES := \
 LOCAL_SRC_FILES := \
     dleyna-jni.c \
     connector.c \
+    gvariant.c \
+    gvarianttype.c \
 
 LOCAL_LDLIBS := -llog -landroid -lz
 LOCAL_STATIC_LIBRARIES := libsoup libxml2 gthread gio gobject gmodule glib iconv libintl ffi

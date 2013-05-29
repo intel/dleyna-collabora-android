@@ -22,7 +22,13 @@
 #ifndef DLEYNA_JNI_H__
 #define DLEYNA_JNI_H__
 
+#include <stdint.h>
+
 #include <android/log.h>
+
+/*
+ * Android logging macros.
+ */
 
 #define TAG "DLeynaDemo"
 
@@ -37,5 +43,17 @@
 
 #define LOGE(format, ...) \
     __android_log_print(ANDROID_LOG_ERROR, TAG, format, ##__VA_ARGS__);
+
+/*
+ * Macros for casting between pointers and jlong.
+ * Native C pointers are represented in Java code as a long (64 bits) since
+ * you don't know a priori whether pointers are 32 or 64 bits in the Java VM.
+ * Casting between pointers and jlong generates compile-time warnings in the
+ * case where pointers are 32 bits. Doing an intermediate cast to size_t avoids
+ * the warnings.
+ */
+
+#define PTR_TO_JLONG(ptr) ((jlong)(size_t)(ptr))
+#define JLONG_TO_PTR(jlg) ((void*)(size_t)(jlg))
 
 #endif /* DLEYNA_JNI_H__ */
