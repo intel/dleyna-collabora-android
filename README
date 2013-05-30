@@ -97,7 +97,32 @@ entry point:
         ...
         $(MY_LIBSOUP)/tests/socket-test.c \
 
-5) Modify TestNativeLibs/src/com/intel/dleyna/testnativelibs/Tests.java to add
+Also, add a proper defintion for your static library module at the begining of the file. Like:
+
+    # <modulename>
+        include $(CLEAR_VARS)
+        LOCAL_MODULE := <modulename> 
+        LOCAL_SRC_FILES := ../../NativeLibs/install-$(TARGET_ARCH_ABI)-$(TARGET_PLATFORM)/lib/...
+        include $(PREBUILT_STATIC_LIBRARY)
+
+Use the ones already there as a basis and adapt it as needed
+
+5) Still on TestNativeLibs/jni/Android.mk. Locate the module definition for dleyna_jni
+and add your library and library tests include paths to LOCAL_C_INCLUDES as:
+
+    ../../NativeLibs/install-$(TARGET_ARCH_ABI)-$(TARGET_PLATFORM)/include/<library_headers_dir> \
+    ../../NativeLibs/install-$(TARGET_ARCH_ABI)-$(TARGET_PLATFORM)/include/<library_headers_dir>/... \
+    ../../NativeLibs/sources-$(TARGET_ARCH_ABI)-$(TARGET_PLATFORM)/$(MY_<MODULENAME>) \
+    ../../NativeLibs/sources-$(TARGET_ARCH_ABI)-$(TARGET_PLATFORM)/$(MY_<MODULENAME>)/tests
+
+The example above relies on you declaring a MY_<MODULENAME> var at the begining of the dleyna-jni
+module declaration so you can use it latter and avoid having to repeatedly enter your library tests and
+library's top level includes directory. Again, use the already present entries as a model. 
+
+Last modification you need to perform to this file is to add your <modulename> to the
+LOCAL_STATIC_LIBRARIES list at the end of the deleyna-jni module section.
+
+6) Modify TestNativeLibs/src/com/intel/dleyna/testnativelibs/Tests.java to add
 the new unit test:
 
     public static native void soupSocketTest();
@@ -106,7 +131,7 @@ the new unit test:
         public void exec() { soupSocketTest(); }
     }),
 
-6) If the new unit test requires any resources on the device, add them to
+7) If the new unit test requires any resources on the device, add them to
 TestNativeLibs/ResourceFiles and run InstallResourceFiles as described above.
 
 Dleyna Demo App
