@@ -119,7 +119,7 @@ LOCAL_C_INCLUDES as:
 
 The example above relies on you declaring a MY_<MODULENAME> var at the begining
 of the dleyna-jni module declaration so you can use it later and avoid having to
-repeatedly enter your library tests and library's top level includes directory.
+repeatedly enter your library tests and library's top level include directory.
 Again, use the already present entries as a model.
 
 Last modification you need to perform to this file is to add your <modulename> to
