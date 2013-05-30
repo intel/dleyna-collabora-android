@@ -173,6 +173,11 @@ public class Tests {
     public static native void soupTimeoutTest();
     public static native void soupTldTest();
     public static native void soupUriParsing();
+
+    // gssdp
+    public static native void gssdpBrowserTest();
+    public static native void gssdpPublishTest();
+
     /**
      * Enumeration of the various test programs.
      */
@@ -593,6 +598,15 @@ public class Tests {
         }),
         SOUP_URI_PARSING("", new Impl() {
             public void exec() { soupUriParsing(); }
+        }),
+
+        // gssdp
+
+        GSSDP_BROWSER_TEST("", new Impl() {
+            public void exec() { gssdpBrowserTest(); }
+        }),
+        GSSDP_PUBLISH_TEST("", new Impl() {
+            public void exec() { gssdpPublishTest(); }
         });
 
         /** Short description of the test. */

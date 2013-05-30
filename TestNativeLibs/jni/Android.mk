@@ -81,10 +81,17 @@ LOCAL_MODULE := libxml2
 LOCAL_SRC_FILES := ../../NativeLibs/install-$(TARGET_ARCH_ABI)-$(TARGET_PLATFORM)/lib/libxml2.a
 include $(PREBUILT_STATIC_LIBRARY)
 
+# gssdp
+include $(CLEAR_VARS)
+LOCAL_MODULE := gssdp
+LOCAL_SRC_FILES := ../../NativeLibs/install-$(TARGET_ARCH_ABI)-$(TARGET_PLATFORM)/lib/libgssdp-1.0.a
+include $(PREBUILT_STATIC_LIBRARY)
+
 # dleyna-jni
 include $(CLEAR_VARS)
 MY_GLIB := glib-2.34.3
 MY_LIBSOUP := libsoup-2.40.3
+MY_GSSDP := gssdp-0.14.2
 LOCAL_MODULE := dleyna-jni
 
 LOCAL_C_INCLUDES := \
@@ -103,6 +110,11 @@ LOCAL_C_INCLUDES := \
     ../../NativeLibs/install-$(TARGET_ARCH_ABI)-$(TARGET_PLATFORM)/include/libsoup-2.4/libsoup \
     ../../NativeLibs/sources-$(TARGET_ARCH_ABI)-$(TARGET_PLATFORM)/$(MY_LIBSOUP) \
     ../../NativeLibs/sources-$(TARGET_ARCH_ABI)-$(TARGET_PLATFORM)/$(MY_LIBSOUP)/tests \
+\
+    ../../NativeLibs/install-$(TARGET_ARCH_ABI)-$(TARGET_PLATFORM)/include/gssdp-1.0 \
+    ../../NativeLibs/install-$(TARGET_ARCH_ABI)-$(TARGET_PLATFORM)/include/gssdp-1.0/libgssdp \
+    ../../NativeLibs/sources-$(TARGET_ARCH_ABI)-$(TARGET_PLATFORM)/$(MY_GSSDP) \
+    ../../NativeLibs/sources-$(TARGET_ARCH_ABI)-$(TARGET_PLATFORM)/$(MY_GSSDP)/tests
 
 LOCAL_SRC_FILES := \
     dleyna-jni.c \
@@ -250,6 +262,9 @@ LOCAL_SRC_FILES := \
     $(MY_LIBSOUP)/tests/tld-test.c \
     $(MY_LIBSOUP)/tests/uri-parsing.c \
     $(MY_LIBSOUP)/tests/test-utils.c \
+\
+    $(MY_GSSDP)/tests/test-browser.c \
+    $(MY_GSSDP)/tests/test-publish.c
 
 # DOES NOT LINK
 #   $(MY_GLIB)/tests/module-test.c $(MY_GLIB)/tests/libmoduletestplugin_a.c $(MY_GLIB)/tests/libmoduletestplugin_b.c \
@@ -265,5 +280,5 @@ LOCAL_SRC_FILES := \
 
 LOCAL_CFLAGS += -DSRCDIR=\"/data/data/com.intel.dleyna.testnativelibs/files/SRCDIR\"
 LOCAL_LDLIBS := -llog -landroid -lz
-LOCAL_STATIC_LIBRARIES := libsoup libxml2 gthread gio gobject gmodule glib iconv libintl ffi
+LOCAL_STATIC_LIBRARIES := gssdp libsoup libxml2 gthread gio gobject gmodule glib iconv libintl ffi
 include $(BUILD_SHARED_LIBRARY)
