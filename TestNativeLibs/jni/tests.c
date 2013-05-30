@@ -187,3 +187,9 @@ DEFINE_TEST(soup_streaming_test, soupStreamingTest, "--debug")
 DEFINE_TEST(soup_timeout_test, soupTimeoutTest, "--debug")
 DEFINE_TEST(soup_tld_test, soupTldTest, "--debug")
 DEFINE_TEST(soup_uri_parsing, soupUriParsing, "--debug")
+
+// gssdp
+
+DEFINE_TEST(gssdp_browser_test, gssdpBrowserTest)
+DEFINE_TEST(gssdp_publish_test, gssdpPublishTest)
+
