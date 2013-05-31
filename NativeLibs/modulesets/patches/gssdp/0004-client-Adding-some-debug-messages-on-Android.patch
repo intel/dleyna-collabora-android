@@ -1,7 +1,7 @@
-From b05d31dd286a5872503facacf87b53460a72aae6 Mon Sep 17 00:00:00 2001
+From 333d4f650c24be9f614e883ec9d6aa819b403018 Mon Sep 17 00:00:00 2001
 From: "Reynaldo H. Verdejo Pinochet" <reynaldo@collabora.com>
 Date: Thu, 30 May 2013 17:27:46 -0400
-Subject: [PATCH] client: Adding some debug messages on Android
+Subject: [PATCH 4/4] client: Adding some debug messages on Android
 
 ---
  configure.ac            |   17 +++++++++++++++++
@@ -60,7 +60,7 @@ index f8d4dc2..c250f64 100644
  
  CLEANFILES = $(BUILT_SOURCES)
 diff --git a/libgssdp/gssdp-client.c b/libgssdp/gssdp-client.c
-index f91cadf..d81796d 100644
+index 26fbb07..71f5566 100644
 --- a/libgssdp/gssdp-client.c
 +++ b/libgssdp/gssdp-client.c
 @@ -76,6 +76,10 @@ typedef unsigned long in_addr_t;
@@ -74,16 +74,16 @@ index f91cadf..d81796d 100644
  /* Size of the buffer used for reading from the socket */
  #define BUF_SIZE 65536
  
-@@ -1258,6 +1262,8 @@ get_host_ip (GSSDPNetworkDevice *device)
-                 goto fail;
+@@ -1260,6 +1264,8 @@ get_host_ip (GSSDPNetworkDevice *device)
+         iface = g_malloc0 (sizeof (struct ifreq));
  
          if (device->iface_name != NULL) {
 +                __android_log_write(ANDROID_LOG_DEBUG, "gssdp",
 +                        "Got an interface name");
                  /* We have an actual interface request */
-                 iface = calloc (1, sizeof (struct ifreq));
                  strncpy (iface->ifr_name, device->iface_name, IFNAMSIZ);
-@@ -1279,6 +1285,8 @@ get_host_ip (GSSDPNetworkDevice *device)
+ 
+@@ -1283,6 +1289,8 @@ get_host_ip (GSSDPNetworkDevice *device)
  
          }
  
@@ -92,7 +92,7 @@ index f91cadf..d81796d 100644
          /* No interface name was passed on as query. Need
           * to figure out address of the first active/configured
           * device and pass that over
-@@ -1311,6 +1319,8 @@ get_host_ip (GSSDPNetworkDevice *device)
+@@ -1315,6 +1323,8 @@ get_host_ip (GSSDPNetworkDevice *device)
  
          } while (!got_all);
  
