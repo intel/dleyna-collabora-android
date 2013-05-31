@@ -1,18 +1,18 @@
-From f8eaad102474cf0a824c689e950d9d5040600996 Mon Sep 17 00:00:00 2001
+From 54db1663fa8270792d3e5285b74a64c96e631238 Mon Sep 17 00:00:00 2001
 From: "Reynaldo H. Verdejo Pinochet" <reynaldo@collabora.com>
 Date: Tue, 7 May 2013 23:00:55 -0400
-Subject: [PATCH 3/3] Port get_host_ip() to Android/Bionic [pass 2]
+Subject: [PATCH 3/4] Port get_host_ip() to Android/Bionic [pass 2]
 
 Add multiple device enumeration/config getter code
 ---
- libgssdp/gssdp-client.c |   69 +++++++++++++++++++++++++++++++++++++++++------
- 1 file changed, 61 insertions(+), 8 deletions(-)
+ libgssdp/gssdp-client.c |   88 ++++++++++++++++++++++++++++++++++++++++-------
+ 1 file changed, 76 insertions(+), 12 deletions(-)
 
 diff --git a/libgssdp/gssdp-client.c b/libgssdp/gssdp-client.c
-index e8fb77b..f91cadf 100644
+index e8fb77b..63190c4 100644
 --- a/libgssdp/gssdp-client.c
 +++ b/libgssdp/gssdp-client.c
-@@ -1248,12 +1248,14 @@ get_host_ip (GSSDPNetworkDevice *device)
+@@ -1248,16 +1248,19 @@ get_host_ip (GSSDPNetworkDevice *device)
  
          return TRUE;
  #elif __BIONIC__
@@ -28,16 +28,34 @@ index e8fb77b..f91cadf 100644
          if ((sock = socket (AF_INET, SOCK_STREAM, 0)) < 0)
 -                return FALSE;
 +                goto fail;
++
++        iface = g_malloc0 (sizeof (struct ifreq));
  
          if (device->iface_name != NULL) {
                  /* We have an actual interface request */
-@@ -1275,20 +1277,71 @@ get_host_ip (GSSDPNetworkDevice *device)
+-                iface = calloc (1, sizeof (struct ifreq));
+                 strncpy (iface->ifr_name, device->iface_name, IFNAMSIZ);
  
-                 goto cleanup;
+                 if (ioctl (sock, SIOCGIFADDR, iface) == -1)
+@@ -1268,27 +1271,88 @@ get_host_ip (GSSDPNetworkDevice *device)
+ 
+                 /* FIXME: is IPv4 all we need?
+                  * Should also check buffer size against INET_ADDRSTRLEN */
++
++                device->host_ip = g_malloc0 (INET_ADDRSTRLEN);
+                 if (inet_ntop (AF_INET, &device->mask.sin_addr, device->host_ip,
+                         INET_ADDRSTRLEN) == NULL) {
++                        g_free (device->host_ip);
++                        device->host_ip = NULL;
+                         goto cleanup_and_fail;
+                 }
+ 
+-                goto cleanup;
++                goto success;
++
++        }
  
 -        } else {
-+        }
-+
          /* No interface name was passed on as query. Need
           * to figure out address of the first active/configured
           * device and pass that over
@@ -50,7 +68,7 @@ index e8fb77b..f91cadf 100644
 +        if_limit = 5; /* We probe for 5 ifaces for starters */
 +
 +        do {
-+                realloc (iface, if_limit * sizeof (struct ifreq));
++                iface = g_realloc (iface, if_limit * sizeof (struct ifreq));
 +                ifconfigs.ifc_len = if_limit;
 +                ifconfigs.ifc_buf = (char *) iface;
 +
@@ -76,34 +94,42 @@ index e8fb77b..f91cadf 100644
 +
 +        for (i = 0; i < ifconfigs.ifc_len; i++) {
 +
-+                address = &(iface[i].ifr_addr);
++                address = (struct sockaddr_in *) &(iface[i].ifr_addr);
 +
 +                if (address->sin_addr.s_addr) {
 +
 +                        memcpy (&device->mask, address,
 +                                sizeof (struct sockaddr_in));
++                        device->iface_name = g_strdup (iface[i].ifr_name);
 +
 +                        /* Again, only IPv4 */
++                        device->host_ip = g_malloc0 (INET_ADDRSTRLEN);
 +                        if (inet_ntop (AF_INET, &device->mask.sin_addr,
 +                                device->host_ip, INET_ADDRSTRLEN) == NULL) {
++                                g_free (device->iface_name);
++                                device->iface_name = NULL;
++                                g_free (device->host_ip);
++                                device->host_ip = NULL;
 +                                goto cleanup_and_fail;
 +                        }
 +
-+                        goto cleanup;
++                        goto success;
 +
 +                }
          }
  
-+cleanup_and_fail:
-+        free (iface);
-+fail: /* Maybe print meaningfull message or smth? */
-+        return FALSE;
- cleanup:
-         free (iface);
-         return TRUE;
+-cleanup:
+-        free (iface);
+-        return TRUE;
 -cleanup_and_fail: /* Maybe print meaningfull message or smth? */
 -        free (iface);
--        return FALSE;
++cleanup_and_fail:
++        g_free (iface);
++fail:
+         return FALSE;
++success:
++        g_free (iface);
++        return TRUE;
  #else
          struct ifaddrs *ifa_list, *ifa;
          GList *up_ifaces, *ifaceptr;
