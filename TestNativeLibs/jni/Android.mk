@@ -280,5 +280,5 @@ LOCAL_SRC_FILES := \
 
 LOCAL_CFLAGS += -DSRCDIR=\"/data/data/com.intel.dleyna.testnativelibs/files/SRCDIR\"
 LOCAL_LDLIBS := -llog -landroid -lz
-LOCAL_STATIC_LIBRARIES := libsoup libxml2 gthread gio gobject gmodule glib iconv libintl ffi gssdp
+LOCAL_STATIC_LIBRARIES := gssdp libsoup libxml2 gthread gio gobject gmodule glib iconv libintl ffi
 include $(BUILD_SHARED_LIBRARY)
