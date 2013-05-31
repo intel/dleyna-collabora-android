@@ -1,4 +1,4 @@
-From 333d4f650c24be9f614e883ec9d6aa819b403018 Mon Sep 17 00:00:00 2001
+From 4000e4e817dc4853a835b0862d9dbb915d4e34be Mon Sep 17 00:00:00 2001
 From: "Reynaldo H. Verdejo Pinochet" <reynaldo@collabora.com>
 Date: Thu, 30 May 2013 17:27:46 -0400
 Subject: [PATCH 4/4] client: Adding some debug messages on Android
@@ -60,7 +60,7 @@ index f8d4dc2..c250f64 100644
  
  CLEANFILES = $(BUILT_SOURCES)
 diff --git a/libgssdp/gssdp-client.c b/libgssdp/gssdp-client.c
-index 26fbb07..71f5566 100644
+index 63190c4..1568a5f 100644
 --- a/libgssdp/gssdp-client.c
 +++ b/libgssdp/gssdp-client.c
 @@ -76,6 +76,10 @@ typedef unsigned long in_addr_t;
@@ -83,7 +83,7 @@ index 26fbb07..71f5566 100644
                  /* We have an actual interface request */
                  strncpy (iface->ifr_name, device->iface_name, IFNAMSIZ);
  
-@@ -1283,6 +1289,8 @@ get_host_ip (GSSDPNetworkDevice *device)
+@@ -1284,6 +1290,8 @@ get_host_ip (GSSDPNetworkDevice *device)
  
          }
  
@@ -92,7 +92,7 @@ index 26fbb07..71f5566 100644
          /* No interface name was passed on as query. Need
           * to figure out address of the first active/configured
           * device and pass that over
-@@ -1315,6 +1323,8 @@ get_host_ip (GSSDPNetworkDevice *device)
+@@ -1316,6 +1324,8 @@ get_host_ip (GSSDPNetworkDevice *device)
  
          } while (!got_all);
  

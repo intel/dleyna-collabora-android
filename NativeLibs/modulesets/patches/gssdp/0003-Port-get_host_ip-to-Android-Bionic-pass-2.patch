@@ -1,15 +1,15 @@
-From 8246deb2537f74b94c33ba9d740104597b22e155 Mon Sep 17 00:00:00 2001
+From 54db1663fa8270792d3e5285b74a64c96e631238 Mon Sep 17 00:00:00 2001
 From: "Reynaldo H. Verdejo Pinochet" <reynaldo@collabora.com>
 Date: Tue, 7 May 2013 23:00:55 -0400
 Subject: [PATCH 3/4] Port get_host_ip() to Android/Bionic [pass 2]
 
 Add multiple device enumeration/config getter code
 ---
- libgssdp/gssdp-client.c |   85 ++++++++++++++++++++++++++++++++++++++++-------
- 1 file changed, 73 insertions(+), 12 deletions(-)
+ libgssdp/gssdp-client.c |   88 ++++++++++++++++++++++++++++++++++++++++-------
+ 1 file changed, 76 insertions(+), 12 deletions(-)
 
 diff --git a/libgssdp/gssdp-client.c b/libgssdp/gssdp-client.c
-index e8fb77b..26fbb07 100644
+index e8fb77b..63190c4 100644
 --- a/libgssdp/gssdp-client.c
 +++ b/libgssdp/gssdp-client.c
 @@ -1248,16 +1248,19 @@ get_host_ip (GSSDPNetworkDevice *device)
@@ -37,7 +37,7 @@ index e8fb77b..26fbb07 100644
                  strncpy (iface->ifr_name, device->iface_name, IFNAMSIZ);
  
                  if (ioctl (sock, SIOCGIFADDR, iface) == -1)
-@@ -1268,27 +1271,85 @@ get_host_ip (GSSDPNetworkDevice *device)
+@@ -1268,27 +1271,88 @@ get_host_ip (GSSDPNetworkDevice *device)
  
                  /* FIXME: is IPv4 all we need?
                   * Should also check buffer size against INET_ADDRSTRLEN */
@@ -46,6 +46,7 @@ index e8fb77b..26fbb07 100644
                  if (inet_ntop (AF_INET, &device->mask.sin_addr, device->host_ip,
                          INET_ADDRSTRLEN) == NULL) {
 +                        g_free (device->host_ip);
++                        device->host_ip = NULL;
                          goto cleanup_and_fail;
                  }
  
@@ -106,7 +107,9 @@ index e8fb77b..26fbb07 100644
 +                        if (inet_ntop (AF_INET, &device->mask.sin_addr,
 +                                device->host_ip, INET_ADDRSTRLEN) == NULL) {
 +                                g_free (device->iface_name);
++                                device->iface_name = NULL;
 +                                g_free (device->host_ip);
++                                device->host_ip = NULL;
 +                                goto cleanup_and_fail;
 +                        }
 +
