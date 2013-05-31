@@ -1,0 +1,21 @@
+#!/bin/sh
+
+DOCNAME=dleyna-lib-doc
+OUTDIR=/tmp
+SDKDIR=$HOME/android-sdk-linux
+
+rm -rf $OUTDIR/$DOCNAME
+mkdir $OUTDIR/$DOCNAME
+rm -f $OUTDIR/$DOCNAME.tgz
+
+# The -linkoffline argument doesn't seem to work as expected
+
+javadoc \
+    -d $OUTDIR/$DOCNAME \
+    -sourcepath src \
+    -noqualifier java.lang:java.util:android.os:android.app \
+    -linkoffline http://developer.android.com/reference $SDKDIR/docs/reference \
+    com.intel.dleyna.lib
+
+cd $OUTDIR
+tar czf $DOCNAME.tgz $DOCNAME
