@@ -178,6 +178,13 @@ public class Tests {
     public static native void gssdpBrowserTest();
     public static native void gssdpPublishTest();
 
+    // gupnp
+    public static native void gupnpBrowsingTest();
+    public static native void gupnpIntrospectionTest();
+    public static native void gupnpProxyTest();
+    public static native void gupnpServerTest();
+
+
     /**
      * Enumeration of the various test programs.
      */
@@ -607,6 +614,21 @@ public class Tests {
         }),
         GSSDP_PUBLISH_TEST("", new Impl() {
             public void exec() { gssdpPublishTest(); }
+        }),
+
+        // gupnp
+
+        GUPNP_BROWSING_TEST("", new Impl() {
+            public void exec() { gupnpBrowsingTest(); }
+        }),
+        GUPNP_INTROSPECTION_TEST("", new Impl() {
+            public void exec() { gupnpIntrospectionTest(); }
+        }),
+        GUPNP_PROXY_TEST("", new Impl() {
+            public void exec() { gupnpProxyTest(); }
+        }),
+        GUPNP_SERVER_TEST("", new Impl() {
+            public void exec() { gupnpServerTest(); }
         });
 
         /** Short description of the test. */

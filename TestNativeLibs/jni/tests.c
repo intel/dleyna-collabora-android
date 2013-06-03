@@ -193,3 +193,9 @@ DEFINE_TEST(soup_uri_parsing, soupUriParsing, "--debug")
 DEFINE_TEST(gssdp_browser_test, gssdpBrowserTest)
 DEFINE_TEST(gssdp_publish_test, gssdpPublishTest)
 
+// gunpnp
+
+DEFINE_TEST(gupnp_browsing_test, gupnpBrowsingTest)
+DEFINE_TEST(gupnp_introspection_test, gupnpIntrospectionTest)
+DEFINE_TEST(gupnp_proxy_test, gupnpProxyTest)
+DEFINE_TEST(gupnp_server_test, gupnpServerTest)
