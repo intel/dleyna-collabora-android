@@ -23,6 +23,11 @@
 #include <gio/gio.h>
 #include <stdlib.h>
 
+#ifdef __BIONIC__
+#include <android/log.h>
+#define LOG_TAG "gssdp-tests-browser"
+#endif
+
 static void
 resource_available_cb (GSSDPResourceBrowser *resource_browser,
                        const char           *usn,
@@ -33,9 +38,20 @@ resource_available_cb (GSSDPResourceBrowser *resource_browser,
         g_print ("resource available\n"
                  "  USN:      %s\n",
                  usn);
+#ifdef __BIONIC__
+        __android_log_print (ANDROID_LOG_INFO, LOG_TAG, "resource available\n"
+                             "   USN:      %s\n", usn);
+#endif
         
-        for (l = locations; l; l = l->next)
+        for (l = locations; l; l = l->next) {
                 g_print ("  Location: %s\n", (char *) l->data);
+#ifdef __BIONIC__
+                __android_log_print (ANDROID_LOG_INFO, LOG_TAG,
+                                    "   Location: %s\n",
+                                     (char *) l->data);
+#endif
+
+        }
 }
 
 static void
@@ -45,6 +61,10 @@ resource_unavailable_cb (GSSDPResourceBrowser *resource_browser,
         g_print ("resource unavailable\n"
                  "  USN:      %s\n",
                  usn);
+#ifdef __BIONIC__
+        __android_log_print (ANDROID_LOG_INFO, LOG_TAG, "resource unavailable\n"
+                             "   USN:      %s\n", usn);
+#endif
 }
 
 int
@@ -68,6 +88,11 @@ gssdp_browser_test_main (int    argc,
         if (error) {
                 g_printerr ("Error creating the GSSDP client: %s\n",
                             error->message);
+#ifdef __BIONIC__
+                __android_log_print (ANDROID_LOG_WARN, LOG_TAG,
+                                     "Error creating the GSSDP client: %s\n",
+                                     error->message);
+#endif
 
                 g_error_free (error);
 
