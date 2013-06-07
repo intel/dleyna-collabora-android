@@ -23,6 +23,11 @@
 #include <gio/gio.h>
 #include <stdlib.h>
 
+#ifdef __BIONIC__
+#include <android/log.h>
+#define LOG_TAG "gssdp-tests-publish"
+#endif
+
 int
 gssdp_publish_test_main (int    argc,
       char **argv)
@@ -44,6 +49,11 @@ gssdp_publish_test_main (int    argc,
         if (error) {
                 g_printerr ("Error creating the GSSDP client: %s\n",
                             error->message);
+#ifdef __BIONIC__
+                __android_log_print (ANDROID_LOG_WARN, LOG_TAG,
+                                    "Error creating the GSSDP client: %s\n",
+                                    error->message);
+#endif
 
                 g_error_free (error);
 
