@@ -28,6 +28,14 @@
 #include <signal.h>
 #include <glib.h>
 
+#ifdef __BIONIC__
+#include <android/log.h>
+#define LOG_TAG "gupnp-tests-introspection"
+#define LOGI(...) __android_log_print(ANDROID_LOG_INFO, LOG_TAG, __VA_ARGS__)
+#define LOGW(...) __android_log_print(ANDROID_LOG_WARN, LOG_TAG, __VA_ARGS__)
+#define LOGE(...) __android_log_print(ANDROID_LOG_ERROR, LOG_TAG, __VA_ARGS__)
+#endif
+
 GMainLoop *main_loop;
 
 static gboolean async = FALSE;
@@ -50,6 +58,9 @@ print_action_arguments (GList *argument_list)
         GList *iter;
 
         g_print ("\targuments:\n");
+#ifdef __BIONIC__
+        LOGI ( "\targuments:");
+#endif
         for (iter = argument_list; iter; iter = iter->next) {
                 GUPnPServiceActionArgInfo *argument;
 
@@ -62,6 +73,14 @@ print_action_arguments (GList *argument_list)
                          (argument->direction ==
                           GUPNP_SERVICE_ACTION_ARG_DIRECTION_IN)? "in": "out",
                          argument->related_state_variable);
+#ifdef __BIONIC__
+                LOGI ("\t\tname: %s\n\t\tdirection: %s\n"
+                        "\t\trelated state variable: %s\n",
+                        argument->name,
+                        (argument->direction ==
+                        GUPNP_SERVICE_ACTION_ARG_DIRECTION_IN)? "in": "out",
+                        argument->related_state_variable);
+#endif
         }
 }
 
@@ -75,12 +94,18 @@ print_actions (GUPnPServiceIntrospection *introspection)
                 const GList *iter;
 
                 g_print ("actions:\n");
+#ifdef __BIONIC__
+                LOGI ("actions:");
+#endif
                 for (iter = action_list; iter; iter = iter->next) {
                         GUPnPServiceActionInfo *action_info;
 
                         action_info = (GUPnPServiceActionInfo *) iter->data;
 
                         g_print ("\tname: %s\n", action_info->name);
+#ifdef __BIONIC__
+                        LOGI ("\tname: %s", action_info->name);
+#endif
                         print_action_arguments (action_info->arguments);
                 }
                 g_print ("\n");
@@ -99,6 +124,9 @@ print_state_variables (GUPnPServiceIntrospection *introspection)
                 const GList *iter;
 
                 g_print ("state variables:\n");
+#ifdef __BIONIC__
+                LOGI ("state variables:");
+#endif
                 for (iter = variables; iter; iter = iter->next) {
                         GUPnPServiceStateVariableInfo *variable;
                         GValue default_value;
@@ -112,6 +140,12 @@ print_state_variables (GUPnPServiceIntrospection *introspection)
                                  variable->name,
                                  g_type_name (variable->type),
                                  variable->send_events? "yes": "no");
+#ifdef __BIONIC__
+                        LOGI ("\tname: %s\n\ttype: %s\n\tsend events: %s",
+                                variable->name,
+                                g_type_name (variable->type),
+                                variable->send_events? "yes": "no");
+#endif
 
                         memset (&default_value, 0, sizeof (GValue));
                         g_value_init (&default_value, G_TYPE_STRING);
@@ -121,6 +155,9 @@ print_state_variables (GUPnPServiceIntrospection *introspection)
                         if (default_value_str) {
                                 g_print ("\tdefault value: %s\n",
                                          default_value_str);
+#ifdef __BIONIC__
+                                LOGI ("\tdefault value: %s", default_value_str);
+#endif
                         }
                         g_value_unset (&default_value);
 
@@ -145,6 +182,13 @@ print_state_variables (GUPnPServiceIntrospection *introspection)
                                          g_value_get_string (&min),
                                          g_value_get_string (&max),
                                          g_value_get_string (&step));
+#ifdef __BIONIC__
+                                LOGI ("\tminimum: %s\n\tmaximum: %s\n"
+                                        "\tstep: %s",
+                                        g_value_get_string (&min),
+                                        g_value_get_string (&max),
+                                        g_value_get_string (&step));
+#endif
 
                                 g_value_unset (&min);
                                 g_value_unset (&max);
@@ -155,11 +199,18 @@ print_state_variables (GUPnPServiceIntrospection *introspection)
                                 GList *value_iter;
 
                                 g_print ("\tallowed values: ");
+#ifdef __BIONIC__
+                                LOGI ("\tallowed values: ");
+#endif
                                 for (value_iter = variable->allowed_values;
                                      value_iter;
                                      value_iter = value_iter->next) {
                                         g_print ("\"%s\" ",
                                                  (gchar *) value_iter->data);
+#ifdef __BIONIC__
+                                        LOGI ("\"%s\" ",
+                                                (gchar *) value_iter->data);
+#endif
                                 }
                         }
 
@@ -179,6 +230,11 @@ got_introspection (GUPnPServiceInfo          *info,
                 g_warning ("Failed to create introspection for '%s': %s",
                            gupnp_service_info_get_udn (info),
                            error->message);
+#ifdef __BIONIC__
+                LOGI ("Failed to create introspection for '%s': %s",
+                        gupnp_service_info_get_udn (info),
+                        error->message);
+#endif
 
                 return;
         }
@@ -186,6 +242,11 @@ got_introspection (GUPnPServiceInfo          *info,
         g_print ("service:  %s\nlocation: %s\n",
                 gupnp_service_info_get_udn (info),
                 gupnp_service_info_get_location (info));
+#ifdef __BIONIC__
+        LOGI ("service:  %s, location: %s",
+                gupnp_service_info_get_udn (info),
+                gupnp_service_info_get_location (info));
+#endif
         print_actions (introspection);
         print_state_variables (introspection);
         g_object_unref (introspection);
@@ -227,6 +288,9 @@ service_proxy_unavailable_cb (GUPnPControlPoint *cp,
         g_print ("Service unavailable:\n");
         g_print ("\ttype:     %s\n", type);
         g_print ("\tlocation: %s\n", location);
+#ifdef __BIONIC__
+        LOGI ("Service unavailable: type: %s, location: %s", type, location);
+#endif
 }
 
 int
@@ -265,6 +329,10 @@ gupnp_introspection_test_main (int argc, char **argv)
         if (error) {
                 g_printerr ("Error creating the GUPnP context: %s\n",
 			    error->message);
+#ifdef __BIONIC__
+                LOGW ("Error creating the GUPnP context: %s",
+			            error->message);
+#endif
                 g_error_free (error);
 
                 return EXIT_FAILURE;

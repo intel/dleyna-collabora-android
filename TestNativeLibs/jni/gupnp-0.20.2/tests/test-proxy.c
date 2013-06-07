@@ -26,6 +26,14 @@
 #include <signal.h>
 #include <glib.h>
 
+#ifdef __BIONIC__
+#include <android/log.h>
+#define LOG_TAG "gupnp-tests-proxy"
+#define LOGI(...) __android_log_print(ANDROID_LOG_INFO, LOG_TAG, __VA_ARGS__)
+#define LOGW(...) __android_log_print(ANDROID_LOG_WARN, LOG_TAG, __VA_ARGS__)
+#define LOGE(...) __android_log_print(ANDROID_LOG_ERROR, LOG_TAG, __VA_ARGS__)
+#endif
+
 GMainLoop *main_loop;
 
 static void
@@ -40,6 +48,9 @@ subscription_lost_cb (GUPnPServiceProxy *proxy,
                       gpointer           user_data)
 {
         g_print ("Lost subscription: %s\n", reason->message);
+#ifdef __BIONIC__
+        LOGI ("Lost subscription: %s\n", reason->message);
+#endif
 }
 
 static void
@@ -51,6 +62,11 @@ notify_cb (GUPnPServiceProxy *proxy,
         g_print ("Received a notification for variable '%s':\n", variable);
         g_print ("\tvalue:     %d\n", g_value_get_uint (value));
         g_print ("\tuser_data: %s\n", (const char *) user_data);
+#ifdef __BIONIC__
+        LOGI ("Received a notification for variable '%s':", variable);
+        LOGI ("\tvalue:     %d", g_value_get_uint (value));
+        LOGI ("\tuser_data: %s", (const char *) user_data);
+#endif
 }
 
 static void
@@ -66,6 +82,10 @@ service_proxy_available_cb (GUPnPControlPoint *cp,
 
         g_print ("ContentDirectory available:\n");
         g_print ("\tlocation: %s\n", location);
+#ifdef __BIONIC__
+        LOGI ("ContentDirectory available:");
+        LOGI ("\tlocation: %s", location);
+#endif
 
         /* We want to be notified whenever SystemUpdateID (of type uint)
          * changes */
@@ -121,6 +141,9 @@ service_proxy_available_cb (GUPnPControlPoint *cp,
 
         if (error) {
                 g_printerr ("Error: %s\n", error->message);
+#ifdef __BIONIC__
+                LOGW ("Error: %s\n", error->message);
+#endif
                 g_error_free (error);
 
                 return;
@@ -130,6 +153,12 @@ service_proxy_available_cb (GUPnPControlPoint *cp,
         g_print ("\tResult:         %s\n", result);
         g_print ("\tNumberReturned: %u\n", count);
         g_print ("\tTotalMatches:   %u\n", total);
+#ifdef __BIONIC__
+        LOGI ("Browse returned:");
+        LOGI ("\tResult:         %s", result);
+        LOGI ("\tNumberReturned: %u", count);
+        LOGI ("\tTotalMatches:   %u", total);
+#endif
 
         g_free (result);
 }
@@ -144,6 +173,10 @@ service_proxy_unavailable_cb (GUPnPControlPoint *cp,
 
         g_print ("ContentDirectory unavailable:\n");
         g_print ("\tlocation: %s\n", location);
+#ifdef __BIONIC__
+        LOGI ("ContentDirectory unavailable:");
+        LOGI ("\tlocation: %s", location);
+#endif
 }
 
 int
@@ -166,6 +199,9 @@ gupnp_proxy_test_main (int argc, char **argv)
         if (error) {
                 g_printerr ("Error creating the GUPnP context: %s\n",
 			    error->message);
+#ifdef __BIONIC__
+                LOGW ("Error creating the GUPnP context: %s", error->message);
+#endif
                 g_error_free (error);
 
                 return EXIT_FAILURE;
