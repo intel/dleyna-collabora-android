@@ -26,6 +26,14 @@
 #include <signal.h>
 #include <glib.h>
 
+#ifdef __BIONIC__
+#include <android/log.h>
+#define LOG_TAG "gupnp-tests-browsing"
+#define LOGI(...) __android_log_print(ANDROID_LOG_INFO, LOG_TAG, __VA_ARGS__)
+#define LOGW(...) __android_log_print(ANDROID_LOG_WARN, LOG_TAG, __VA_ARGS__)
+#define LOGE(...) __android_log_print(ANDROID_LOG_ERROR, LOG_TAG, __VA_ARGS__)
+#endif
+
 GMainLoop *main_loop;
 
 static void
@@ -46,6 +54,10 @@ device_proxy_available_cb (GUPnPControlPoint *cp,
         g_print ("Device available:\n");
         g_print ("\ttype:     %s\n", type);
         g_print ("\tlocation: %s\n", location);
+
+#ifdef __BIONIC__
+        LOGI ("Device available:\n\ttype: %s, location: %s", type, location);
+#endif
 }
 
 static void
@@ -60,6 +72,10 @@ device_proxy_unavailable_cb (GUPnPControlPoint *cp,
         g_print ("Device unavailable:\n");
         g_print ("\ttype:     %s\n", type);
         g_print ("\tlocation: %s\n", location);
+
+#ifdef __BIONIC__
+        LOGI ("Device unavailable: type: %s, location: %s", type, location);
+#endif
 }
 
 static void
@@ -74,6 +90,10 @@ service_proxy_available_cb (GUPnPControlPoint *cp,
         g_print ("Service available:\n");
         g_print ("\ttype:     %s\n", type);
         g_print ("\tlocation: %s\n", location);
+#ifdef __BIONIC__
+        LOGI ("Service available: type: %s, location: %s", type, location);
+#endif
+
 }
 
 static void
@@ -88,6 +108,10 @@ service_proxy_unavailable_cb (GUPnPControlPoint *cp,
         g_print ("Service unavailable:\n");
         g_print ("\ttype:     %s\n", type);
         g_print ("\tlocation: %s\n", location);
+#ifdef __BIONIC__
+        LOGI ("Service unavailable: type: %s, location: %s", type, location);
+#endif
+
 }
 
 int
@@ -110,6 +134,9 @@ gupnp_browsing_test_main (int argc, char **argv)
         if (error) {
                 g_printerr ("Error creating the GUPnP context: %s\n",
 			    error->message);
+#ifdef __BIONIC__
+        LOGW ("Error creating the GUPnP context: %s", error->message);
+#endif
                 g_error_free (error);
 
                 return EXIT_FAILURE;
