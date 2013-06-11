@@ -27,7 +27,7 @@ API_LEVEL=${API_LEVEL:-9}
 TOOLCHAIN_VERSION=${TOOLCHAIN_VERSION:-4.6}
 
 # Where the Android NDK lives.
-NDK_NAME=${NDK_NAME:-android-ndk-r8d}
+NDK_NAME=${NDK_NAME:-android-ndk-r8e}
 NDK_DIR=${NDK_DIR:-$HOME}/$NDK_NAME
 
 # Where the Android SDK lives.
