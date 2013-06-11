@@ -199,3 +199,10 @@ DEFINE_TEST(gupnp_browsing_test, gupnpBrowsingTest)
 DEFINE_TEST(gupnp_introspection_test, gupnpIntrospectionTest)
 DEFINE_TEST(gupnp_proxy_test, gupnpProxyTest)
 DEFINE_TEST(gupnp_server_test, gupnpServerTest)
+
+// gupnp-av
+
+DEFINE_TEST(gupnpav_list_parser_test, gupnpavListParserTest)
+DEFINE_TEST(gupnpav_check_search_test, gupnpavCheckSearchTest)
+DEFINE_TEST(gupnpav_fragments_test, gupnpavFragmentsTest)
+DEFINE_TEST(gupnpav_criteria_parser_test, gupnpavCriteriaParserTest)
