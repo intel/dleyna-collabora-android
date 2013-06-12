@@ -184,6 +184,11 @@ public class Tests {
     public static native void gupnpProxyTest();
     public static native void gupnpServerTest();
 
+    // gupnp-av
+    public static native void gupnpavListParserTest();
+    public static native void gupnpavCheckSearchTest();
+    public static native void gupnpavFragmentsTest();
+    public static native void gupnpavCriteriaParserTest();
 
     /**
      * Enumeration of the various test programs.
@@ -629,6 +634,21 @@ public class Tests {
         }),
         GUPNP_SERVER_TEST("", new Impl() {
             public void exec() { gupnpServerTest(); }
+        }),
+
+        // gupnp-av
+
+        GUPNPAV_LIST_PARSER_TEST("", new Impl() {
+            public void exec() { gupnpavListParserTest(); }
+        }),
+        GUPNPAV_CHECK_SEARCH_TEST("", new Impl() {
+            public void exec() { gupnpavCheckSearchTest(); }
+        }),
+        GUPNPAV_FRAGMENTS_TEST("", new Impl() {
+            public void exec() { gupnpavFragmentsTest(); }
+        }),
+        GUPNPAV_CRITERIA_PARSER_TEST("", new Impl() {
+            public void exec() { gupnpavCriteriaParserTest(); }
         });
 
         /** Short description of the test. */

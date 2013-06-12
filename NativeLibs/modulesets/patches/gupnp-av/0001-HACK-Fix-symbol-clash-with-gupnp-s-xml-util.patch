@@ -1,0 +1,351 @@
+From cd2088622a0e26dc9c04f84ce82a92ff7f4d7550 Mon Sep 17 00:00:00 2001
+From: "Reynaldo H. Verdejo Pinochet" <reynaldo@collabora.com>
+Date: Tue, 11 Jun 2013 12:46:52 -0400
+Subject: [PATCH] [HACK] Fix symbol clash with gupnp's xml-util
+
+This is a gupnpav-on-Android quick fix to allow bundling gupnp
+and gupnp-av into a single shared library. Currently this can't
+be done due to symbol name clashes between this library's and
+gupnp's xml-util.h
+---
+ libgupnp-av/gupnp-cds-last-change-parser.c |    2 +-
+ libgupnp-av/gupnp-didl-lite-container.c    |    4 ++--
+ libgupnp-av/gupnp-didl-lite-item.c         |    2 +-
+ libgupnp-av/gupnp-didl-lite-object.c       |   26 +++++++++++++-------------
+ libgupnp-av/gupnp-didl-lite-parser.c       |    4 ++--
+ libgupnp-av/gupnp-didl-lite-writer.c       |    2 +-
+ libgupnp-av/gupnp-feature-list-parser.c    |    2 +-
+ libgupnp-av/gupnp-last-change-parser.c     |    2 +-
+ libgupnp-av/xml-util.c                     |   16 ++++++++--------
+ libgupnp-av/xml-util.h                     |    4 ++--
+ 10 files changed, 32 insertions(+), 32 deletions(-)
+
+diff --git a/libgupnp-av/gupnp-cds-last-change-parser.c b/libgupnp-av/gupnp-cds-last-change-parser.c
+index d51d385..9c68c6c 100644
+--- a/libgupnp-av/gupnp-cds-last-change-parser.c
++++ b/libgupnp-av/gupnp-cds-last-change-parser.c
+@@ -121,7 +121,7 @@ gupnp_cds_last_change_parser_parse (GUPnPCDSLastChangeParser *parser,
+                 goto out;
+         }
+ 
+-        state_event = xml_util_get_element ((xmlNode *) doc,
++        state_event = gupnpav_xml_util_get_element ((xmlNode *) doc,
+                                             "StateEvent",
+                                             NULL);
+         if (state_event == NULL) {
+diff --git a/libgupnp-av/gupnp-didl-lite-container.c b/libgupnp-av/gupnp-didl-lite-container.c
+index 16a535a..94ab13e 100644
+--- a/libgupnp-av/gupnp-didl-lite-container.c
++++ b/libgupnp-av/gupnp-didl-lite-container.c
+@@ -340,7 +340,7 @@ gupnp_didl_lite_container_container_update_id_is_set
+ 
+         xml_node = gupnp_didl_lite_object_get_xml_node
+                                         (GUPNP_DIDL_LITE_OBJECT (container));
+-        content = xml_util_get_child_element_content (xml_node,
++        content = gupnpav_xml_util_get_child_element_content (xml_node,
+                                                       "containerUpdateID");
+         return content != NULL;
+ }
+@@ -390,7 +390,7 @@ gupnp_didl_lite_container_total_deleted_child_count_is_set
+ 
+         xml_node = gupnp_didl_lite_object_get_xml_node
+                                         (GUPNP_DIDL_LITE_OBJECT (container));
+-        content = xml_util_get_child_element_content (xml_node,
++        content = gupnpav_xml_util_get_child_element_content (xml_node,
+                                                       "totalDeletedChildCount");
+         return content != NULL;
+ }
+diff --git a/libgupnp-av/gupnp-didl-lite-item.c b/libgupnp-av/gupnp-didl-lite-item.c
+index ab38cb6..24a29db 100644
+--- a/libgupnp-av/gupnp-didl-lite-item.c
++++ b/libgupnp-av/gupnp-didl-lite-item.c
+@@ -249,7 +249,7 @@ gupnp_didl_lite_item_get_lifetime (GUPnPDIDLLiteItem *item)
+         object = GUPNP_DIDL_LITE_OBJECT (item);
+         node = gupnp_didl_lite_object_get_xml_node (object);
+ 
+-        lifetime_str = xml_util_get_child_element_content (node, "lifetime");
++        lifetime_str = gupnpav_xml_util_get_child_element_content (node, "lifetime");
+         lifetime = seconds_from_time (lifetime_str);
+ 
+         return lifetime;
+diff --git a/libgupnp-av/gupnp-didl-lite-object.c b/libgupnp-av/gupnp-didl-lite-object.c
+index 5e527bc..459b2fa 100644
+--- a/libgupnp-av/gupnp-didl-lite-object.c
++++ b/libgupnp-av/gupnp-didl-lite-object.c
+@@ -1036,7 +1036,7 @@ gupnp_didl_lite_object_get_upnp_class (GUPnPDIDLLiteObject *object)
+ {
+         g_return_val_if_fail (GUPNP_IS_DIDL_LITE_OBJECT (object), NULL);
+ 
+-        return xml_util_get_child_element_content (object->priv->xml_node,
++        return gupnpav_xml_util_get_child_element_content (object->priv->xml_node,
+                                                    "class");
+ }
+ 
+@@ -1142,7 +1142,7 @@ gupnp_didl_lite_object_get_title (GUPnPDIDLLiteObject *object)
+ {
+         g_return_val_if_fail (GUPNP_IS_DIDL_LITE_OBJECT (object), NULL);
+ 
+-        return xml_util_get_child_element_content (object->priv->xml_node,
++        return gupnpav_xml_util_get_child_element_content (object->priv->xml_node,
+                                                    "title");
+ }
+ 
+@@ -1159,7 +1159,7 @@ gupnp_didl_lite_object_get_creator (GUPnPDIDLLiteObject *object)
+ {
+         g_return_val_if_fail (GUPNP_IS_DIDL_LITE_OBJECT (object), NULL);
+ 
+-        return xml_util_get_child_element_content (object->priv->xml_node,
++        return gupnpav_xml_util_get_child_element_content (object->priv->xml_node,
+                                                    "creator");
+ }
+ 
+@@ -1197,7 +1197,7 @@ gupnp_didl_lite_object_get_artist (GUPnPDIDLLiteObject *object)
+ {
+         g_return_val_if_fail (GUPNP_IS_DIDL_LITE_OBJECT (object), NULL);
+ 
+-        return xml_util_get_child_element_content (object->priv->xml_node,
++        return gupnpav_xml_util_get_child_element_content (object->priv->xml_node,
+                                                    "artist");
+ }
+ 
+@@ -1234,7 +1234,7 @@ gupnp_didl_lite_object_get_author (GUPnPDIDLLiteObject *object)
+ {
+         g_return_val_if_fail (GUPNP_IS_DIDL_LITE_OBJECT (object), NULL);
+ 
+-        return xml_util_get_child_element_content (object->priv->xml_node,
++        return gupnpav_xml_util_get_child_element_content (object->priv->xml_node,
+                                                    "author");
+ }
+ 
+@@ -1308,7 +1308,7 @@ gupnp_didl_lite_object_get_genre (GUPnPDIDLLiteObject *object)
+ {
+         g_return_val_if_fail (GUPNP_IS_DIDL_LITE_OBJECT (object), NULL);
+ 
+-        return xml_util_get_child_element_content (object->priv->xml_node,
++        return gupnpav_xml_util_get_child_element_content (object->priv->xml_node,
+                                                    "genre");
+ }
+ 
+@@ -1325,7 +1325,7 @@ gupnp_didl_lite_object_get_write_status (GUPnPDIDLLiteObject *object)
+ {
+         g_return_val_if_fail (GUPNP_IS_DIDL_LITE_OBJECT (object), NULL);
+ 
+-        return xml_util_get_child_element_content (object->priv->xml_node,
++        return gupnpav_xml_util_get_child_element_content (object->priv->xml_node,
+                                                    "writeStatus");
+ }
+ 
+@@ -1342,7 +1342,7 @@ gupnp_didl_lite_object_get_album (GUPnPDIDLLiteObject *object)
+ {
+         g_return_val_if_fail (GUPNP_IS_DIDL_LITE_OBJECT (object), NULL);
+ 
+-        return xml_util_get_child_element_content (object->priv->xml_node,
++        return gupnpav_xml_util_get_child_element_content (object->priv->xml_node,
+                                                    "album");
+ }
+ 
+@@ -1359,7 +1359,7 @@ gupnp_didl_lite_object_get_album_art (GUPnPDIDLLiteObject *object)
+ {
+         g_return_val_if_fail (GUPNP_IS_DIDL_LITE_OBJECT (object), NULL);
+ 
+-        return xml_util_get_child_element_content (object->priv->xml_node,
++        return gupnpav_xml_util_get_child_element_content (object->priv->xml_node,
+                                                    "albumArtURI");
+ }
+ 
+@@ -1376,7 +1376,7 @@ gupnp_didl_lite_object_get_description (GUPnPDIDLLiteObject *object)
+ {
+         g_return_val_if_fail (GUPNP_IS_DIDL_LITE_OBJECT (object), NULL);
+ 
+-        return xml_util_get_child_element_content (object->priv->xml_node,
++        return gupnpav_xml_util_get_child_element_content (object->priv->xml_node,
+                                                    "description");
+ }
+ 
+@@ -1393,7 +1393,7 @@ gupnp_didl_lite_object_get_date (GUPnPDIDLLiteObject *object)
+ {
+         g_return_val_if_fail (GUPNP_IS_DIDL_LITE_OBJECT (object), NULL);
+ 
+-        return xml_util_get_child_element_content (object->priv->xml_node,
++        return gupnpav_xml_util_get_child_element_content (object->priv->xml_node,
+                                                    "date");
+ }
+ 
+@@ -1412,7 +1412,7 @@ gupnp_didl_lite_object_get_track_number (GUPnPDIDLLiteObject *object)
+ 
+         g_return_val_if_fail (GUPNP_IS_DIDL_LITE_OBJECT (object), -1);
+ 
+-        str = xml_util_get_child_element_content (object->priv->xml_node,
++        str = gupnpav_xml_util_get_child_element_content (object->priv->xml_node,
+                                                   "originalTrackNumber");
+         if (str == NULL)
+                 return -1;
+@@ -1483,7 +1483,7 @@ gupnp_didl_lite_object_update_id_is_set (GUPnPDIDLLiteObject *object)
+         g_return_val_if_fail (object != NULL, FALSE);
+         g_return_val_if_fail (GUPNP_IS_DIDL_LITE_OBJECT (object), FALSE);
+ 
+-        content = xml_util_get_child_element_content (object->priv->xml_node,
++        content = gupnpav_xml_util_get_child_element_content (object->priv->xml_node,
+                                                       "objectUpdateID");
+         return content != NULL;
+ }
+diff --git a/libgupnp-av/gupnp-didl-lite-parser.c b/libgupnp-av/gupnp-didl-lite-parser.c
+index 086c2cc..b593994 100644
+--- a/libgupnp-av/gupnp-didl-lite-parser.c
++++ b/libgupnp-av/gupnp-didl-lite-parser.c
+@@ -52,7 +52,7 @@ verify_didl_attributes (xmlNode *node)
+ {
+         const char *content;
+ 
+-        content = xml_util_get_child_element_content (node, "date");
++        content = gupnpav_xml_util_get_child_element_content (node, "date");
+         if (content) {
+                 /* try to roughly verify the passed date with ^\d{4}-\d{2}-\d{2} */
+                 char *ptr = (char *) content;
+@@ -245,7 +245,7 @@ gupnp_didl_lite_parser_parse_didl_recursive (GUPnPDIDLLiteParser *parser,
+         }
+ 
+         /* Get a pointer to root element */
+-        element = xml_util_get_element ((xmlNode *) doc,
++        element = gupnpav_xml_util_get_element ((xmlNode *) doc,
+                                         "DIDL-Lite",
+                                         NULL);
+         if (element == NULL) {
+diff --git a/libgupnp-av/gupnp-didl-lite-writer.c b/libgupnp-av/gupnp-didl-lite-writer.c
+index 82da073..447a4a6 100644
+--- a/libgupnp-av/gupnp-didl-lite-writer.c
++++ b/libgupnp-av/gupnp-didl-lite-writer.c
+@@ -223,7 +223,7 @@ filter_node (xmlNode             *node,
+ 
+         if (strcmp ((const char *) node->name, "container") == 0) {
+             is_container = TRUE;
+-            container_class = xml_util_get_child_element_content (node,
++            container_class = gupnpav_xml_util_get_child_element_content (node,
+                                                                   "class");
+         }
+ 
+diff --git a/libgupnp-av/gupnp-feature-list-parser.c b/libgupnp-av/gupnp-feature-list-parser.c
+index 0f69277..6ae69d4 100644
+--- a/libgupnp-av/gupnp-feature-list-parser.c
++++ b/libgupnp-av/gupnp-feature-list-parser.c
+@@ -137,7 +137,7 @@ gupnp_feature_list_parser_parse_text (GUPnPFeatureListParser *parser,
+         }
+ 
+         /* Get a pointer to root element */
+-        element = xml_util_get_element ((xmlNode *) doc, "Features", NULL);
++        element = gupnpav_xml_util_get_element ((xmlNode *) doc, "Features", NULL);
+         if (element == NULL) {
+                 g_set_error (error,
+                              GUPNP_XML_ERROR,
+diff --git a/libgupnp-av/gupnp-last-change-parser.c b/libgupnp-av/gupnp-last-change-parser.c
+index cddddd8..a512b8d 100644
+--- a/libgupnp-av/gupnp-last-change-parser.c
++++ b/libgupnp-av/gupnp-last-change-parser.c
+@@ -75,7 +75,7 @@ read_state_variable (const char *variable_name,
+         xmlNode    *variable_node;
+         const char *val_str;
+ 
+-        variable_node = xml_util_get_element (instance_node,
++        variable_node = gupnpav_xml_util_get_element (instance_node,
+                                               variable_name,
+                                               NULL);
+         if (!variable_node)
+diff --git a/libgupnp-av/xml-util.c b/libgupnp-av/xml-util.c
+index 4543c74..cf5e042 100644
+--- a/libgupnp-av/xml-util.c
++++ b/libgupnp-av/xml-util.c
+@@ -28,7 +28,7 @@
+ #include "xml-util.h"
+ 
+ xmlNode *
+-xml_util_get_element (xmlNode *node,
++gupnpav_xml_util_get_element (xmlNode *node,
+                       ...)
+ {
+         va_list var_args;
+@@ -77,13 +77,13 @@ xml_util_get_child_elements_by_name (xmlNode *node, const char *name)
+ }
+ 
+ const char *
+-xml_util_get_child_element_content (xmlNode    *node,
++gupnpav_xml_util_get_child_element_content (xmlNode    *node,
+                                     const char *child_name)
+ {
+         xmlNode *child_node;
+         const char *content;
+ 
+-        child_node = xml_util_get_element (node, child_name, NULL);
++        child_node = gupnpav_xml_util_get_element (node, child_name, NULL);
+         if (!child_node || !(child_node->children))
+                 return NULL;
+ 
+@@ -101,7 +101,7 @@ xml_util_get_uint_child_element (xmlNode    *node,
+ {
+         const char *content;
+ 
+-        content = xml_util_get_child_element_content (node, child_name);
++        content = gupnpav_xml_util_get_child_element_content (node, child_name);
+         if (!content)
+                 return default_value;
+ 
+@@ -115,7 +115,7 @@ xml_util_get_uint64_child_element (xmlNode    *node,
+ {
+         const char *content;
+ 
+-        content = xml_util_get_child_element_content (node, child_name);
++        content = gupnpav_xml_util_get_child_element_content (node, child_name);
+         if (!content)
+                 return default_value;
+ 
+@@ -227,7 +227,7 @@ xml_util_set_child (xmlNode    *parent_node,
+         xmlNode *node;
+         xmlChar *escaped;
+ 
+-        node = xml_util_get_element (parent_node, name, NULL);
++        node = gupnpav_xml_util_get_element (parent_node, name, NULL);
+         if (node == NULL)
+                 node = xmlNewChild (parent_node,
+                                     namespace,
+@@ -247,7 +247,7 @@ xml_util_unset_child (xmlNode    *parent_node,
+ {
+         xmlNode *node;
+ 
+-        node = xml_util_get_element (parent_node, name, NULL);
++        node = gupnpav_xml_util_get_element (parent_node, name, NULL);
+         if (node != NULL) {
+                 xmlUnlinkNode (node);
+                 xmlFreeNode (node);
+@@ -284,7 +284,7 @@ xml_util_get_child_string (xmlNode    *parent_node,
+         char      *ret;
+         xmlNode   *node;
+ 
+-        node = xml_util_get_element (parent_node, name, NULL);
++        node = gupnpav_xml_util_get_element (parent_node, name, NULL);
+         if (!node)
+                 return NULL;
+ 
+diff --git a/libgupnp-av/xml-util.h b/libgupnp-av/xml-util.h
+index ffa5e50..a966e6f 100644
+--- a/libgupnp-av/xml-util.h
++++ b/libgupnp-av/xml-util.h
+@@ -34,7 +34,7 @@ G_BEGIN_DECLS
+ 
+ /* Misc utilities for inspecting xmlNodes */
+ G_GNUC_INTERNAL xmlNode *
+-xml_util_get_element                    (xmlNode    *node,
++gupnpav_xml_util_get_element                    (xmlNode    *node,
+                                          ...) G_GNUC_NULL_TERMINATED;
+ 
+ G_GNUC_INTERNAL GList *
+@@ -42,7 +42,7 @@ xml_util_get_child_elements_by_name     (xmlNode *node,
+                                          const char *name);
+ 
+ G_GNUC_INTERNAL const char *
+-xml_util_get_child_element_content      (xmlNode    *node,
++gupnpav_xml_util_get_child_element_content      (xmlNode    *node,
+                                          const char *child_name);
+ 
+ G_GNUC_INTERNAL guint
+-- 
+1.7.10.4
+
