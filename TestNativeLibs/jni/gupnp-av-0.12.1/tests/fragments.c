@@ -24,6 +24,14 @@
 #include <libgupnp-av/gupnp-didl-lite-writer.h>
 #include <libgupnp-av/gupnp-didl-lite-item.h>
 
+#ifdef __BIONIC__
+#include <android/log.h>
+#define LOG_TAG "gupnpav-tests-fragments"
+#define LOGI(...) __android_log_print(ANDROID_LOG_INFO, LOG_TAG, __VA_ARGS__)
+#define LOGW(...) __android_log_print(ANDROID_LOG_WARN, LOG_TAG, __VA_ARGS__)
+#define LOGE(...) __android_log_print(ANDROID_LOG_ERROR, LOG_TAG, __VA_ARGS__)
+#endif
+
 /* creates an item described by:
 static const gchar * const didllite =
         "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
@@ -153,6 +161,9 @@ int gupnpav_fragments_test_main (void)
         debug_dump (object);
         if (result != GUPNP_DIDL_LITE_FRAGMENT_RESULT_OK) {
                 g_warning ("Applying fragments failed.");
+#ifdef __BIONIC__
+                LOGW ("Applying fragments failed.");
+#endif
                 goto out;
         }
 
@@ -160,6 +171,9 @@ int gupnpav_fragments_test_main (void)
 
         if (g_strcmp0 (value, "Cthulhu fhtagn")) {
                 g_warning ("Title is '%s', should be 'Cthulhu fhtagn'.", value);
+#ifdef __BIONIC__
+                LOGW ("Title is '%s', should be 'Cthulhu fhtagn'.", value);
+#endif
                 goto out;
         }
 
@@ -167,6 +181,9 @@ int gupnpav_fragments_test_main (void)
 
         if (artists) {
                 g_warning ("Should be no artists.");
+#ifdef __BIONIC__
+                LOGW ("Should be no artists.");
+#endif
                 g_list_free_full (artists, g_object_unref);
                 goto out;
         }
@@ -175,6 +192,10 @@ int gupnpav_fragments_test_main (void)
 
         if (g_strcmp0 (value, "Try a little tenderness")) {
                 g_warning ("Title is '%s', should be 'Try a little tenderness'.", value);
+#ifdef __BIONIC__
+                LOGW ("Title is '%s', should be 'Try a little tenderness'.",
+                        value);
+#endif
                 goto out;
         }
 
@@ -182,11 +203,17 @@ int gupnpav_fragments_test_main (void)
 
         if (!artists) {
                 g_warning ("Should be one artist, there are none.");
+#ifdef __BIONIC__
+                LOGW ("Should be one artist, there are none.");
+#endif
                 goto out;
         }
         if (artists->next) {
                 g_list_free_full (artists, g_object_unref);
                 g_warning ("Should be one artist, there are more.");
+#ifdef __BIONIC__
+                LOGW ("Should be one artist, there are more.");
+#endif
                 goto out;
         }
         artist = g_object_ref (artists->data);
@@ -195,6 +222,9 @@ int gupnpav_fragments_test_main (void)
         if (g_strcmp0 (value, "Unknown")) {
                 g_object_unref (artist);
                 g_warning ("Artist is '%s', but should be 'Unknown'.", value);
+#ifdef __BIONIC__
+                LOGW ("Artist is '%s', but should be 'Unknown'.", value);
+#endif
                 goto out;
         }
         g_object_unref (artist);
@@ -204,5 +234,8 @@ int gupnpav_fragments_test_main (void)
         g_object_unref (object);
         g_object_unref (temp_object);
         g_object_unref (writer);
+#ifdef __BIONIC__
+        LOGI ("Test completed");
+#endif
         return retval;
 }
