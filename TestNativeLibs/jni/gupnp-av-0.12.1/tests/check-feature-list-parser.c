@@ -23,6 +23,14 @@
 #include <stdlib.h>
 #include <string.h>
 
+#ifdef __BIONIC__
+#include <android/log.h>
+#define LOG_TAG "gupnpav-tests-listparser"
+#define LOGI(...) __android_log_print(ANDROID_LOG_INFO, LOG_TAG, __VA_ARGS__)
+#define LOGW(...) __android_log_print(ANDROID_LOG_WARN, LOG_TAG, __VA_ARGS__)
+#define LOGE(...) __android_log_print(ANDROID_LOG_ERROR, LOG_TAG, __VA_ARGS__)
+#endif
+
 static const char * const names[] = {
         "BOOKMARK",
         "EPG",
@@ -60,14 +68,29 @@ check_feature (GUPnPFeature *feature)
 {
         static int index = 0;
 
-        if (strcmp (names[index], gupnp_feature_get_name (feature)))
+        if (strcmp (names[index], gupnp_feature_get_name (feature))) {
+#ifdef __BIONIC__
+                LOGI ("No match: '%s' != '%s'", names[index],
+                        gupnp_feature_get_name (feature));
+#endif
                         return FALSE;
+        }
 
-        if (strcmp (versions[index], gupnp_feature_get_version (feature)))
+        if (strcmp (versions[index], gupnp_feature_get_version (feature))) {
+#ifdef __BIONIC__
+                LOGI ("No match: '%s' != '%s'", versions[index],
+                        gupnp_feature_get_version (feature));
+#endif
                         return FALSE;
+        }
 
-        if (strcmp (ids[index], gupnp_feature_get_object_ids (feature)))
+        if (strcmp (ids[index], gupnp_feature_get_object_ids (feature))) {
+#ifdef __BIONIC__
+                LOGI ("No match: '%s' != '%s'", ids[index],
+                        gupnp_feature_get_object_ids (feature));
+#endif
                         return FALSE;
+        }
 
         index++;
 
@@ -93,6 +116,9 @@ gupnpav_list_parser_test_main (int argc, char **argv)
         features = gupnp_feature_list_parser_parse_text (parser, text, &error);
         if (features == NULL) {
                 g_printerr ("Parse error: %s\n", error->message);
+#ifdef __BIONIC__
+                LOGW ("Parse error: %s", error->message);
+#endif
                 g_error_free (error);
                 return EXIT_FAILURE;
         }
@@ -108,5 +134,8 @@ gupnpav_list_parser_test_main (int argc, char **argv)
         g_list_free_full (features, g_object_unref);
         g_object_unref (parser);
 
+#ifdef __BIONIC__
+        LOGI ("Test completed");
+#endif
         return (success) ? EXIT_SUCCESS : EXIT_FAILURE;
 }

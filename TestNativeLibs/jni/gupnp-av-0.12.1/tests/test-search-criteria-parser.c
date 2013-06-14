@@ -22,11 +22,22 @@
 #include <libgupnp-av/gupnp-search-criteria-parser.h>
 #include <stdlib.h>
 
+#ifdef __BIONIC__
+#include <android/log.h>
+#define LOG_TAG "gupnpav-tests-criteriaparser"
+#define LOGI(...) __android_log_print(ANDROID_LOG_INFO, LOG_TAG, __VA_ARGS__)
+#define LOGW(...) __android_log_print(ANDROID_LOG_WARN, LOG_TAG, __VA_ARGS__)
+#define LOGE(...) __android_log_print(ANDROID_LOG_ERROR, LOG_TAG, __VA_ARGS__)
+#endif
+
 static void
 begin_parens_cb (GUPnPSearchCriteriaParser *parser,
                  gpointer                   user_data)
 {
         g_print ("(");
+#ifdef __BIONIC__
+        LOGI ("(");
+#endif
 }
 
 static void
@@ -34,6 +45,9 @@ end_parens_cb (GUPnPSearchCriteriaParser *parser,
                gpointer                   user_data)
 {
         g_print (")");
+#ifdef __BIONIC__
+        LOGI (")");
+#endif
 }
 
 static void
@@ -41,6 +55,9 @@ conjunction_cb (GUPnPSearchCriteriaParser *parser,
                 gpointer                   user_data)
 {
         g_print (" and ");
+#ifdef __BIONIC__
+        LOGI (" and ");
+#endif
 }
 
 static void
@@ -48,6 +65,9 @@ disjunction_cb (GUPnPSearchCriteriaParser *parser,
                 gpointer                   user_data)
 {
         g_print (" or ");
+#ifdef __BIONIC__
+        LOGI (" or ");
+#endif
 }
 
 static gboolean
@@ -59,6 +79,9 @@ expression_cb (GUPnPSearchCriteriaParser *parser,
                gpointer                   user_data)
 {
         g_print ("%s %d %s", property, op, value);
+#ifdef __BIONIC__
+        LOGI ("%s %d %s", property, op, value);
+#endif
 
         return TRUE;
 }
@@ -99,9 +122,16 @@ gupnpav_criteria_parser_test_main (int argc, char **argv)
                           NULL);
 
         error = NULL;
+
+#ifdef __BIONIC__
+        LOGI ("Search criteria string: %s", argv[1]);
+#endif
         gupnp_search_criteria_parser_parse_text (parser, argv[1], &error);
         if (error != NULL) {
                 g_printerr ("Parse error: %s\n", error->message);
+#ifdef __BIONIC__
+                LOGW ("Parse error: %s", error->message);
+#endif
                 g_error_free (error);
                 return EXIT_FAILURE;
         }
@@ -110,5 +140,8 @@ gupnpav_criteria_parser_test_main (int argc, char **argv)
 
         g_object_unref (parser);
 
+#ifdef __BIONIC__
+        LOGI ("Test completed");
+#endif
         return EXIT_SUCCESS;
 }

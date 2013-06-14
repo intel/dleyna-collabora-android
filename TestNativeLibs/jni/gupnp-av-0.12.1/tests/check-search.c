@@ -22,6 +22,14 @@
 #include <libgupnp-av/gupnp-search-criteria-parser.h>
 #include <stdlib.h>
 
+#ifdef __BIONIC__
+#include <android/log.h>
+#define LOG_TAG "gupnpav-tests-search"
+#define LOGI(...) __android_log_print(ANDROID_LOG_INFO, LOG_TAG, __VA_ARGS__)
+#define LOGW(...) __android_log_print(ANDROID_LOG_WARN, LOG_TAG, __VA_ARGS__)
+#define LOGE(...) __android_log_print(ANDROID_LOG_ERROR, LOG_TAG, __VA_ARGS__)
+#endif
+
 static const char * const searches[] = {
         "dc:title contains \"foo\"",
         "dc:title contains 'foo'",
@@ -48,6 +56,10 @@ gupnpav_check_search_test_main (int argc, char **argv)
                 if (error) {
                         g_printerr ("\n\nCannot parse '%s': %s\n",
                                     searches[i], error->message);
+#ifdef __BIONIC__
+                        LOGW ("Cannot parse '%s': %s", searches[i],
+                                error->message);
+#endif
                         g_error_free (error);
 
                         return EXIT_FAILURE;
@@ -55,8 +67,14 @@ gupnpav_check_search_test_main (int argc, char **argv)
                 /* TODO: obviously an important next step is to verify that the
                    data was actually parsed correctly */
                 g_print (".");
+#ifdef __BIONIC__
+                LOGI (".");
+#endif
         }
 
         g_print ("\n");
+#ifdef __BIONIC__
+        LOGI ("Test completed");
+#endif
         return EXIT_SUCCESS;
 }
