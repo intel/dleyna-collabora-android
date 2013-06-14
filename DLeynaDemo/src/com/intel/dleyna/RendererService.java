@@ -36,12 +36,12 @@ public class RendererService extends Service {
         JNI.cleanTempDir();
     }
 
-    private final IBinder binder = new RendererInterface.Stub() {
+    private final IBinder binder = new IRendererService.Stub() {
 
-        private RemoteCallbackList<RendererCallbackInterface> callbacks =
-                new RemoteCallbackList<RendererCallbackInterface>();
+        private RemoteCallbackList<IRendererCallback> callbacks =
+                new RemoteCallbackList<IRendererCallback>();
 
-        public void registerCallback(RendererCallbackInterface cb) {
+        public void registerCallback(IRendererCallback cb) {
             if (App.LOG) Log.i(App.TAG, "RendererService: registerCallback");
             callbacks.register(cb);
         }

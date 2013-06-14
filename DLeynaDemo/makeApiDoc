@@ -1,0 +1,23 @@
+#!/bin/sh
+
+DOC_NAME=dleyna-lib-doc
+OUT_DIR=/tmp
+SDK_DIR=${SDK_DIR:-$HOME/android-sdk-linux}
+
+rm -rf $OUT_DIR/$DOC_NAME
+mkdir $OUT_DIR/$DOC_NAME
+rm -f $OUT_DIR/$DOC_NAME.tgz
+
+# FIXME: The -linkoffline argument is supposed to result in links to Android
+# doc in the output, but doesn't seem to work as expected. On the other hand,
+# it doesn't hurt to leave it there.
+
+javadoc \
+    -d $OUT_DIR/$DOC_NAME \
+    -sourcepath src \
+    -noqualifier java.lang:java.util:android.os:android.app \
+    -linkoffline http://developer.android.com/reference $SDK_DIR/docs/reference \
+    com.intel.dleyna.lib
+
+cd $OUT_DIR
+tar czf $DOC_NAME.tgz $DOC_NAME

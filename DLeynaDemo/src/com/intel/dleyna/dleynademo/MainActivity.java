@@ -22,13 +22,8 @@
 package com.intel.dleyna.dleynademo;
 
 import android.app.Activity;
-import android.content.ComponentName;
-import android.content.Context;
 import android.content.Intent;
-import android.content.ServiceConnection;
 import android.os.Bundle;
-import android.os.IBinder;
-import android.os.RemoteException;
 import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
 import android.view.Menu;
@@ -38,8 +33,8 @@ import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.TextView;
 
-import com.intel.dleyna.RendererCallbackInterface;
-import com.intel.dleyna.RendererInterface;
+import com.intel.dleyna.lib.Renderer;
+import com.intel.dleyna.lib.RendererManager;
 
 /**
  * This is the main Activity of the dLeyna demo app.
@@ -55,17 +50,6 @@ public class MainActivity extends Activity {
     private TextView ttyTextView;
     private Button clearButton;
 
-    /** The application package containing the Renderer service. */
-    private static final String RENDERER_SERVICE_PACKAGE = "com.intel.dleyna.dleynademo";
-
-    /** The class implementing the Renderer service. */
-    private static final String RENDERER_SERVICE_CLASS = "com.intel.dleyna.RendererService";
-
-    /** The Binder interface to the Renderer service. */
-    private RendererInterface rendererService;
-
-    private boolean rendererServiceBound;
-
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         if (App.LOG) Log.i(TAG, "MainActivity: onCreate");
@@ -80,18 +64,7 @@ public class MainActivity extends Activity {
     protected void onStart() {
         super.onStart();
         if (App.LOG) Log.i(TAG, "MainActivity: onStart");
-        Intent intent = new Intent();
-        intent.setClassName(RENDERER_SERVICE_PACKAGE, RENDERER_SERVICE_CLASS);
-        try {
-            rendererServiceBound = bindService(intent, RendererConnection, Context.BIND_AUTO_CREATE);
-        } catch (SecurityException e) {
-        }
-        if (!rendererServiceBound) {
-            Log.w(TAG, "MainActivity: onStart: can't bind to renderer service");
-            // For some crazy reason you have to have to unbind a service even if
-            // the bind failed, or you'll get a "leaked ServiceConnection" warning.
-            unbindService(RendererConnection);
-        }
+        rendererMgr.connect(this);
     }
 
     protected void onResume() {
@@ -112,11 +85,8 @@ public class MainActivity extends Activity {
 
     protected void onDestroy() {
         super.onDestroy();
-        if (rendererServiceBound) {
-            unbindService(RendererConnection);
-            rendererServiceBound = false;
-        }
         if (App.LOG) Log.i(TAG, "MainActivity: onDestroy");
+        rendererMgr.disconnect();
     }
 
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -145,30 +115,22 @@ public class MainActivity extends Activity {
         }
     };
 
-    private final ServiceConnection RendererConnection = new ServiceConnection() {
+    private RendererManager rendererMgr = RendererManager.getInstance(new RendererManager.Events() {
 
-        public void onServiceConnected(ComponentName className, IBinder b) {
-            if (App.LOG) Log.i(TAG, "MainActivity: onServiceConnected");
-            rendererService = RendererInterface.Stub.asInterface(b);
-            try {
-                rendererService.registerCallback(rendererCallback);
-            } catch (RemoteException e) {
-                 e.printStackTrace();
-            }
+        public void onConnected() {
+            writeTty("Connected.");
         }
 
-        public void onServiceDisconnected(ComponentName arg0) {
-            if (App.LOG) Log.i(TAG, "MainActivity: onServiceDisconnected");
-            rendererService = null;
-        }
-    };
+        public void onDisconnected() {
+            writeTty("disConnected.");
+       }
 
-    /**
-     * Callbacks from the Renderer service via Binder are handled here.
-     */
-    private final RendererCallbackInterface rendererCallback =
-            new RendererCallbackInterface.Stub() {
-    };
+        public void onRendererFound(Renderer r) {
+        }
+
+        public void onRendererLost(Renderer r) {
+        }
+    });
 
 
     private void setEnabledStateOfWidgets(boolean enabled) {

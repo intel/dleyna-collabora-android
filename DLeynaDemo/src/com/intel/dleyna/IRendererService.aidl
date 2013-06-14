@@ -22,6 +22,10 @@
 
 package com.intel.dleyna;
 
-interface RendererCallbackInterface {
+import com.intel.dleyna.IRendererCallback;
 
+interface IRendererService {
+
+    // Client provides us with a binder for callbacks.
+    void registerCallback(IRendererCallback cb);
 }
