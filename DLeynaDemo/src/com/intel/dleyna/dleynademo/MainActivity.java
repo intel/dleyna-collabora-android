@@ -33,7 +33,6 @@ import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.TextView;
 
-import com.intel.dleyna.RendererCallbackInterface;
 import com.intel.dleyna.lib.Renderer;
 import com.intel.dleyna.lib.RendererManager;
 

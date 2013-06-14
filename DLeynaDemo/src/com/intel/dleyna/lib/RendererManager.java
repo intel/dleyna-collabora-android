@@ -33,8 +33,8 @@ import android.os.IBinder;
 import android.os.RemoteException;
 import android.util.Log;
 
-import com.intel.dleyna.RendererCallbackInterface;
-import com.intel.dleyna.RendererInterface;
+import com.intel.dleyna.IRendererCallback;
+import com.intel.dleyna.IRendererService;
 import com.intel.dleyna.dleynademo.App;
 
 /**
@@ -71,7 +71,7 @@ public class RendererManager {
     private static final String RENDERER_SERVICE_CLASS = "com.intel.dleyna.RendererService";
 
     /** The Binder interface to the Renderer service. */
-    private RendererInterface rendererService;
+    private IRendererService rendererService;
 
     private boolean rendererServiceBound;
 
@@ -138,7 +138,7 @@ public class RendererManager {
 
         public void onServiceConnected(ComponentName className, IBinder b) {
             if (App.LOG) Log.i(TAG, "onServiceConnected");
-            rendererService = RendererInterface.Stub.asInterface(b);
+            rendererService = IRendererService.Stub.asInterface(b);
             try {
                 rendererService.registerCallback(rendererCallback);
                 for (Events events : listeners) {
@@ -162,8 +162,8 @@ public class RendererManager {
     /**
      * Callbacks from the Renderer service via Binder are handled here.
      */
-    private final RendererCallbackInterface rendererCallback =
-            new RendererCallbackInterface.Stub() {
+    private final IRendererCallback rendererCallback =
+            new IRendererCallback.Stub() {
     };
 
     /**
