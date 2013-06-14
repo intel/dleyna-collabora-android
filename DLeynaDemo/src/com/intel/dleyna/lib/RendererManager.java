@@ -21,8 +21,21 @@
 
 package com.intel.dleyna.lib;
 
+import java.util.LinkedList;
+import java.util.List;
+
 import android.app.Activity;
+import android.content.ComponentName;
+import android.content.Context;
+import android.content.Intent;
+import android.content.ServiceConnection;
+import android.os.IBinder;
 import android.os.RemoteException;
+import android.util.Log;
+
+import com.intel.dleyna.RendererCallbackInterface;
+import com.intel.dleyna.RendererInterface;
+import com.intel.dleyna.dleynademo.App;
 
 /**
  * This class allows applications to discover Digital Media Renderers
@@ -31,18 +44,38 @@ import android.os.RemoteException;
  * <p>
  * Use {@link #getInstance(Events)} to to obtain the singleton instance of this class.
  * <p>
- * Use {@link #connect()} to initiate a connection to the background renderer service,
- * and {@link #disconnect()} to break the connection and deallocate connection resources.
+ * Use {@link #connect(Context)} to initiate a connection to the background renderer service,
+ * typically from the onStart() method of an Activity.
+ * <p>
+ * Use {@link #disconnect()} to break the connection and deallocate connection resources,
+ * typically from the onDestroy() method of an Activity.
  * <p>
  * While connected to the background renderer service,
- * you can use {@link #getRenderers()} to obtain a list of all currently available renderers,
- * and you will be notified of the appearance and disappearance of renderers in callbacks to
+ * you can use {@link #getRenderers()} to obtain a list of all currently available renderers.
+ * <p>
+ * You will be notified of the appearance and disappearance of renderers in callbacks to
  * the {@link Events} object that you passed to {@link #getInstance(Events)}.
+ * These notifications will be run on the main thread of your application.
  */
 public class RendererManager {
 
+    private static final String TAG = "RendererMgr";
+
     /** The singleton instance */
     private static RendererManager instance;
+
+    /** The application package containing the Renderer service. */
+    private static final String RENDERER_SERVICE_PACKAGE = "com.intel.dleyna.dleynademo";
+
+    /** The class implementing the Renderer service. */
+    private static final String RENDERER_SERVICE_CLASS = "com.intel.dleyna.RendererService";
+
+    /** The Binder interface to the Renderer service. */
+    private RendererInterface rendererService;
+
+    private boolean rendererServiceBound;
+
+    private List<Events> listeners = new LinkedList<Events>();
 
     /** The hidden constructor */
     private RendererManager() {
@@ -58,11 +91,12 @@ public class RendererManager {
         if (instance == null) {
             instance = new RendererManager();
         }
-        instance.addObserver(events);
+        instance.addListener(events);
         return instance;
     }
 
-    private void addObserver(Events events) {
+    private void addListener(Events events) {
+        listeners.add(events);
     }
 
     /**
@@ -81,11 +115,56 @@ public class RendererManager {
      * on the application's main thread. The thread this is called on will be the one
      * used to deliver all event notifications from this {@link RendererManager}
      * and from all {@link Renderer}s discovered by it.
+     * @param context the context in which this is being called, typically an {@link Activity}.
      * @return true on success, false on failure
      */
-    public boolean connect() {
-        return true;
+    public boolean connect(Context context) {
+        Intent intent = new Intent();
+        intent.setClassName(RENDERER_SERVICE_PACKAGE, RENDERER_SERVICE_CLASS);
+        try {
+            rendererServiceBound = context.bindService(intent, RendererConnection, Context.BIND_AUTO_CREATE);
+        } catch (SecurityException e) {
+        }
+        if (!rendererServiceBound) {
+            Log.w(TAG, "connect: can't bind to renderer service");
+            // For some crazy reason you have to have to unbind a service even if
+            // the bind failed, or you'll get a "leaked ServiceConnection" warning.
+            context.unbindService(RendererConnection);
+        }
+        return rendererServiceBound;
     }
+
+    private final ServiceConnection RendererConnection = new ServiceConnection() {
+
+        public void onServiceConnected(ComponentName className, IBinder b) {
+            if (App.LOG) Log.i(TAG, "onServiceConnected");
+            rendererService = RendererInterface.Stub.asInterface(b);
+            try {
+                rendererService.registerCallback(rendererCallback);
+                for (Events events : listeners) {
+                    events.onConnected();
+                }
+            } catch (RemoteException e) {
+                // I'm supposing that if we get here, then onServiceDisconnected()
+                // will still be called, so do nothing special.
+                e.printStackTrace();
+            }
+        }
+
+        public void onServiceDisconnected(ComponentName arg0) {
+            if (App.LOG) Log.i(TAG, "onServiceDisconnected");
+            for (Events events : listeners) {
+                events.onDisconnected();
+            }
+        }
+    };
+
+    /**
+     * Callbacks from the Renderer service via Binder are handled here.
+     */
+    private final RendererCallbackInterface rendererCallback =
+            new RendererCallbackInterface.Stub() {
+    };
 
     /**
      * Disconnect from the background renderer service.
@@ -127,10 +206,12 @@ public class RendererManager {
     /**
      * Asynchronous Renderer Manager events.
      */
-    public class Events {
+    public static class Events {
         /**
          * Override this to be notified when the connection to the background renderer service
          * has been established.
+         * <p>
+         * This will be run on the application's main thread.
          */
         public void onConnected() {
         }
@@ -138,6 +219,8 @@ public class RendererManager {
         /**
          * Override this to be notified when the connection to the background renderer service
          * has been broken.
+         * <p>
+         * This will be run on the application's main thread.
          */
         public void onDisconnected() {
         }
@@ -145,6 +228,8 @@ public class RendererManager {
         /**
          * Override this to be notified whenever a renderer appears on the network.
          * @param r the renderer that has appeared
+         * <p>
+         * This will be run on the application's main thread.
          */
         public void onRendererFound(Renderer r) {
         }
@@ -152,6 +237,8 @@ public class RendererManager {
         /**
          * Override this to be notified whenever a renderer disappears from the network.
          * @param r the renderer that has disappeared
+         * <p>
+         * This will be run on the application's main thread.
          */
         public void onRendererLost(Renderer r) {
         }
