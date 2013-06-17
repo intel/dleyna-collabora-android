@@ -29,12 +29,11 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.os.Bundle;
 import android.os.IBinder;
 import android.os.RemoteException;
 import android.util.Log;
 
-import com.intel.dleyna.IRendererCallback;
-import com.intel.dleyna.IRendererService;
 import com.intel.dleyna.dleynademo.App;
 
 /**
@@ -162,8 +161,57 @@ public class RendererManager {
     /**
      * Callbacks from the Renderer service via Binder are handled here.
      */
-    private final IRendererCallback rendererCallback =
-            new IRendererCallback.Stub() {
+    private final IRendererCallback rendererCallback = new IRendererCallback.Stub() {
+
+        /*------------------------+
+         | RendererManager.Events |
+         +------------------------*/
+
+        public void onRendererFound(String objectPath) {
+        }
+
+        public void onRendererLost(String objectPath) {
+        }
+
+        /*---------------------------+
+         | IRendererControllerEvents |
+         +---------------------------*/
+
+        public void onPlaybackStatusChanged(String objectPath, String status) {
+        }
+
+        public void onRateChanged(String objectPath, double rate) {
+        }
+
+        public void onMetadataChanged(String objectPath, Bundle metadata) {
+        }
+
+        public void onVolumeChanged(String objectPath, double volume) {
+        }
+
+        public void onMinimumRateChanged(String objectPath, long rate) {
+        }
+
+        public void onMaximumRateChanged(String objectPath, long rate) {
+        }
+
+        public void onCanGoNextChanged(String objectPath, boolean value) {
+        }
+
+        public void onCanGoPreviousChanged(String objectPath, boolean value) {
+        }
+
+        public void onNumberOfTracksChanged(String objectPath, int n) {
+        }
+
+        public void onTrackChanged(String objectPath, int track) {
+        }
+
+        public void onTransportPlaySpeedsChanged(String objectPath, double[] speeds) {
+        }
+
+        public void onMuteChanged(String objectPath, boolean value) {
+        }
     };
 
     /**

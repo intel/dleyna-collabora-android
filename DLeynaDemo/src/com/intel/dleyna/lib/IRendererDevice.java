@@ -24,7 +24,7 @@ package com.intel.dleyna.lib;
 import android.os.RemoteException;
 
 /**
- * The IRendererDevice portion of the Renderer API.
+ * The Device portion of the Renderer API.
  */
 public interface IRendererDevice {
 
@@ -56,6 +56,7 @@ public interface IRendererDevice {
      * @return the icon URL, or null if this property is not implemented.
      * @throws RemoteException no connection to the background renderer service
      */
+
     public String getIconURL() throws RemoteException;
     /**
      * Get the name of this renderer's manufacturer.
@@ -131,7 +132,7 @@ public interface IRendererDevice {
      * Get the device icon.
      * @return the device icon.
      */
-    public Icon getIcon();
+    public Icon getIcon() throws RemoteException;
 
     /**
      * Cancel all outstanding commands this client has issued to this renderer.

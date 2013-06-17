@@ -21,8 +21,7 @@
 
 package com.intel.dleyna.lib;
 
-import java.util.Map;
-
+import android.os.Bundle;
 import android.os.RemoteException;
 
 /**
@@ -36,7 +35,7 @@ import android.os.RemoteException;
  * Use the {@link RendererManager} to discover instances of this class.
  * <p>
  * The connection to the background renderer service that you initiate with
- * {@link RendererManager#connect()} must be established for the methods of this
+ * {@link RendererManager#connect(android.content.Context)} must be established for the methods of this
  * class to succeed. Otherwise, they will throw a {@link RemoteException}.
  */
 public class Renderer implements IRendererDevice, IRendererController, IRendererPushHost {
@@ -152,7 +151,7 @@ public class Renderer implements IRendererDevice, IRendererController, IRenderer
     public void setRate(double rate) throws RemoteException {
     }
 
-    public Map<String,Object> getMetadata() throws RemoteException {
+    public Bundle getMetadata() throws RemoteException {
         return null;
     }
 
@@ -254,7 +253,7 @@ public class Renderer implements IRendererDevice, IRendererController, IRenderer
         public void onRateChanged(IRendererController c, double rate) {
         }
 
-        public void onMetadataChanged(IRendererController c, Map<String,Object> metadata) {
+        public void onMetadataChanged(IRendererController c, Bundle metadata) {
         }
 
         public void onVolumeChanged(IRendererController c, double volume) {

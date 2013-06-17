@@ -21,7 +21,7 @@
 
 package com.intel.dleyna.lib;
 
-import java.util.Map;
+import android.os.Bundle;
 
 /**
  * Asynchronous events from the controller interface of a renderer.
@@ -52,7 +52,7 @@ public interface IRendererControllerEvents {
      * @param c the controller
      * @param metadata the new metadata
      */
-    public void onMetadataChanged(IRendererController c, Map<String,Object> metadata);
+    public void onMetadataChanged(IRendererController c, Bundle metadata);
 
     /**
      * Notification that the volume level has changed.
