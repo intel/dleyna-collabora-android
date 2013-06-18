@@ -21,8 +21,7 @@
 
 package com.intel.dleyna.lib;
 
-import java.util.Map;
-
+import android.os.Bundle;
 import android.os.RemoteException;
 
 /**
@@ -176,7 +175,7 @@ public interface IRendererController {
      * @return the metadata
      * @throws RemoteException no connection to the background renderer service
      */
-    public Map<String,Object> getMetadata() throws RemoteException;
+    public Bundle getMetadata() throws RemoteException;
 
     /**
      * Get the current volume level.
