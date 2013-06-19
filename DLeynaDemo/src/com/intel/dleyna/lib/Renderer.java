@@ -21,6 +21,9 @@
 
 package com.intel.dleyna.lib;
 
+import java.util.LinkedList;
+import java.util.List;
+
 import android.os.Bundle;
 import android.os.RemoteException;
 
@@ -41,10 +44,17 @@ import android.os.RemoteException;
 public class Renderer implements IRendererDevice, IRendererController, IRendererPushHost {
 
     /** Identifies this renderer to the background renderer service. */
-    private String objectPath;
+    private final String objectPath;
 
-    /** The hidden constructor. */
-    private Renderer() {
+    private List<IRendererControllerEvents> controllerListeners = new LinkedList<IRendererControllerEvents>();
+
+    /** The package-visible constructor */
+    Renderer(String objectPath) {
+        this.objectPath = objectPath;
+    }
+
+    List<IRendererControllerEvents> getControllerListeners() {
+        return controllerListeners;
     }
 
     /*-----------------+
@@ -111,6 +121,7 @@ public class Renderer implements IRendererDevice, IRendererController, IRenderer
      +---------------------*/
 
     public void addListener(IRendererControllerEvents events) {
+        controllerListeners.add(events);
     }
 
     public void next() throws RemoteException {

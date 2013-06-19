@@ -27,8 +27,11 @@ import com.intel.dleyna.lib.IRendererCallback;
 
 interface IRendererService {
 
-    // Client provides us with a binder for callbacks.
-    void registerCallback(IRendererCallback cb);
+    // Client registration.
+    void registerClient(IRendererCallback cb);
+
+    // Client de-registration.
+    void unregisterClient(IRendererCallback cb);
 
     /*-----------------+
      | IRendererDevice |

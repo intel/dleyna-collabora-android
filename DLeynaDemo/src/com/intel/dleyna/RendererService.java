@@ -44,9 +44,14 @@ public class RendererService extends Service {
         private RemoteCallbackList<IRendererCallback> callbacks =
                 new RemoteCallbackList<IRendererCallback>();
 
-        public void registerCallback(IRendererCallback cb) {
+        public void registerClient(IRendererCallback cb) {
             Log.i("RendererService", "registerCallback");
             callbacks.register(cb);
+        }
+
+        public void unregisterClient(IRendererCallback cb) {
+            Log.i("RendererService", "unregisterCallback");
+            callbacks.unregister(cb);
         }
 
 //      How to broadcast callbacks:
