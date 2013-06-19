@@ -30,11 +30,14 @@ import android.os.Bundle;
  * {@link IRendererController#addListener(IRendererControllerEvents)}.
  * <p>
  * A default implementation of this interface is provided by {@link Renderer.ControllerEvents}.
+ * <p>
+ * All event notifications will run on the application's main thread.
  */
 public interface IRendererControllerEvents {
 
     /**
      * Notification that the playback status has changed.
+     * <p>
      * @param status the new playback status: "Playing", "Paused", or "Stopped"
      * @param c the controller
      */

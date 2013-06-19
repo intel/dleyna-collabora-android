@@ -21,6 +21,7 @@
 
 package com.intel.dleyna.lib;
 
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -30,34 +31,33 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.IBinder;
+import android.os.Looper;
 import android.os.RemoteException;
 import android.util.Log;
 
-import com.intel.dleyna.dleynademo.App;
-
 /**
- * This class allows applications to discover Digital Media Renderers
+ * This class enables applications to discover Digital Media Renderers
  * on local networks attached to this device (or on the device itself).
  * Each such DMR is represented by an instance of {@link Renderer}.
  * <p>
- * Use {@link #getInstance(Events)} to to obtain the singleton instance of this class.
+ * Use {@link #getInstance(Events)} to to obtain the singleton instance of this class
+ * and register for notification of events.
  * <p>
- * Use {@link #connect(Context)} to initiate a connection to the background renderer service,
- * typically from the onStart() method of an Activity.
+ * Use {@link #connect(Context)} to initiate the connection to the background renderer service.
  * <p>
- * Use {@link #disconnect()} to break the connection and deallocate connection resources,
- * typically from the onDestroy() method of an Activity.
+ * Use {@link #disconnect()} to break the connection and deallocate connection resources.
  * <p>
  * While connected to the background renderer service,
- * you can use {@link #getRenderers()} to obtain a list of all currently available renderers.
- * <p>
- * You will be notified of the appearance and disappearance of renderers in callbacks to
+ * you can use {@link #getRenderers()} to obtain a list of all currently available renderers,
+ * and you will be notified of the appearance and disappearance of renderers in callbacks to
  * the {@link Events} object that you passed to {@link #getInstance(Events)}.
- * These notifications will be run on the main thread of your application.
+ * Those notifications will run on the application's main thread.
  */
 public class RendererManager {
 
+    private static final boolean LOG = true;
     private static final String TAG = "RendererMgr";
 
     /** The singleton instance */
@@ -74,14 +74,25 @@ public class RendererManager {
 
     private boolean rendererServiceBound;
 
+    /** The context from which {@link #connect(Context)} was called. */
+    private Context context;
+
     private List<Events> listeners = new LinkedList<Events>();
+
+    private HashMap<String,Renderer> renderers = new HashMap<String,Renderer>();
+
+    /** The handler we use to run notifications on the main thread. */
+    private Handler handler;
 
     /** The hidden constructor */
     private RendererManager() {
     }
 
     /**
-     * Get the unique renderer manager instance, creating it if necessary.
+     * Get the unique renderer manager instance, creating it if necessary,
+     * and register for notification of events.
+     * <p>
+     * You would typically call this method from {@link Activity#onStart()}.
      * @param events an instance of your extension of {@link Events},
      * for receiving notification of events.
      * @return the singleton instance
@@ -89,7 +100,9 @@ public class RendererManager {
     public static RendererManager getInstance(Events events) {
         if (instance == null) {
             instance = new RendererManager();
+            instance.handler = new Handler(Looper.getMainLooper());
         }
+        instance.handler = new Handler(Looper.getMainLooper());
         instance.addListener(events);
         return instance;
     }
@@ -110,36 +123,48 @@ public class RendererManager {
      * This method could fail if, for example, the application package containing
      * the renderer service hasn't been installed on the device.
      * <p>
-     * You would typically call this method from {@link Activity#onStart()},
-     * on the application's main thread. The thread this is called on will be the one
-     * used to deliver all event notifications from this {@link RendererManager}
-     * and from all {@link Renderer}s discovered by it.
+     * You would typically call this method from {@link Activity#onStart()}.
      * @param context the context in which this is being called, typically an {@link Activity}.
      * @return true on success, false on failure
      */
     public boolean connect(Context context) {
+        this.context = context;
         Intent intent = new Intent();
         intent.setClassName(RENDERER_SERVICE_PACKAGE, RENDERER_SERVICE_CLASS);
         try {
-            rendererServiceBound = context.bindService(intent, RendererConnection, Context.BIND_AUTO_CREATE);
+            rendererServiceBound = context.bindService(intent, rendererConnection, Context.BIND_AUTO_CREATE);
         } catch (SecurityException e) {
         }
         if (!rendererServiceBound) {
-            Log.w(TAG, "connect: can't bind to renderer service");
+            if (LOG) Log.w(TAG, "connect: can't bind to renderer service");
             // For some crazy reason you have to have to unbind a service even if
             // the bind failed, or you'll get a "leaked ServiceConnection" warning.
-            context.unbindService(RendererConnection);
+            context.unbindService(rendererConnection);
         }
         return rendererServiceBound;
     }
 
-    private final ServiceConnection RendererConnection = new ServiceConnection() {
+    /**
+     * Disconnect from the background renderer service.
+     * <p>
+     * You would typically call this method from {@link Activity#onDestroy()}.
+     */
+    public void disconnect() {
+        try {
+            rendererService.unregisterClient(rendererCallback);
+        } catch (RemoteException e) {
+            e.printStackTrace();
+        }
+        context.unbindService(rendererConnection);
+    }
+
+    private final ServiceConnection rendererConnection = new ServiceConnection() {
 
         public void onServiceConnected(ComponentName className, IBinder b) {
-            if (App.LOG) Log.i(TAG, "onServiceConnected");
+            if (LOG) Log.i(TAG, "onServiceConnected");
             rendererService = IRendererService.Stub.asInterface(b);
             try {
-                rendererService.registerCallback(rendererCallback);
+                rendererService.registerClient(rendererCallback);
                 for (Events events : listeners) {
                     events.onConnected();
                 }
@@ -151,7 +176,7 @@ public class RendererManager {
         }
 
         public void onServiceDisconnected(ComponentName arg0) {
-            if (App.LOG) Log.i(TAG, "onServiceDisconnected");
+            if (LOG) Log.i(TAG, "onServiceDisconnected");
             for (Events events : listeners) {
                 events.onDisconnected();
             }
@@ -159,76 +184,13 @@ public class RendererManager {
     };
 
     /**
-     * Callbacks from the Renderer service via Binder are handled here.
-     */
-    private final IRendererCallback rendererCallback = new IRendererCallback.Stub() {
-
-        /*------------------------+
-         | RendererManager.Events |
-         +------------------------*/
-
-        public void onRendererFound(String objectPath) {
-        }
-
-        public void onRendererLost(String objectPath) {
-        }
-
-        /*---------------------------+
-         | IRendererControllerEvents |
-         +---------------------------*/
-
-        public void onPlaybackStatusChanged(String objectPath, String status) {
-        }
-
-        public void onRateChanged(String objectPath, double rate) {
-        }
-
-        public void onMetadataChanged(String objectPath, Bundle metadata) {
-        }
-
-        public void onVolumeChanged(String objectPath, double volume) {
-        }
-
-        public void onMinimumRateChanged(String objectPath, long rate) {
-        }
-
-        public void onMaximumRateChanged(String objectPath, long rate) {
-        }
-
-        public void onCanGoNextChanged(String objectPath, boolean value) {
-        }
-
-        public void onCanGoPreviousChanged(String objectPath, boolean value) {
-        }
-
-        public void onNumberOfTracksChanged(String objectPath, int n) {
-        }
-
-        public void onTrackChanged(String objectPath, int track) {
-        }
-
-        public void onTransportPlaySpeedsChanged(String objectPath, double[] speeds) {
-        }
-
-        public void onMuteChanged(String objectPath, boolean value) {
-        }
-    };
-
-    /**
-     * Disconnect from the background renderer service.
-     * <p>
-     * You would typically call this method from {@link Activity#onDestroy()}.
-     */
-    public void disconnect() {
-    }
-
-    /**
      * Get all known renderers.
      * @return all currently known renderers
      * @throws RemoteException no connection to the background renderer service
      */
     public Renderer[] getRenderers() throws RemoteException {
-        return null;
+        // TODO: fetch them from the service, update our local copy.
+        return (Renderer[]) renderers.values().toArray();
     }
 
     /**
@@ -238,8 +200,10 @@ public class RendererManager {
      * <p>
      * This may result in callbacks to {@link Events#onRendererFound(Renderer)} and/or
      * {@link Events#onRendererLost(Renderer)} on registered observers.
+     * @throws RemoteException no connection to the background renderer service
      */
-    public void rescan() {
+    public void rescan() throws RemoteException {
+        // TODO
     }
 
     /**
@@ -248,8 +212,263 @@ public class RendererManager {
      * @throws RemoteException no connection to the background renderer service
      */
     public String getVersion() throws RemoteException {
+        // TODO
         return null;
     }
+
+    /**
+     * Callbacks from the Renderer service via Binder are handled here.
+     * The callbacks run on some arbitrary Binder thread.
+     * We forward the calls to the main thread by using {@link #handler}.
+     */
+    private final IRendererCallback rendererCallback = new IRendererCallback.Stub() {
+
+        /*------------------------+
+         | RendererManager.Events |
+         +------------------------*/
+
+        public void onRendererFound(final String objectPath) {
+            if (LOG) Log.i(TAG, "onRendererFound: " + objectPath);
+            handler.post(new Runnable() {
+                public void run() {
+                    if (renderers.containsKey(objectPath)) {
+                        if (LOG) Log.e(TAG, "onRendererFound: REDUNDANT: " + objectPath);
+                    } else {
+                        Renderer r = new Renderer(objectPath);
+                        renderers.put(objectPath, r);
+                        for (Events l : listeners) {
+                            l.onRendererFound(r);
+                        }
+                    }
+                }
+            });
+        }
+
+        public void onRendererLost(final String objectPath) {
+            if (LOG) Log.i(TAG, "onRendererLost: " + objectPath);
+            handler.post(new Runnable() {
+                public void run() {
+                    Renderer r = renderers.get(objectPath);
+                    if (r == null) {
+                        if (LOG) Log.e(TAG, "onRendererLost: MISSING: " + objectPath);
+                    } else {
+                        for (Events l : listeners) {
+                            l.onRendererLost(r);
+                        }
+                        renderers.remove(objectPath);
+                    }
+                }
+            });
+        }
+
+        /*---------------------------+
+         | IRendererControllerEvents |
+         +---------------------------*/
+
+        public void onPlaybackStatusChanged(final String objectPath, final String status) {
+            if (LOG) Log.i(TAG, "onPlaybackStatusChanged: " + objectPath + " " + status);
+            handler.post(new Runnable() {
+                public void run() {
+                    Renderer r = renderers.get(objectPath);
+                    if (r == null) {
+                        if (LOG) Log.e(TAG, "onPlaybackStatusChanged: MISSING: " + objectPath);
+                    } else {
+                        List<IRendererControllerEvents> listeners = r.getControllerListeners();
+                        for (IRendererControllerEvents l : listeners) {
+                            l.onPlaybackStatusChanged(r, status);
+                        }
+                    }
+                }
+            });
+        }
+
+        public void onRateChanged(final String objectPath, final double rate) {
+            if (LOG) Log.i(TAG, "onRateChanged: " + objectPath + " " + rate);
+            handler.post(new Runnable() {
+                public void run() {
+                    Renderer r = renderers.get(objectPath);
+                    if (r == null) {
+                        if (LOG) Log.e(TAG, "onRateChanged: MISSING: " + objectPath);
+                    } else {
+                        List<IRendererControllerEvents> listeners = r.getControllerListeners();
+                        for (IRendererControllerEvents l : listeners) {
+                            l.onRateChanged(r, rate);
+                        }
+                    }
+                }
+            });
+        }
+
+        public void onMetadataChanged(final String objectPath, final Bundle metadata) {
+            if (LOG) Log.i(TAG, "onMetadataChanged: " + objectPath + " " + metadata);
+            handler.post(new Runnable() {
+                public void run() {
+                    Renderer r = renderers.get(objectPath);
+                    if (r == null) {
+                        if (LOG) Log.e(TAG, "onMetadataChanged: MISSING: " + objectPath);
+                    } else {
+                        List<IRendererControllerEvents> listeners = r.getControllerListeners();
+                        for (IRendererControllerEvents l : listeners) {
+                            l.onMetadataChanged(r, metadata);
+                        }
+                    }
+                }
+            });
+        }
+
+        public void onVolumeChanged(final String objectPath, final double volume) {
+            if (LOG) Log.i(TAG, "onVolumeChanged: " + objectPath + " " + volume);
+            handler.post(new Runnable() {
+                public void run() {
+                    Renderer r = renderers.get(objectPath);
+                    if (r == null) {
+                        if (LOG) Log.e(TAG, "onVolumeChanged: MISSING: " + objectPath);
+                    } else {
+                        List<IRendererControllerEvents> listeners = r.getControllerListeners();
+                        for (IRendererControllerEvents l : listeners) {
+                            l.onVolumeChanged(r, volume);
+                        }
+                    }
+                }
+            });
+        }
+
+        public void onMinimumRateChanged(final String objectPath, final long rate) {
+            if (LOG) Log.i(TAG, "onMinimumRateChanged: " + objectPath + " " + rate);
+            handler.post(new Runnable() {
+                public void run() {
+                    Renderer r = renderers.get(objectPath);
+                    if (r == null) {
+                        if (LOG) Log.e(TAG, "onMinimumRateChanged: MISSING: " + objectPath);
+                    } else {
+                        List<IRendererControllerEvents> listeners = r.getControllerListeners();
+                        for (IRendererControllerEvents l : listeners) {
+                            l.onMinimumRateChanged(r, rate);
+                        }
+                    }
+                }
+            });
+        }
+
+        public void onMaximumRateChanged(final String objectPath, final long rate) {
+            if (LOG) Log.i(TAG, "onMaximumRateChanged: " + objectPath + " " + rate);
+            handler.post(new Runnable() {
+                public void run() {
+                    Renderer r = renderers.get(objectPath);
+                    if (r == null) {
+                        if (LOG) Log.e(TAG, "onMaximumRateChanged: MISSING: " + objectPath);
+                    } else {
+                        List<IRendererControllerEvents> listeners = r.getControllerListeners();
+                        for (IRendererControllerEvents l : listeners) {
+                            l.onMaximumRateChanged(r, rate);
+                        }
+                    }
+                }
+            });
+        }
+
+        public void onCanGoNextChanged(final String objectPath, final boolean value) {
+            if (LOG) Log.i(TAG, "onCanGoNextChanged: " + objectPath + " " + value);
+            handler.post(new Runnable() {
+                public void run() {
+                    Renderer r = renderers.get(objectPath);
+                    if (r == null) {
+                        if (LOG) Log.e(TAG, "onCanGoNextChanged: MISSING: " + objectPath);
+                    } else {
+                        List<IRendererControllerEvents> listeners = r.getControllerListeners();
+                        for (IRendererControllerEvents l : listeners) {
+                            l.onCanGoNextChanged(r, value);
+                        }
+                    }
+                }
+            });
+        }
+
+        public void onCanGoPreviousChanged(final String objectPath, final boolean value) {
+            if (LOG) Log.i(TAG, "onCanGoPreviousChanged: " + objectPath + " " + value);
+            handler.post(new Runnable() {
+                public void run() {
+                    Renderer r = renderers.get(objectPath);
+                    if (r == null) {
+                        if (LOG) Log.e(TAG, "onCanGoPreviousChanged: MISSING: " + objectPath);
+                    } else {
+                        List<IRendererControllerEvents> listeners = r.getControllerListeners();
+                        for (IRendererControllerEvents l : listeners) {
+                            l.onCanGoPreviousChanged(r, value);
+                        }
+                    }
+                }
+            });
+        }
+
+        public void onNumberOfTracksChanged(final String objectPath, final int n) {
+            if (LOG) Log.i(TAG, "onNumberOfTracksChanged: " + objectPath + " " + n);
+            handler.post(new Runnable() {
+                public void run() {
+                    Renderer r = renderers.get(objectPath);
+                    if (r == null) {
+                        if (LOG) Log.e(TAG, "onNumberOfTracksChanged: MISSING: " + objectPath);
+                    } else {
+                        List<IRendererControllerEvents> listeners = r.getControllerListeners();
+                        for (IRendererControllerEvents l : listeners) {
+                            l.onNumberOfTracksChanged(r, n);
+                        }
+                    }
+                }
+            });
+        }
+
+        public void onTrackChanged(final String objectPath, final int track) {
+            if (LOG) Log.i(TAG, "onTrackChanged: " + objectPath + " " + track);
+            handler.post(new Runnable() {
+                public void run() {
+                    Renderer r = renderers.get(objectPath);
+                    if (r == null) {
+                        if (LOG) Log.e(TAG, "onTrackChanged: MISSING: " + objectPath);
+                    } else {
+                        List<IRendererControllerEvents> listeners = r.getControllerListeners();
+                        for (IRendererControllerEvents l : listeners) {
+                            l.onTrackChanged(r, track);
+                        }
+                    }
+                }
+            });
+        }
+
+        public void onTransportPlaySpeedsChanged(final String objectPath, final double[] speeds) {
+            if (LOG) Log.i(TAG, "onTransportPlaySpeedsChanged: " + objectPath + " " + speeds);
+            handler.post(new Runnable() {
+                public void run() {
+                    Renderer r = renderers.get(objectPath);
+                    if (r == null) {
+                        if (LOG) Log.e(TAG, "onTransportPlaySpeedsChanged: MISSING: " + objectPath);
+                    } else {
+                        List<IRendererControllerEvents> listeners = r.getControllerListeners();
+                        for (IRendererControllerEvents l : listeners) {
+                            l.onTransportPlaySpeedsChanged(r, speeds);
+                        }
+                    }
+                }
+            });
+        }
+
+        public void onMuteChanged(final String objectPath, final boolean value) {
+            if (LOG) Log.i(TAG, "onMuteChanged: " + objectPath + " " + value);
+            handler.post(new Runnable() {
+                public void run() {
+                    Renderer r = renderers.get(objectPath);
+                    if (r == null) {
+                        if (LOG) Log.e(TAG, "onMetadataChanged: MISSING: " + objectPath);
+                    } else {
+                        List<IRendererControllerEvents> listeners = r.getControllerListeners();
+                        for (IRendererControllerEvents l : listeners) {
+                            l.onMuteChanged(r, value);
+                        }
+                    }
+                }
+            });
+        }
+     };
 
     /**
      * Asynchronous Renderer Manager events.
@@ -259,7 +478,7 @@ public class RendererManager {
          * Override this to be notified when the connection to the background renderer service
          * has been established.
          * <p>
-         * This will be run on the application's main thread.
+         * This will run on the application's main thread.
          */
         public void onConnected() {
         }
@@ -268,7 +487,7 @@ public class RendererManager {
          * Override this to be notified when the connection to the background renderer service
          * has been broken.
          * <p>
-         * This will be run on the application's main thread.
+         * This will run on the application's main thread.
          */
         public void onDisconnected() {
         }
@@ -277,7 +496,7 @@ public class RendererManager {
          * Override this to be notified whenever a renderer appears on the network.
          * @param r the renderer that has appeared
          * <p>
-         * This will be run on the application's main thread.
+         * This will run on the application's main thread.
          */
         public void onRendererFound(Renderer r) {
         }
@@ -286,7 +505,7 @@ public class RendererManager {
          * Override this to be notified whenever a renderer disappears from the network.
          * @param r the renderer that has disappeared
          * <p>
-         * This will be run on the application's main thread.
+         * This will run on the application's main thread.
          */
         public void onRendererLost(Renderer r) {
         }
