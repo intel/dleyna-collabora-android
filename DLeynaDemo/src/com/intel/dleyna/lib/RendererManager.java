@@ -22,7 +22,6 @@
 package com.intel.dleyna.lib;
 
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 
 import android.app.Activity;
@@ -42,7 +41,7 @@ import android.util.Log;
  * on local networks attached to this device (or on the device itself).
  * Each such DMR is represented by an instance of {@link Renderer}.
  * <p>
- * Use {@link #getInstance(Events)} to to obtain the singleton instance of this class
+ * Use {@link #RendererManager(Events)} to to obtain an instance of this class
  * and register for notification of events.
  * <p>
  * Use {@link #connect(Context)} to initiate the connection to the background renderer service.
@@ -52,16 +51,13 @@ import android.util.Log;
  * While connected to the background renderer service,
  * you can use {@link #getRenderers()} to obtain a list of all currently available renderers,
  * and you will be notified of the appearance and disappearance of renderers in callbacks to
- * the {@link Events} object that you passed to {@link #getInstance(Events)}.
+ * the {@link Events} object that you passed to {@link #RendererManager(Events)}.
  * Those notifications will run on the application's main thread.
  */
 public class RendererManager {
 
     private static final boolean LOG = true;
     private static final String TAG = "RendererMgr";
-
-    /** The singleton instance */
-    private static RendererManager instance;
 
     /** The application package containing the Renderer service. */
     private static final String RENDERER_SERVICE_PACKAGE = "com.intel.dleyna.dleynademo";
@@ -72,43 +68,32 @@ public class RendererManager {
     /** The Binder interface to the Renderer service. */
     private IRendererService rendererService;
 
-    private boolean rendererServiceBound;
-
     /** The context from which {@link #connect(Context)} was called. */
     private Context context;
 
-    private List<Events> listeners = new LinkedList<Events>();
+    /** Do we have a binder to the service? */
+    private boolean serviceBound;
 
+    /** Are we connected to the service? */
+    private boolean serviceConnected;
+
+    /** The event listener. */
+    private Events listener;
+
+    /** Maps "object path" strings to renderers. */
     private HashMap<String,Renderer> renderers = new HashMap<String,Renderer>();
 
     /** The handler we use to run notifications on the main thread. */
     private Handler handler;
 
-    /** The hidden constructor */
-    private RendererManager() {
-    }
-
     /**
-     * Get the unique renderer manager instance, creating it if necessary,
-     * and register for notification of events.
-     * <p>
-     * You would typically call this method from {@link Activity#onStart()}.
+     * You would typically invoke this constructor from {@link Activity#onStart()}.
      * @param events an instance of your extension of {@link Events},
      * for receiving notification of events.
-     * @return the singleton instance
      */
-    public static RendererManager getInstance(Events events) {
-        if (instance == null) {
-            instance = new RendererManager();
-            instance.handler = new Handler(Looper.getMainLooper());
-        }
-        instance.handler = new Handler(Looper.getMainLooper());
-        instance.addListener(events);
-        return instance;
-    }
-
-    private void addListener(Events events) {
-        listeners.add(events);
+    public RendererManager(Events events) {
+        handler = new Handler(Looper.getMainLooper());
+        listener = events;
     }
 
     /**
@@ -117,7 +102,7 @@ public class RendererManager {
      * Connection establishment is asynchronous --
      * if this method succeeds, you will later receive a callback to
      * the {@link Events#onConnected()} method of the Events object you passed to
-     * {@link #getInstance(Events)} or to {@link Events#onDisconnected()}
+     * {@link #RendererManager(Events)}, or to {@link Events#onDisconnected()}
      * if something went wrong in the meantime.
      * <p>
      * This method could fail if, for example, the application package containing
@@ -128,20 +113,24 @@ public class RendererManager {
      * @return true on success, false on failure
      */
     public boolean connect(Context context) {
-        this.context = context;
-        Intent intent = new Intent();
-        intent.setClassName(RENDERER_SERVICE_PACKAGE, RENDERER_SERVICE_CLASS);
-        try {
-            rendererServiceBound = context.bindService(intent, rendererConnection, Context.BIND_AUTO_CREATE);
-        } catch (SecurityException e) {
+        if (LOG) Log.i(TAG, "connect");
+        if (!serviceBound) {
+            this.context = context;
+            Intent intent = new Intent();
+            intent.setClassName(RENDERER_SERVICE_PACKAGE, RENDERER_SERVICE_CLASS);
+            try {
+                serviceBound = context.bindService(intent, rendererConnection, Context.BIND_AUTO_CREATE);
+            } catch (SecurityException e) {
+                if (LOG) Log.e(TAG, "connect: " + e);
+            }
+            if (!serviceBound) {
+                if (LOG) Log.e(TAG, "connect: can't bind to renderer service");
+                // For some crazy reason you have to have to unbind a service even if
+                // the bind failed, or you'll get a "leaked ServiceConnection" warning.
+                context.unbindService(rendererConnection);
+            }
         }
-        if (!rendererServiceBound) {
-            if (LOG) Log.w(TAG, "connect: can't bind to renderer service");
-            // For some crazy reason you have to have to unbind a service even if
-            // the bind failed, or you'll get a "leaked ServiceConnection" warning.
-            context.unbindService(rendererConnection);
-        }
-        return rendererServiceBound;
+        return serviceBound;
     }
 
     /**
@@ -150,24 +139,29 @@ public class RendererManager {
      * You would typically call this method from {@link Activity#onDestroy()}.
      */
     public void disconnect() {
-        try {
-            rendererService.unregisterClient(rendererCallback);
-        } catch (RemoteException e) {
-            e.printStackTrace();
+        if (LOG) Log.i(TAG, "disconnect");
+        if (serviceConnected) {
+            try {
+                rendererService.unregisterClient(rendererCallback);
+            } catch (RemoteException e) {
+                if (LOG) Log.e(TAG, "disconnect: unregisterClient: " + e);
+            }
         }
-        context.unbindService(rendererConnection);
+        if (serviceBound) {
+            context.unbindService(rendererConnection);
+            serviceBound = false;
+        }
     }
 
     private final ServiceConnection rendererConnection = new ServiceConnection() {
 
         public void onServiceConnected(ComponentName className, IBinder b) {
             if (LOG) Log.i(TAG, "onServiceConnected");
+            serviceConnected = true;
             rendererService = IRendererService.Stub.asInterface(b);
             try {
                 rendererService.registerClient(rendererCallback);
-                for (Events events : listeners) {
-                    events.onConnected();
-                }
+                listener.onConnected();
             } catch (RemoteException e) {
                 // I'm supposing that if we get here, then onServiceDisconnected()
                 // will still be called, so do nothing special.
@@ -177,9 +171,8 @@ public class RendererManager {
 
         public void onServiceDisconnected(ComponentName arg0) {
             if (LOG) Log.i(TAG, "onServiceDisconnected");
-            for (Events events : listeners) {
-                events.onDisconnected();
-            }
+            serviceConnected = false;
+            listener.onDisconnected();
         }
     };
 
@@ -236,9 +229,7 @@ public class RendererManager {
                     } else {
                         Renderer r = new Renderer(objectPath);
                         renderers.put(objectPath, r);
-                        for (Events l : listeners) {
-                            l.onRendererFound(r);
-                        }
+                        listener.onRendererFound(r);
                     }
                 }
             });
@@ -252,9 +243,7 @@ public class RendererManager {
                     if (r == null) {
                         if (LOG) Log.e(TAG, "onRendererLost: MISSING: " + objectPath);
                     } else {
-                        for (Events l : listeners) {
-                            l.onRendererLost(r);
-                        }
+                        listener.onRendererLost(r);
                         renderers.remove(objectPath);
                     }
                 }
