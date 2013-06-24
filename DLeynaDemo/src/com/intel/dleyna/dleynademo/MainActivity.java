@@ -115,7 +115,7 @@ public class MainActivity extends Activity {
         }
     };
 
-    private RendererManager rendererMgr = RendererManager.getInstance(new RendererManager.Events() {
+    private RendererManager rendererMgr = new RendererManager(new RendererManager.Events() {
 
         public void onConnected() {
             writeTty("Connected.");
