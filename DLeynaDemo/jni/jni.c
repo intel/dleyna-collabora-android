@@ -23,7 +23,7 @@
 #include <stddef.h>
 
 #include "com_intel_dleyna_JNI.h"
-#include "dleyna-jni.h"
+#include "util.h"
 
 // Added to glib to allow us to inform it about dir names.
 extern void set_dir_names(const char*, const char*);

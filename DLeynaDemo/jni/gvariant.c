@@ -22,8 +22,8 @@
 #include <glib.h>
 #include <jni.h>
 
-#include "dleyna-jni.h"
 #include "com_intel_dleyna_GVariant.h"
+#include "util.h"
 
 
 JNIEXPORT void JNICALL Java_com_intel_dleyna_GVariant_refSink(

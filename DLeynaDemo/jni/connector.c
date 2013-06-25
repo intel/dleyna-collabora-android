@@ -19,9 +19,11 @@
  * Tom Keel <thomas.keel@intel.com>
  */
 
-#include <connector.h>
 #include <glib.h>
-#include "dleyna-jni.h"
+#include <libdleyna/core/connector.h>
+
+#include "util.h"
+
 
 static gboolean initialize(
     const gchar *server_info,
@@ -29,7 +31,9 @@ static gboolean initialize(
     GQuark error_quark,
     gpointer user_data)
 {
-    return FALSE;
+    LOGI("connecto.initialize: ENTER: server=%p root=%p quark=0x%08x data=%p", server_info, root_info, error_quark, user_data);
+    LOGI("connecto.initialize: EXIT");
+    return TRUE;
 }
 
 static void shutdown(void)

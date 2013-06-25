@@ -37,10 +37,44 @@ public class RendererService extends Service {
     private static final boolean LOG = true;
     private static final String TAG = "RendererService";
 
+    private static final String DAEMON_THREAD_NAME = "RendererDaemon";
+
     public RendererService() {
         JNI.initialize();
         JNI.cleanTempDir();
+        // FIXME: move the call to cleanTempDir() into the Application instance
+        // of the service app when we split things up someday. You can't just
+        // call it from each service process.
     }
+
+    public IBinder onBind(Intent intent) {
+        if (LOG) Log.i(TAG, "onBind");
+        if (daemonThread == null) {
+            daemonThread = new Thread(daemonRunnable, DAEMON_THREAD_NAME);
+            daemonThread.setDaemon(true);
+            daemonThread.start();
+        }
+        return binder;
+    }
+
+    public boolean onUnbind(Intent intent) {
+        if (LOG) Log.i(TAG, "onUnbind");
+        // TODO: do connector-something to cause daemon to return from runNative()
+        return false;
+    }
+
+    private Thread daemonThread;
+
+    private Runnable daemonRunnable = new Runnable() {
+        public void run() {
+            if (LOG) Log.i(TAG, Thread.currentThread().getName() + ": entering");
+            runNative();
+            if (LOG) Log.i(TAG, Thread.currentThread().getName() + ": exiting");
+            daemonThread = null;
+        }
+    };
+
+    public static native boolean runNative();
 
     private final IBinder binder = new IRendererService.Stub() {
 
@@ -48,12 +82,12 @@ public class RendererService extends Service {
                 new RemoteCallbackList<IRendererCallback>();
 
         public void registerClient(IRendererCallback cb) {
-            if (LOG) Log.i(TAG, "registerCallback");
+            if (LOG) Log.i(TAG, "registerClient");
             callbacks.register(cb);
         }
 
         public void unregisterClient(IRendererCallback cb) {
-            if (LOG) Log.i(TAG, "unregisterCallback");
+            if (LOG) Log.i(TAG, "unregisterClient");
             callbacks.unregister(cb);
         }
 
@@ -254,14 +288,4 @@ public class RendererService extends Service {
         public void removeFile(String objectPath, String path) {
         }
     };
-
-    public IBinder onBind(Intent intent) {
-        if (LOG) Log.i(TAG, "onBind");
-        return binder;
-    }
-
-    public boolean onUnbind(Intent intent) {
-        if (LOG) Log.i(TAG, "onUnbind");
-        return false;
-    }
 }

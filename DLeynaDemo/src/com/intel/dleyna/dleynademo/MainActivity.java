@@ -118,12 +118,12 @@ public class MainActivity extends Activity {
     private RendererManager rendererMgr = new RendererManager(new RendererManager.Events() {
 
         public void onConnected() {
-            writeTty("Connected.");
+            writeTty("Connected.\n");
         }
 
         public void onDisconnected() {
-            writeTty("disConnected.");
-       }
+            writeTty("Disconnected.\n");
+        }
 
         public void onRendererFound(Renderer r) {
         }

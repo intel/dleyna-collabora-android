@@ -22,15 +22,17 @@
 package com.intel.dleyna;
 
 /**
- * Connector is the interface to a native DLeyna service.
+ * IConnector is the interface to a native DLeyna service.
  * <p>
- * Some thread, which we here call the "main" thread,
+ * Some thread, which we here call the "daemon" thread
+ * (and which is *not* the "main" thread in the Android sense),
  * will call the native function dleyna_main_loop_start()
  * which in turn will call {@link #initialize(String, String, int, long)},
  * then {@link #connect(String, ConnectionCallback)},
  * and then g_main_loop_run().
  * <p>
- * Almost all the other methods of this interface will then be called from the main loop:
+ * Almost all the other methods of this interface will then be called from the g_main_loop
+ * on the daemon thread:
  * {@link #watchClient(String)},
  * {@link #unwatchClient(String)},
  * {@link #setClientLostCallback(ClientLostCallback)},
@@ -43,8 +45,8 @@ package com.intel.dleyna;
  * {@link #notify(long, String, String, String, Object, int)}
  * <p>
  * The exceptions are {@link #disconnect()} and {@link #shutdown()}
- * which will be called, in that order, on the main thread,
- * just after the main loop exits.
+ * which will be called, in that order, on the daemon thread,
+ * just after the g_main_loop exits.
  * <p>
  * Some of the functions of this interface supply us with callbacks.
  * We necessarily invoke the callbacks on some thread other than the main thread,
@@ -54,7 +56,7 @@ package com.intel.dleyna;
  * @author Tom Keel
  *
  */
-public interface Connector {
+public interface IConnector {
 
     /**
      * Called before anything else.
@@ -68,23 +70,23 @@ public interface Connector {
     public boolean initialize(String serverInfo, String rootInfo, int errorQuark, long userData);
 
     /**
-     * Called after the main loop exits, and after {@link #disconnect()} has been called,
-     * on the main thread.
+     * Called after the g_main_loop exits, and after {@link #disconnect()} has been called,
+     * on the daemon thread.
      * Clean up.
      */
     public void shutdown();
 
     /**
-     * Called after {@link #initialize}, before the main loop starts.
+     * Called after {@link #initialize}, before the g_main_loop loop starts.
      * We don't really need to do anything other than call the callback,
-     * but we have to delay doing that until the main loop is running.
+     * but we have to delay doing that until the g_main_loop is running.
      * @param serverName
      * @param connCb
      */
     public void connect(String serverName, ConnectionCallback connCb);
 
     /**
-     * Called after the main loop finishes, before {@link #shutdown()}.
+     * Called after the g_main_loop finishes, before {@link #shutdown()}.
      */
     public void disconnect();
 
