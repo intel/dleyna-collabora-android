@@ -1,7 +1,7 @@
-From 13f5add0fc0ed7fb87be0e5c94c64edf3631fde2 Mon Sep 17 00:00:00 2001
+From f11df06303cb0a09d9fc6ffbf30e445b84a3a789 Mon Sep 17 00:00:00 2001
 From: "Reynaldo H. Verdejo Pinochet" <reynaldo@collabora.com>
 Date: Wed, 22 May 2013 22:13:40 -0400
-Subject: [PATCH 3/3] Add fallback uuid implementation for Android
+Subject: [PATCH 2/3] Add fallback uuid implementation for Android
 
 Android lacks a libuuid implementation. This change
 adds a simple UUID v4 generator fallback as described
@@ -11,7 +11,7 @@ by http://www.ietf.org/rfc/rfc4122.txt
  1 file changed, 20 insertions(+), 3 deletions(-)
 
 diff --git a/libgupnp/gupnp-service.c b/libgupnp/gupnp-service.c
-index 7436ea2..c5e4565 100644
+index 9ea78e9..f27f84b 100644
 --- a/libgupnp/gupnp-service.c
 +++ b/libgupnp/gupnp-service.c
 @@ -1099,10 +1099,27 @@ generate_sid (void)
