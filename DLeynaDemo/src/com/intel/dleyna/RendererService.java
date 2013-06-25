@@ -34,6 +34,9 @@ import com.intel.dleyna.lib.Icon;
 
 public class RendererService extends Service {
 
+    private static final boolean LOG = true;
+    private static final String TAG = "RendererService";
+
     public RendererService() {
         JNI.initialize();
         JNI.cleanTempDir();
@@ -45,12 +48,12 @@ public class RendererService extends Service {
                 new RemoteCallbackList<IRendererCallback>();
 
         public void registerClient(IRendererCallback cb) {
-            Log.i("RendererService", "registerCallback");
+            if (LOG) Log.i(TAG, "registerCallback");
             callbacks.register(cb);
         }
 
         public void unregisterClient(IRendererCallback cb) {
-            Log.i("RendererService", "unregisterCallback");
+            if (LOG) Log.i(TAG, "unregisterCallback");
             callbacks.unregister(cb);
         }
 
@@ -253,6 +256,12 @@ public class RendererService extends Service {
     };
 
     public IBinder onBind(Intent intent) {
+        if (LOG) Log.i(TAG, "onBind");
         return binder;
+    }
+
+    public boolean onUnbind(Intent intent) {
+        if (LOG) Log.i(TAG, "onUnbind");
+        return false;
     }
 }
