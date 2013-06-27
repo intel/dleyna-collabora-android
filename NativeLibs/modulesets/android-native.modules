@@ -123,7 +123,7 @@
         </dependencies>
     </autotools>
 
-    <!-- dleyna -->
+    <!-- dleyna-core -->
 
     <autotools id="dleyna-core" autogen-sh="bootstrap-configure">
         <branch repo="01org" module="dleyna-core.git">
@@ -133,7 +133,9 @@
         </dependencies>
     </autotools>
 
-    <autotools id="dleyna-renderer" autogen-sh="bootstrap-configure" autogenargs="--enable-lib-only">
+    <!-- dleyna-renderer -->
+
+    <autotools id="dleyna-renderer" autogen-sh="bootstrap-configure" autogenargs="--enable-lib-only --with-connector-name=android">
         <branch repo="01org" module="dleyna-renderer.git">
         </branch>
         <dependencies>
