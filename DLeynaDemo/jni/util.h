@@ -30,7 +30,7 @@
  * Android logging macros.
  */
 
-#define TAG "DLeyna"
+#define TAG "DLeynaNative"
 
 #define LOGD(format, ...) \
     __android_log_print(ANDROID_LOG_DEBUG, TAG, format, ##__VA_ARGS__);

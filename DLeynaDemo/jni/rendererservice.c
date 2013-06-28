@@ -30,12 +30,18 @@
 
 #define DLR_RENDERER_SERVICE_NAME "dleyna-renderer-service"
 
-JNIEXPORT jboolean JNICALL Java_com_intel_dleyna_RendererService_runNative(
-    JNIEnv *env, jclass clazz)
+JNIEXPORT jint JNICALL Java_com_intel_dleyna_RendererService_dleynaMainLoopStart(
+    JNIEnv *env, jobject this)
 {
+    LOGI("dleynaMainLoopStart: this=%p", this);
+	return dleyna_main_loop_start(DLR_RENDERER_SERVICE_NAME,
+            dleyna_control_point_get_renderer(), (gpointer)this);
+}
 
-    LOGI("runNative");
-	dleyna_main_loop_start(DLR_RENDERER_SERVICE_NAME,
-            dleyna_control_point_get_renderer(), NULL);
+JNIEXPORT void JNICALL Java_com_intel_dleyna_RendererService_dleynaMainLoopQuit(
+    JNIEnv *env, jobject this)
+{
+    LOGI("dleynaMainLoopQuit");
+    dleyna_main_loop_quit();
 }
 

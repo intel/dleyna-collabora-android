@@ -11,11 +11,27 @@ extern "C" {
 #define com_intel_dleyna_RendererService_LOG 1L
 /*
  * Class:     com_intel_dleyna_RendererService
- * Method:    runNative
- * Signature: ()Z
+ * Method:    dleynaMainLoopStart
+ * Signature: ()I
  */
-JNIEXPORT jboolean JNICALL Java_com_intel_dleyna_RendererService_runNative
-  (JNIEnv *, jclass);
+JNIEXPORT jint JNICALL Java_com_intel_dleyna_RendererService_dleynaMainLoopStart
+  (JNIEnv *, jobject);
+
+/*
+ * Class:     com_intel_dleyna_RendererService
+ * Method:    dleynaMainLoopQuit
+ * Signature: ()V
+ */
+JNIEXPORT void JNICALL Java_com_intel_dleyna_RendererService_dleynaMainLoopQuit
+  (JNIEnv *, jobject);
+
+/*
+ * Class:     com_intel_dleyna_RendererService
+ * Method:    setJNIEnv
+ * Signature: ()V
+ */
+JNIEXPORT void JNICALL Java_com_intel_dleyna_RendererService_setJNIEnv
+  (JNIEnv *, jobject);
 
 #ifdef __cplusplus
 }

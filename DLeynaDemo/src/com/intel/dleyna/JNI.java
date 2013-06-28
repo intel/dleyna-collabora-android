@@ -46,8 +46,8 @@ public class JNI {
      */
     public static void initialize() {
         if (!initialized) {
-            System.loadLibrary("dleyna-connector-android");
             System.loadLibrary("dleyna-jni");
+            System.loadLibrary("dleyna-connector-android");
             String homeDirName = App.getInstance().getFilesDir().getAbsolutePath();
             tempDirName = homeDirName + '/' + TEMP_DIR_BASENAME;
             setDirNames(homeDirName, tempDirName);

@@ -118,6 +118,7 @@ LOCAL_SRC_FILES := ../../NativeLibs/install-$(TARGET_ARCH_ABI)-$(TARGET_PLATFORM
 include $(PREBUILT_STATIC_LIBRARY)
 
 # dleyna-connector-android
+
 include $(CLEAR_VARS)
 LOCAL_MODULE := dleyna-connector-android
 
@@ -128,11 +129,12 @@ LOCAL_C_INCLUDES := \
 
 LOCAL_SRC_FILES := connector.c
 
-LOCAL_LDLIBS := -llog -landroid -lz
-#LOCAL_STATIC_LIBRARIES := gupnp gssdp libsoup libxml2 gthread gio gobject gmodule glib iconv libintl ffi
+LOCAL_LDLIBS := -llog
+LOCAL_SHARED_LIBRARIES := dleyna-jni
 include $(BUILD_SHARED_LIBRARY)
 
 # dleyna-jni
+
 include $(CLEAR_VARS)
 LOCAL_MODULE := dleyna-jni
 
@@ -147,7 +149,6 @@ LOCAL_SRC_FILES := \
     jni.c \
     rendererservice.c \
 
-LOCAL_LDLIBS := -llog -landroid -lz
+LOCAL_LDLIBS := -llog -lz
 LOCAL_STATIC_LIBRARIES := dleyna-renderer dleyna-core gupnp-dlna gupnp-av gupnp gssdp libsoup libxml2 gthread gio gobject gmodule glib iconv libintl ffi
-LOCAL_SHARED_LIBRARIES := dleyna-connector-android
 include $(BUILD_SHARED_LIBRARY)
