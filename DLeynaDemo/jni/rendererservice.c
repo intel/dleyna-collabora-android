@@ -22,28 +22,20 @@
 #include <glib.h>
 #include <jni.h>
 
-#include "com_intel_dleyna_GVariantType.h"
+#include <libdleyna/core/main-loop.h>
+#include <libdleyna/renderer/control-point-renderer.h>
+
+#include "com_intel_dleyna_RendererService.h"
 #include "util.h"
 
+#define DLR_RENDERER_SERVICE_NAME "dleyna-renderer-service"
 
-JNIEXPORT jlong JNICALL Java_com_intel_dleyna_GVariantType_newBasicNative(
-    JNIEnv* env, jclass clazz, jchar basicType)
+JNIEXPORT jboolean JNICALL Java_com_intel_dleyna_RendererService_runNative(
+    JNIEnv *env, jclass clazz)
 {
-    char type[2];
 
-    type[0] = (char)basicType;
-    type[1] = '\0';
-    return PTR_TO_JLONG(g_variant_type_new(type));
+    LOGI("runNative");
+	dleyna_main_loop_start(DLR_RENDERER_SERVICE_NAME,
+            dleyna_control_point_get_renderer(), NULL);
 }
 
-JNIEXPORT jlong JNICALL Java_com_intel_dleyna_GVariantType_newArrayNative(
-    JNIEnv* env, jclass clazz, jlong elementType)
-{
-    return PTR_TO_JLONG(g_variant_type_new_array(JLONG_TO_PTR(elementType)));
-}
-
-JNIEXPORT void JNICALL Java_com_intel_dleyna_GVariantType_free(
-    JNIEnv* env, jclass clazz, jlong type)
-{
-    g_variant_type_free(JLONG_TO_PTR(type));
-}

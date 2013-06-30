@@ -19,8 +19,8 @@
  * Tom Keel <thomas.keel@intel.com>
  */
 
-#ifndef DLEYNA_JNI_H__
-#define DLEYNA_JNI_H__
+#ifndef DLEYNA_UTIL_H__
+#define DLEYNA_UTIL_H__
 
 #include <stdint.h>
 
@@ -30,7 +30,7 @@
  * Android logging macros.
  */
 
-#define TAG "DLeynaDemo"
+#define TAG "DLeyna"
 
 #define LOGD(format, ...) \
     __android_log_print(ANDROID_LOG_DEBUG, TAG, format, ##__VA_ARGS__);
@@ -56,4 +56,4 @@
 #define PTR_TO_JLONG(ptr) ((jlong)(size_t)(ptr))
 #define JLONG_TO_PTR(jlg) ((void*)(size_t)(jlg))
 
-#endif /* DLEYNA_JNI_H__ */
+#endif /* DLEYNA_UTIL_H__ */

@@ -1,0 +1,54 @@
+From 67cec86308eed0bce83a98430dae1a01f70100f0 Mon Sep 17 00:00:00 2001
+From: Tom Keel <thomas.keel@intel.com>
+Date: Thu, 27 Jun 2013 10:59:12 +0200
+Subject: [PATCH] [HACK] Fix another symbol clash with gupnp.
+
+This time, it's gvalue_util_set_value_from_string that clashes.
+---
+ libgupnp-av/gupnp-last-change-parser.c |    2 +-
+ libgupnp-av/gvalue-util.c              |    2 +-
+ libgupnp-av/gvalue-util.h              |    2 +-
+ 3 files changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/libgupnp-av/gupnp-last-change-parser.c b/libgupnp-av/gupnp-last-change-parser.c
+index a512b8d..13f7178 100644
+--- a/libgupnp-av/gupnp-last-change-parser.c
++++ b/libgupnp-av/gupnp-last-change-parser.c
+@@ -90,7 +90,7 @@ read_state_variable (const char *variable_name,
+                 return FALSE;
+         }
+ 
+-        gvalue_util_set_value_from_string (value, val_str);
++        gupnpav_gvalue_util_set_value_from_string (value, val_str);
+ 
+         return TRUE;
+ }
+diff --git a/libgupnp-av/gvalue-util.c b/libgupnp-av/gvalue-util.c
+index 1342ddc..8cfdb61 100644
+--- a/libgupnp-av/gvalue-util.c
++++ b/libgupnp-av/gvalue-util.c
+@@ -25,7 +25,7 @@
+ #include "gvalue-util.h"
+ 
+ gboolean
+-gvalue_util_set_value_from_string (GValue     *value,
++gupnpav_gvalue_util_set_value_from_string (GValue     *value,
+                                    const char *str)
+ {
+         GValue tmp_value = {0, };
+diff --git a/libgupnp-av/gvalue-util.h b/libgupnp-av/gvalue-util.h
+index c3b883a..63f2dc5 100644
+--- a/libgupnp-av/gvalue-util.h
++++ b/libgupnp-av/gvalue-util.h
+@@ -25,7 +25,7 @@
+ #include <glib-object.h>
+ 
+ G_GNUC_INTERNAL gboolean
+-gvalue_util_set_value_from_string      (GValue       *value,
++gupnpav_gvalue_util_set_value_from_string      (GValue       *value,
+                                         const char   *str);
+ 
+ #endif /* __GVALUE_UTIL_H__ */
+-- 
+1.7.9.5
+

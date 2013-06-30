@@ -81,25 +81,73 @@ LOCAL_MODULE := libxml2
 LOCAL_SRC_FILES := ../../NativeLibs/install-$(TARGET_ARCH_ABI)-$(TARGET_PLATFORM)/lib/libxml2.a
 include $(PREBUILT_STATIC_LIBRARY)
 
+# gssdp
+include $(CLEAR_VARS)
+LOCAL_MODULE := gssdp
+LOCAL_SRC_FILES := ../../NativeLibs/install-$(TARGET_ARCH_ABI)-$(TARGET_PLATFORM)/lib/libgssdp-1.0.a
+include $(PREBUILT_STATIC_LIBRARY)
+
+# gupnp
+include $(CLEAR_VARS)
+LOCAL_MODULE := gupnp
+LOCAL_SRC_FILES := ../../NativeLibs/install-$(TARGET_ARCH_ABI)-$(TARGET_PLATFORM)/lib/libgupnp-1.0.a
+include $(PREBUILT_STATIC_LIBRARY)
+
+# gupnp-av
+include $(CLEAR_VARS)
+LOCAL_MODULE := gupnp-av
+LOCAL_SRC_FILES := ../../NativeLibs/install-$(TARGET_ARCH_ABI)-$(TARGET_PLATFORM)/lib/libgupnp-av-1.0.a
+include $(PREBUILT_STATIC_LIBRARY)
+
+# gupnp-dlna
+include $(CLEAR_VARS)
+LOCAL_MODULE := gupnp-dlna
+LOCAL_SRC_FILES := ../../NativeLibs/install-$(TARGET_ARCH_ABI)-$(TARGET_PLATFORM)/lib/libgupnp-dlna-2.0.a
+include $(PREBUILT_STATIC_LIBRARY)
+
+# dleyna-core
+include $(CLEAR_VARS)
+LOCAL_MODULE := dleyna-core
+LOCAL_SRC_FILES := ../../NativeLibs/install-$(TARGET_ARCH_ABI)-$(TARGET_PLATFORM)/lib/libdleyna-core-1.0.a
+include $(PREBUILT_STATIC_LIBRARY)
+
+# dleyna-renderer
+include $(CLEAR_VARS)
+LOCAL_MODULE := dleyna-renderer
+LOCAL_SRC_FILES := ../../NativeLibs/install-$(TARGET_ARCH_ABI)-$(TARGET_PLATFORM)/lib/libdleyna-renderer-1.0.a
+include $(PREBUILT_STATIC_LIBRARY)
+
+# dleyna-connector-android
+include $(CLEAR_VARS)
+LOCAL_MODULE := dleyna-connector-android
+
+LOCAL_C_INCLUDES := \
+    ../../NativeLibs/install-$(TARGET_ARCH_ABI)-$(TARGET_PLATFORM)/include/glib-2.0 \
+    ../../NativeLibs/install-$(TARGET_ARCH_ABI)-$(TARGET_PLATFORM)/lib/glib-2.0/include \
+    ../../NativeLibs/install-$(TARGET_ARCH_ABI)-$(TARGET_PLATFORM)/include/dleyna-1.0 \
+
+LOCAL_SRC_FILES := connector.c
+
+LOCAL_LDLIBS := -llog -landroid -lz
+#LOCAL_STATIC_LIBRARIES := gupnp gssdp libsoup libxml2 gthread gio gobject gmodule glib iconv libintl ffi
+include $(BUILD_SHARED_LIBRARY)
+
 # dleyna-jni
 include $(CLEAR_VARS)
-MY_GLIB := glib-2.34.3
-MY_LIBSOUP := libsoup-2.40.3
 LOCAL_MODULE := dleyna-jni
 
 LOCAL_C_INCLUDES := \
-    ../../NativeLibs/install-$(TARGET_ARCH_ABI)-$(TARGET_PLATFORM)/include \
     ../../NativeLibs/install-$(TARGET_ARCH_ABI)-$(TARGET_PLATFORM)/include/glib-2.0 \
-    ../../NativeLibs/install-$(TARGET_ARCH_ABI)-$(TARGET_PLATFORM)/include/glib-2.0/glib \
     ../../NativeLibs/install-$(TARGET_ARCH_ABI)-$(TARGET_PLATFORM)/lib/glib-2.0/include \
-    ../../NativeLibs/sources/dleyna-core/libdleyna/core \
+    ../../NativeLibs/install-$(TARGET_ARCH_ABI)-$(TARGET_PLATFORM)/include/dleyna-1.0 \
 
 LOCAL_SRC_FILES := \
-    dleyna-jni.c \
-    connector.c \
     gvariant.c \
     gvarianttype.c \
+    jni.c \
+    rendererservice.c \
 
 LOCAL_LDLIBS := -llog -landroid -lz
-LOCAL_STATIC_LIBRARIES := libsoup libxml2 gthread gio gobject gmodule glib iconv libintl ffi
+LOCAL_STATIC_LIBRARIES := dleyna-renderer dleyna-core gupnp-dlna gupnp-av gupnp gssdp libsoup libxml2 gthread gio gobject gmodule glib iconv libintl ffi
+LOCAL_SHARED_LIBRARIES := dleyna-connector-android
 include $(BUILD_SHARED_LIBRARY)

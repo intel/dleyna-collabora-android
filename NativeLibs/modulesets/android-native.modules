@@ -104,6 +104,7 @@
     <autotools id="gupnp-av" autogen-sh="autoreconf">
         <branch repo="gnome.org" module="gupnp-av/0.12/gupnp-av-0.12.1.tar.xz" version="0.12.1">
         <patch file="gupnp-av/0001-HACK-Fix-symbol-clash-with-gupnp-s-xml-util.patch" strip="1" />
+        <patch file="gupnp-av/0002-Fix-another-symbol-clash-with-gupnp.patch" strip="1" />
         </branch>
         <dependencies>
             <dep package="gupnp"/>
@@ -122,7 +123,7 @@
         </dependencies>
     </autotools>
 
-    <!-- dleyna -->
+    <!-- dleyna-core -->
 
     <autotools id="dleyna-core" autogen-sh="bootstrap-configure">
         <branch repo="01org" module="dleyna-core.git">
@@ -132,7 +133,9 @@
         </dependencies>
     </autotools>
 
-    <autotools id="dleyna-renderer" autogen-sh="bootstrap-configure" autogenargs="--enable-lib-only">
+    <!-- dleyna-renderer -->
+
+    <autotools id="dleyna-renderer" autogen-sh="bootstrap-configure" autogenargs="--enable-lib-only --with-connector-name=android">
         <branch repo="01org" module="dleyna-renderer.git">
         </branch>
         <dependencies>
