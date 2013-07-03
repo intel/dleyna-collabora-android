@@ -27,17 +27,21 @@ import android.os.Bundle;
 import android.os.IBinder;
 import android.os.RemoteCallbackList;
 import android.util.Log;
+import android.util.SparseArray;
 
 import com.intel.dleyna.lib.IRendererCallback;
 import com.intel.dleyna.lib.IRendererService;
 import com.intel.dleyna.lib.Icon;
 
-public class RendererService extends Service {
+public class RendererService extends Service implements IConnector {
 
     private static final boolean LOG = true;
     private static final String TAG = "RendererService";
 
     private static final String DAEMON_THREAD_NAME = "RendererDaemon";
+
+    private SparseArray<RemoteObject> objects = new SparseArray<RemoteObject>();
+    private int nextRemoteObjectId = 1;
 
     public RendererService() {
         JNI.initialize();
@@ -49,17 +53,24 @@ public class RendererService extends Service {
 
     public IBinder onBind(Intent intent) {
         if (LOG) Log.i(TAG, "onBind");
-        if (daemonThread == null) {
-            daemonThread = new Thread(daemonRunnable, DAEMON_THREAD_NAME);
-            daemonThread.setDaemon(true);
-            daemonThread.start();
+        if (daemonThread != null) {
+            if (LOG) Log.e(TAG, "onBind: zombie daemon thread!");
         }
+        daemonThread = new Thread(daemonRunnable, DAEMON_THREAD_NAME);
+        daemonThread.setDaemon(true);
+        daemonThread.start();
         return binder;
     }
 
     public boolean onUnbind(Intent intent) {
         if (LOG) Log.i(TAG, "onUnbind");
-        // TODO: do connector-something to cause daemon to return from runNative()
+        dleynaMainLoopQuit();
+        // Wait for the daemon thread to exit.
+        try {
+            daemonThread.join();
+        } catch (InterruptedException e) {
+        }
+        daemonThread = null;
         return false;
     }
 
@@ -68,13 +79,24 @@ public class RendererService extends Service {
     private Runnable daemonRunnable = new Runnable() {
         public void run() {
             if (LOG) Log.i(TAG, Thread.currentThread().getName() + ": entering");
-            runNative();
-            if (LOG) Log.i(TAG, Thread.currentThread().getName() + ": exiting");
-            daemonThread = null;
+            setJNIEnv();
+            int status = dleynaMainLoopStart();
+            if (LOG) Log.i(TAG, Thread.currentThread().getName() + ": exiting: status=" + status);
         }
     };
 
-    public static native boolean runNative();
+    /**
+     * This is called on the daemon thread.
+     * It creates and enters the g_main_loop.
+     * @return 0 success, non-zero the gmain_loop didn't start
+     */
+    public native int dleynaMainLoopStart();
+
+    /**
+     * This is called on this service's main thread.
+     * It causes the daemon thread to exit the g_main_loop.
+     */
+    public native void dleynaMainLoopQuit();
 
     private final IBinder binder = new IRendererService.Stub() {
 
@@ -288,4 +310,77 @@ public class RendererService extends Service {
         public void removeFile(String objectPath, String path) {
         }
     };
+
+    /*------------+
+     | IConnector |
+     +------------*/
+
+    public native void setJNIEnv();
+
+    public boolean initialize(String serverInfo, String rootInfo, int errorQuark) {
+        if (LOG) Log.i(TAG, "initialize");
+        return true;
+    }
+
+    public void shutdown() {
+        if (LOG) Log.i(TAG, "shutdown");
+    }
+
+    public void connect(String serverName, long connectedCb, long disconnectedCb) {
+        if (LOG) Log.i(TAG, "connect");
+    }
+
+    public void disconnect() {
+        if (LOG) Log.i(TAG, "disconnect");
+    }
+
+    public boolean watchClient(String clientName) {
+        if (LOG) Log.i(TAG, "watchClient");
+        return false;
+    }
+
+    public void unwatchClient(String clientName) {
+        if (LOG) Log.i(TAG, "unwatchClient");
+    }
+
+    public void setClientLostCallback(long lostCb) {
+        if (LOG) Log.i(TAG, "setClientLostCallback");
+    }
+
+    public int publishObject(long connectorId, String objectPath, boolean isRoot,
+            int interfaceIndex, long dispatchCb) {
+        if (LOG) Log.i(TAG, "publishObject");
+        RemoteObject ro = new RemoteObject(nextRemoteObjectId++, connectorId, objectPath, isRoot, interfaceIndex, dispatchCb);
+        objects.append(ro.id, ro);
+        if (LOG) Log.i(TAG, "publishObject: id=" + ro.id);
+       return ro.id;
+    }
+
+    public int publishSubtree(long connectorId, String objectPath, long[] dispatchCb,
+            long interfaceFilterCb) {
+        if (LOG) Log.i(TAG, "publishSubtree");
+        return 0;
+    }
+
+    public void unpublishObject(long connectorId, int ObjectId) {
+        if (LOG) Log.i(TAG, "unpublishObject");
+    }
+
+    public void unpublishSubtree(long connectorId, int objectId) {
+        if (LOG) Log.i(TAG, "unpublishSubtree");
+    }
+
+    public void returnResponse(long messageId, Object parameters) {
+        if (LOG) Log.i(TAG, "unpublishSubtree");
+    }
+
+    public void returnError(long messageId, int errorCode) {
+        if (LOG) Log.i(TAG, "returnResponse");
+    }
+
+    public boolean notify(long connectorId, String objectPath, String interfaceName,
+            String notificationName, Object parameters, int errorCode) {
+        if (LOG) Log.i(TAG, "notify");
+        return false;
+    }
 }

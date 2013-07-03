@@ -151,6 +151,7 @@ public class RendererManager {
             context.unbindService(rendererConnection);
             serviceBound = false;
         }
+        if (LOG) Log.i(TAG, "disconnect: DONE");
     }
 
     private final ServiceConnection rendererConnection = new ServiceConnection() {

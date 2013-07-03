@@ -14,3 +14,5 @@ DLeynaDemo/doc
 DLeynaDemo/gen
 DLeynaDemo/libs
 DLeynaDemo/obj
+DLeynaDemo/jni/com_intel_dleyna_BogusConnector.h
+DLeynaDemo/src/com/intel/dleyna/BogusConnector.java
