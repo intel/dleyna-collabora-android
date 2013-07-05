@@ -40,8 +40,24 @@ public class RendererService extends Service implements IConnector {
 
     private static final String DAEMON_THREAD_NAME = "RendererDaemon";
 
+    private static final String MANGER_OBJECT_PATH = "/com/intel/dLeynaRenderer";
+
+    /**
+     * The current set of remote objects.
+     * The first object to show up should be the Manager object
+     * (though we don't presume so),
+     * and it should be around until shutdown.
+     * Renderer objects come and go.
+     */
     private SparseArray<RemoteObject> objects = new SparseArray<RemoteObject>();
-    private int nextRemoteObjectId = 1;
+
+    /**
+     * We attribute integer id-s to remote objects starting with 1.
+     */
+    private int lastAssignededObjectId;
+
+    /** The manager object's id. */
+    private int managerObjectId;
 
     public RendererService() {
         JNI.initialize();
@@ -53,12 +69,27 @@ public class RendererService extends Service implements IConnector {
 
     public IBinder onBind(Intent intent) {
         if (LOG) Log.i(TAG, "onBind");
+
+        lastAssignededObjectId = 0;
+        managerObjectId = 0;
+
+        // Create and start the daemon thread.
         if (daemonThread != null) {
             if (LOG) Log.e(TAG, "onBind: zombie daemon thread!");
         }
         daemonThread = new Thread(daemonRunnable, DAEMON_THREAD_NAME);
         daemonThread.setDaemon(true);
         daemonThread.start();
+
+        // Wait until the manager object shows up.
+        synchronized(this) {
+            while (managerObjectId == 0) {
+                try {
+                    this.wait();
+                } catch (InterruptedException e) {
+                }
+            }
+        }
         return binder;
     }
 
@@ -349,10 +380,22 @@ public class RendererService extends Service implements IConnector {
 
     public int publishObject(long connectorId, String objectPath, boolean isRoot,
             int interfaceIndex, long dispatchCb) {
-        if (LOG) Log.i(TAG, "publishObject");
-        RemoteObject ro = new RemoteObject(nextRemoteObjectId++, connectorId, objectPath, isRoot, interfaceIndex, dispatchCb);
+        if (LOG) Log.i(TAG, "publishObject: " + objectPath);
+
+        // Add this object to the collection.
+        lastAssignededObjectId++;
+        RemoteObject ro = new RemoteObject(lastAssignededObjectId, connectorId, objectPath,
+                isRoot, interfaceIndex, dispatchCb);
         objects.append(ro.id, ro);
-        if (LOG) Log.i(TAG, "publishObject: id=" + ro.id);
+
+        // If it's the manager object, note its id and unblock the main thread in onBind().
+        if (objectPath.equals(MANGER_OBJECT_PATH)) {
+            synchronized (this) {
+                managerObjectId = lastAssignededObjectId;
+                this.notify();
+            }
+        }
+
        return ro.id;
     }
 
