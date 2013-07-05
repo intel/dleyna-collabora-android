@@ -44,11 +44,21 @@ public class MainActivity extends Activity {
 
     private static final String TAG = App.TAG;
 
+    // States of the connection to the background service.
+    private static final int CONN_DISCONNECTED = 0;
+    private static final int CONN_CONNECTING = 1;
+    private static final int CONN_CONNECTED = 2;
+    private static final int CONN_DISCONNECTING = 3;
+
+    private int connState = CONN_DISCONNECTED;
+
     private Prefs prefs = Prefs.getInstance();
 
     // Widgets.
     private TextView ttyTextView;
     private Button clearButton;
+    private Button connectButton;
+    private Button disconnectButton;
 
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -58,19 +68,22 @@ public class MainActivity extends Activity {
         ttyTextView.setMovementMethod(new ScrollingMovementMethod()); // makes it scrollable...
         clearButton = (Button) findViewById(R.id.clear_button);
         clearButton.setOnClickListener(clearButtonListener);
+        connectButton = (Button) findViewById(R.id.connect_button);
+        connectButton.setOnClickListener(connectButtonListener);
+        disconnectButton = (Button) findViewById(R.id.disconnect_button);
+        disconnectButton.setOnClickListener(disconnectButtonListener);
         showHelp();
     }
 
     protected void onStart() {
         super.onStart();
         if (App.LOG) Log.i(TAG, "MainActivity: onStart");
-        rendererMgr.connect(this);
     }
 
     protected void onResume() {
         super.onResume();
         if (App.LOG) Log.i(TAG, "MainActivity: onResume");
-        setEnabledStateOfWidgets(true);
+        setEnabledStateOfWidgets();
     }
 
     protected void onPause() {
@@ -115,13 +128,35 @@ public class MainActivity extends Activity {
         }
     };
 
+    private final OnClickListener connectButtonListener = new OnClickListener() {
+        public void onClick(View v) {
+            connState = CONN_CONNECTING;
+            setEnabledStateOfWidgets();
+            rendererMgr.connect(MainActivity.this);
+        }
+    };
+
+    private final OnClickListener disconnectButtonListener = new OnClickListener() {
+        public void onClick(View v) {
+            connState = CONN_DISCONNECTING;
+            setEnabledStateOfWidgets();
+            rendererMgr.disconnect();
+        }
+    };
+
     private RendererManager rendererMgr = new RendererManager(new RendererManager.Events() {
 
         public void onConnected() {
+            if (App.LOG) Log.i(TAG, "MainActivity: onConnected");
+            connState = CONN_CONNECTED;
+            setEnabledStateOfWidgets();
             writeTty("Connected.\n");
         }
 
         public void onDisconnected() {
+            if (App.LOG) Log.i(TAG, "MainActivity: onDisconnected");
+            connState = CONN_DISCONNECTED;
+            setEnabledStateOfWidgets();
             writeTty("Disconnected.\n");
         }
 
@@ -132,9 +167,11 @@ public class MainActivity extends Activity {
         }
     });
 
-
-    private void setEnabledStateOfWidgets(boolean enabled) {
-        clearButton.setEnabled(enabled);
+    private void setEnabledStateOfWidgets() {
+        if (App.LOG) Log.i(TAG, "MainActivity: setEnabledStateOfWidgets: connState=" + connState);
+        clearButton.setEnabled(true);
+        connectButton.setEnabled(connState == CONN_DISCONNECTED);
+        disconnectButton.setEnabled(connState == CONN_CONNECTED);
     }
 
     private void writeTty(CharSequence cs) {

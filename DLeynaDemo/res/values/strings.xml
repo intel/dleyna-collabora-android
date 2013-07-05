@@ -25,6 +25,8 @@
     <string name="app_name">DLeyna Demo</string>
     <string name="app_push_name">DLeyna Demo Push</string>
     <string name="clear">Clear</string>
+    <string name="connect">Conn</string>
+    <string name="disconnect">Disc</string>
     <string name="none">No Tests</string>
     <string name="pref_activity_name">DLeyna Demo\nSettings</string>
     <string name="settings">Settings</string>

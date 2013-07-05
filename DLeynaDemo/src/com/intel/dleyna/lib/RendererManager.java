@@ -113,8 +113,9 @@ public class RendererManager {
      * @return true on success, false on failure
      */
     public boolean connect(Context context) {
-        if (LOG) Log.i(TAG, "connect");
+        if (LOG) Log.i(TAG, "connect: bound=" + serviceBound + " connected=" + serviceConnected);
         if (!serviceBound) {
+            if (LOG) Log.i(TAG, "connect: binding");
             this.context = context;
             Intent intent = new Intent();
             intent.setClassName(RENDERER_SERVICE_PACKAGE, RENDERER_SERVICE_CLASS);
@@ -125,10 +126,13 @@ public class RendererManager {
             }
             if (!serviceBound) {
                 if (LOG) Log.e(TAG, "connect: can't bind to renderer service");
-                // For some crazy reason you have to have to unbind a service even if
+                // For some crazy reason you have to unbind a service even if
                 // the bind failed, or you'll get a "leaked ServiceConnection" warning.
                 context.unbindService(rendererConnection);
             }
+            // Note: even though unbinding the service does not necessarily result in an
+            // onServiceDisconnected() callback, i.e. even though we could be here with
+            // serviceConnected == true, we *will* get another onServiceConnected() callback.
         }
         return serviceBound;
     }
@@ -139,8 +143,9 @@ public class RendererManager {
      * You would typically call this method from {@link Activity#onDestroy()}.
      */
     public void disconnect() {
-        if (LOG) Log.i(TAG, "disconnect");
+        if (LOG) Log.i(TAG, "disconnect: bound=" + serviceBound + " connected=" + serviceConnected);
         if (serviceConnected) {
+            if (LOG) Log.i(TAG, "disconnect: unregistering client");
             try {
                 rendererService.unregisterClient(rendererCallback);
             } catch (RemoteException e) {
@@ -149,6 +154,12 @@ public class RendererManager {
         }
         if (serviceBound) {
             context.unbindService(rendererConnection);
+            // We should be on the main thread, but even so, we don't want recursion.
+            handler.post(new Runnable() {
+                public void run() {
+                    listener.onDisconnected();
+                }
+            });
             serviceBound = false;
         }
         if (LOG) Log.i(TAG, "disconnect: DONE");
@@ -157,7 +168,7 @@ public class RendererManager {
     private final ServiceConnection rendererConnection = new ServiceConnection() {
 
         public void onServiceConnected(ComponentName className, IBinder b) {
-            if (LOG) Log.i(TAG, "onServiceConnected");
+            if (LOG) Log.i(TAG, "onServiceConnected: bound=" + serviceBound + " connected=" + serviceConnected);
             serviceConnected = true;
             rendererService = IRendererService.Stub.asInterface(b);
             try {
@@ -171,9 +182,12 @@ public class RendererManager {
         }
 
         public void onServiceDisconnected(ComponentName arg0) {
-            if (LOG) Log.i(TAG, "onServiceDisconnected");
+            if (LOG) Log.i(TAG, "onServiceDisconnected: bound=" + serviceBound + " connected=" + serviceConnected);
             serviceConnected = false;
-            listener.onDisconnected();
+            if (serviceBound) {
+                listener.onDisconnected();
+                serviceBound = false;
+            }
         }
     };
 
