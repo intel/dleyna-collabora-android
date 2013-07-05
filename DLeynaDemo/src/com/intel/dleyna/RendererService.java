@@ -102,6 +102,7 @@ public class RendererService extends Service implements IConnector {
         } catch (InterruptedException e) {
         }
         daemonThread = null;
+        if (LOG) Log.i(TAG, "onUnbind: EXIT");
         return false;
     }
 
