@@ -151,6 +151,7 @@ public class RendererManager {
             } catch (RemoteException e) {
                 if (LOG) Log.e(TAG, "disconnect: unregisterClient: " + e);
             }
+            serviceConnected = false;
         }
         if (serviceBound) {
             context.unbindService(rendererConnection);
@@ -169,6 +170,10 @@ public class RendererManager {
 
         public void onServiceConnected(ComponentName className, IBinder b) {
             if (LOG) Log.i(TAG, "onServiceConnected: bound=" + serviceBound + " connected=" + serviceConnected);
+            // Note: the service could have been re-bound and re-connected automatically
+            // following a service process crash, in which case serviceBound would be false
+            // here. So set it true.
+            serviceBound = true;
             serviceConnected = true;
             rendererService = IRendererService.Stub.asInterface(b);
             try {
