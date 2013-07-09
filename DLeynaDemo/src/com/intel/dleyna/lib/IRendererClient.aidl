@@ -22,7 +22,7 @@
 
 package com.intel.dleyna.lib;
 
-interface IRendererCallback {
+interface IRendererClient {
 
     /*-------------------------+
      | IRendererManager.Events |

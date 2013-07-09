@@ -38,8 +38,11 @@ public class GVariant {
     // Pointer to the native GVariant object
     private long peer;
 
-    // Construct a new instance given the native peer instance
-    private GVariant(long peer) {
+    /**
+     * Construct a new instance given the native instance.
+     * @param peer the native instance
+     */
+    public GVariant(long peer) {
         if (peer == 0) {
             throw new IllegalArgumentException();
         }
@@ -57,6 +60,10 @@ public class GVariant {
             unref(peer);
             peer = 0;
         }
+    }
+
+    private void unref() {
+        unref(peer);
     }
 
     private static native void refSink(long peer);
@@ -227,4 +234,22 @@ public class GVariant {
     }
 
     private static native String[] getArrayOfStringNative(long peer);
+
+    /**
+     * Return the the child at the given index, à la g_variant_get_child_value().
+     * <p>
+     * This GVariant object must be a container (variant, maybe, array, tuple, or dictionary).
+     * @param index index of the child to return
+     * @return the child at the given index
+     */
+    public GVariant getChildValue(int index) {
+        GVariant child = new GVariant(getChildValueNative(peer, index));
+        // TODO: verify this: I think the ref count got bumped when we obtained it by
+        // g_variant_get_child_value(). It gets bumped again in our new GVariant().
+        // So we have to decrement the ref count here.
+        child.unref();
+        return child;
+    }
+
+    private static native long getChildValueNative(long peer, int index);
 }

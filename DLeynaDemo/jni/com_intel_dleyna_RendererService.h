@@ -12,26 +12,18 @@ extern "C" {
 /*
  * Class:     com_intel_dleyna_RendererService
  * Method:    dleynaMainLoopStart
- * Signature: ()I
+ * Signature: (Lcom/intel/dleyna/Connector;)I
  */
 JNIEXPORT jint JNICALL Java_com_intel_dleyna_RendererService_dleynaMainLoopStart
-  (JNIEnv *, jobject);
+  (JNIEnv *, jobject, jobject);
 
 /*
  * Class:     com_intel_dleyna_RendererService
  * Method:    dleynaMainLoopQuit
- * Signature: ()V
+ * Signature: (Lcom/intel/dleyna/Connector;)V
  */
 JNIEXPORT void JNICALL Java_com_intel_dleyna_RendererService_dleynaMainLoopQuit
-  (JNIEnv *, jobject);
-
-/*
- * Class:     com_intel_dleyna_RendererService
- * Method:    setJNIEnv
- * Signature: ()V
- */
-JNIEXPORT void JNICALL Java_com_intel_dleyna_RendererService_setJNIEnv
-  (JNIEnv *, jobject);
+  (JNIEnv *, jobject, jobject);
 
 #ifdef __cplusplus
 }

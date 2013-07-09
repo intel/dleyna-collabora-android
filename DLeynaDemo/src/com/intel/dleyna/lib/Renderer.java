@@ -57,6 +57,10 @@ public class Renderer implements IRendererDevice, IRendererController, IRenderer
         return controllerListeners;
     }
 
+    public String getObjectPath() {
+        return objectPath;
+    }
+
     /*-----------------+
      | IRendererDevice |
      +-----------------*/
@@ -293,5 +297,19 @@ public class Renderer implements IRendererDevice, IRendererController, IRenderer
 
         public void onMuteChanged(IRendererController c, boolean value) {
         }
+    }
+
+    /*--------------------+
+    | For RendererManager |
+    +---------------------*/
+
+    private boolean used;
+
+    boolean getIsObsolete() {
+        return this.used;
+    }
+
+    void setIsObsolete(boolean used) {
+        this.used = used;
     }
 }
