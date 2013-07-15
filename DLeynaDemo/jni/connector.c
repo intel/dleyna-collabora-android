@@ -34,7 +34,7 @@ static jmethodID    sMIDShutdown;
 static jmethodID    sMIDConnect;
 static jmethodID    sMIDDisconnect;
 static jmethodID    sMIDSetClientLostCB;
-static jmethodID    sMIDPubishObject;
+static jmethodID    sMIDPublishObject;
 static jmethodID    sMIDReturnResponse;
 static jmethodID    sMIDReturnError;
 
@@ -68,7 +68,7 @@ static gboolean initialize(
     sMIDConnect         = (*sEnv)->GetMethodID(sEnv, clazz, "connect", "(Ljava/lang/String;JJ)V");
     sMIDDisconnect      = (*sEnv)->GetMethodID(sEnv, clazz, "disconnect", "()V");
     sMIDSetClientLostCB = (*sEnv)->GetMethodID(sEnv, clazz, "setClientLostCallback", "(J)V");
-    sMIDPubishObject    = (*sEnv)->GetMethodID(sEnv, clazz, "publishObject", "(JLjava/lang/String;ZIJ)I");
+    sMIDPublishObject   = (*sEnv)->GetMethodID(sEnv, clazz, "publishObject", "(Ljava/lang/String;ZIJ)I");
     sMIDReturnResponse  = (*sEnv)->GetMethodID(sEnv, clazz, "returnResponse", "(JJ)V");
     sMIDReturnError     = (*sEnv)->GetMethodID(sEnv, clazz, "returnError", "(JJ)V");
 
@@ -143,9 +143,8 @@ static guint publish_object(
     LOGI("connector.publish_object: id=%p path=%s root=%d ifindex=%d cb=%p",
             peer, object_path, root, iface_index, cb_table_1[0]);
     jstring objectPath = (*sEnv)->NewStringUTF(sEnv, object_path);
-    return (*sEnv)->CallIntMethod(sEnv, sPeer, sMIDPubishObject,
-            PTR_TO_JLONG(peer), objectPath, (jboolean)root, (jint)iface_index,
-            PTR_TO_JLONG(cb_table_1[0])); 
+    return (*sEnv)->CallIntMethod(sEnv, sPeer, sMIDPublishObject, objectPath,
+            (jboolean)root, (jint)iface_index, PTR_TO_JLONG(cb_table_1[0])); 
 }
 
 static guint publish_subtree(
