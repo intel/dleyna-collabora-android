@@ -24,6 +24,7 @@ package com.intel.dleyna.dleynademo;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.RemoteException;
 import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
 import android.view.Menu;
@@ -59,6 +60,7 @@ public class MainActivity extends Activity {
     private Button clearButton;
     private Button connectButton;
     private Button disconnectButton;
+    private Button listButton;
 
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -72,6 +74,8 @@ public class MainActivity extends Activity {
         connectButton.setOnClickListener(connectButtonListener);
         disconnectButton = (Button) findViewById(R.id.disconnect_button);
         disconnectButton.setOnClickListener(disconnectButtonListener);
+        listButton = (Button) findViewById(R.id.list_renderers_button);
+        listButton.setOnClickListener(listButtonListener);
         showHelp();
     }
 
@@ -144,6 +148,25 @@ public class MainActivity extends Activity {
         }
     };
 
+    private final OnClickListener listButtonListener = new OnClickListener() {
+        public void onClick(View v) {
+            Renderer[] renderers = null;
+            try {
+                renderers = rendererMgr.getRenderers();
+            } catch (RemoteException e) {
+                e.printStackTrace();
+            }
+            if (renderers == null || renderers.length == 0) {
+                writeTty("No renderers.\n");
+            } else {
+                int n = 1;
+                for (Renderer r : renderers) {
+                    writeTty(n + "/" + renderers.length + " " + r.getObjectPath() + "\n");
+                }
+            }
+        }
+    };
+
     private RendererManager rendererMgr = new RendererManager(new RendererManager.Events() {
 
         public void onConnected() {
@@ -172,6 +195,7 @@ public class MainActivity extends Activity {
         clearButton.setEnabled(true);
         connectButton.setEnabled(connState == CONN_DISCONNECTED);
         disconnectButton.setEnabled(connState == CONN_CONNECTED);
+        listButton.setEnabled(connState == CONN_CONNECTED);
     }
 
     private void writeTty(CharSequence cs) {

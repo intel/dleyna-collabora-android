@@ -35,13 +35,15 @@ static jmethodID    sMIDConnect;
 static jmethodID    sMIDDisconnect;
 static jmethodID    sMIDSetClientLostCB;
 static jmethodID    sMIDPubishObject;
+static jmethodID    sMIDReturnResponse;
+static jmethodID    sMIDReturnError;
 
 static dleyna_connector_connected_cb_t      sSayConnected;
 static dleyna_connector_disconnected_cb_t   sSayDisconnected;
 static dleyna_connector_client_lost_cb_t    sSayClientLost;
 
-JNIEXPORT void JNICALL Java_com_intel_dleyna_RendererService_setJNIEnv(
-    JNIEnv *env)
+JNIEXPORT void JNICALL Java_com_intel_dleyna_Connector_setJNIEnvNative(
+    JNIEnv* env, jobject connector)
 {
     LOGI("connector.setJNIEnv: env=%p", env);
     sEnv = env;
@@ -67,6 +69,8 @@ static gboolean initialize(
     sMIDDisconnect      = (*sEnv)->GetMethodID(sEnv, clazz, "disconnect", "()V");
     sMIDSetClientLostCB = (*sEnv)->GetMethodID(sEnv, clazz, "setClientLostCallback", "(J)V");
     sMIDPubishObject    = (*sEnv)->GetMethodID(sEnv, clazz, "publishObject", "(JLjava/lang/String;ZIJ)I");
+    sMIDReturnResponse  = (*sEnv)->GetMethodID(sEnv, clazz, "returnResponse", "(JJ)V");
+    sMIDReturnError     = (*sEnv)->GetMethodID(sEnv, clazz, "returnError", "(JJ)V");
 
     // Invoke peer.
     jmethodID mid = (*sEnv)->GetMethodID(sEnv, clazz, "initialize", "(Ljava/lang/String;Ljava/lang/String;I)Z");
@@ -130,19 +134,22 @@ static void set_client_lost_cb(dleyna_connector_client_lost_cb_t lost_cb)
 }
 
 static guint publish_object(
-    dleyna_connector_id_t connection,
+    dleyna_connector_id_t peer,
     const gchar *object_path,
     gboolean root,
     guint iface_index,
     const dleyna_connector_dispatch_cb_t *cb_table_1)
 {
-    LOGI("connector.publish_object: id=%p path=%s root=%d ifindex=%d", connection, object_path, root, iface_index);
-    jstring opJ = (*sEnv)->NewStringUTF(sEnv, object_path);
-    return (*sEnv)->CallIntMethod(sEnv, sPeer, sMIDPubishObject, PTR_TO_JLONG(connection), opJ, (jboolean)root, (jint)iface_index); 
+    LOGI("connector.publish_object: id=%p path=%s root=%d ifindex=%d cb=%p",
+            peer, object_path, root, iface_index, cb_table_1[0]);
+    jstring objectPath = (*sEnv)->NewStringUTF(sEnv, object_path);
+    return (*sEnv)->CallIntMethod(sEnv, sPeer, sMIDPubishObject,
+            PTR_TO_JLONG(peer), objectPath, (jboolean)root, (jint)iface_index,
+            PTR_TO_JLONG(cb_table_1[0])); 
 }
 
 static guint publish_subtree(
-    dleyna_connector_id_t connection,
+    dleyna_connector_id_t peer,
     const gchar *object_path,
     const dleyna_connector_dispatch_cb_t *cb_table,
     guint cb_table_size,
@@ -153,14 +160,14 @@ static guint publish_subtree(
 }
 
 static void unpublish_object(
-    dleyna_connector_id_t connection,
+    dleyna_connector_id_t peer,
     guint object_id)
 {
     LOGI("connector.unpublish_object");
 }
 
 static void unpublish_subtree(
-    dleyna_connector_id_t connection,
+    dleyna_connector_id_t peer,
     guint object_id)
 {
     LOGI("connector.unpublish_subtree");
@@ -171,6 +178,7 @@ static void return_response(
     GVariant *parameters)
 {
     LOGI("connector.return_response");
+    (*sEnv)->CallVoidMethod(sEnv, sPeer, sMIDReturnResponse, PTR_TO_JLONG(message_id), PTR_TO_JLONG(parameters));
 }
 
 static void return_error(
@@ -178,10 +186,11 @@ static void return_error(
     const GError *error)
 {
     LOGI("connector.return_error");
+    (*sEnv)->CallVoidMethod(sEnv, sPeer, sMIDReturnError, PTR_TO_JLONG(message_id), PTR_TO_JLONG(error));
 }
 
 static gboolean notify(
-    dleyna_connector_id_t connection,
+    dleyna_connector_id_t peer,
     const gchar *object_path,
     const gchar *interface_name,
     const gchar *notification_name,
@@ -212,4 +221,22 @@ static dleyna_connector_t connector = {
 extern const dleyna_connector_t *dleyna_connector_get_interface(void)
 {
     return &connector;
+}
+
+JNIEXPORT void JNICALL Java_com_intel_dleyna_Connector_dispatchNative(
+    JNIEnv* env, jobject peer, jlong _dispatchFunc, jstring sender,
+    jstring objId, jstring iface, jstring method, jobject args, jlong msgId)
+{
+    const char* senderC = (*env)->GetStringUTFChars(env, sender, NULL);
+    const char* objIdC = (*env)->GetStringUTFChars(env, objId, NULL);
+    const char* ifaceC = (*env)->GetStringUTFChars(env, iface, NULL);
+    const char* methodC = (*env)->GetStringUTFChars(env, method, NULL);
+
+    dleyna_connector_dispatch_cb_t dispatchFunc = JLONG_TO_PTR(_dispatchFunc);
+    dispatchFunc(peer, senderC, objIdC, ifaceC, methodC, args, JLONG_TO_PTR(msgId));
+
+    (*env)->ReleaseStringUTFChars(env, sender, senderC);
+    (*env)->ReleaseStringUTFChars(env, objId, objIdC);
+    (*env)->ReleaseStringUTFChars(env, iface, ifaceC);
+    (*env)->ReleaseStringUTFChars(env, method, methodC);
 }

@@ -22,28 +22,24 @@
 package com.intel.dleyna;
 
 /**
- * This is a wrapper class for the native GVariantType class.
+ * This class provides a way to schedule {@link java.lang.Runnable} objects to be
+ * executed on a g_main_loop.
+ * <p>
+ * Create an instance of this class by calling the constructor {@link #GMainLoop()},
+ * and then use {@link #gIdleAdd(Runnable)} to schedule a runnable object.
+ * You should use {@link #free()} to reclaim resources when done.
  */
-public class GVariantType {
+public class GMainLoop {
 
-    // Basic types
-    public static final char BOOLEAN     = 'b';
-    public static final char UINT32      = 'u';
-    public static final char DOUBLE      = 'd';
-    public static final char STRING      = 's';
-    public static final char OBJECT_PATH = 'o';
-
-    // Composite types.
-    public static final char ARRAY       = 'a';
-    public static final char TUPLE       = 'r';
-
-    // Pointer to the native GVariantType object.
     private long peer;
 
-    // Construct a new instance given the native peer instance.
-    private GVariantType(long peer) {
+    /**
+     * This constructor MUST be called on the thread that runs the g_main_loop.
+     */
+    public GMainLoop() {
+        long peer = allocNative();
         if (peer == 0) {
-            throw new IllegalArgumentException();
+            throw new OutOfMemoryError();
         }
         this.peer = peer;
     }
@@ -55,30 +51,22 @@ public class GVariantType {
      */
     public void free() {
         if (peer != 0) {
-            free(peer);
+            freeNative(peer);
             peer = 0;
         }
     }
-
-    private static native void free(long peer);
 
     protected void finalize() {
         free();
     }
 
-    public static GVariantType newBasic(char basicType) {
-        return new GVariantType(newBasicNative(basicType));
+    public void gIdleAdd(Runnable r) {
+        gIdleAddNative(peer, r);
     }
 
-    private static native long newBasicNative(char basicType);
+    private native long allocNative();
 
-    public static GVariantType newArray(GVariantType elementType) {
-        return new GVariantType(newArrayNative(elementType.getPeer()));
-    }
+    private native long freeNative(long peer);
 
-    private static native long newArrayNative(long elementType);
-
-    public long getPeer() {
-        return peer;
-    }
+    private native void gIdleAddNative(long peer, Runnable r);
 }

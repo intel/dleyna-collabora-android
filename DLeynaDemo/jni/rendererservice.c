@@ -31,15 +31,15 @@
 #define DLR_RENDERER_SERVICE_NAME "dleyna-renderer-service"
 
 JNIEXPORT jint JNICALL Java_com_intel_dleyna_RendererService_dleynaMainLoopStart(
-    JNIEnv *env, jobject this)
+    JNIEnv *env, jobject peer, jobject connector)
 {
-    LOGI("dleynaMainLoopStart: this=%p", this);
+    LOGI("dleynaMainLoopStart: peer=%p connector=%p", connector);
 	return dleyna_main_loop_start(DLR_RENDERER_SERVICE_NAME,
-            dleyna_control_point_get_renderer(), (gpointer)this);
+            dleyna_control_point_get_renderer(), (gpointer)connector);
 }
 
 JNIEXPORT void JNICALL Java_com_intel_dleyna_RendererService_dleynaMainLoopQuit(
-    JNIEnv *env, jobject this)
+    JNIEnv *env, jobject peer, jobject connector)
 {
     LOGI("dleynaMainLoopQuit");
     dleyna_main_loop_quit();

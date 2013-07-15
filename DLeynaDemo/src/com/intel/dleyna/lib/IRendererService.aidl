@@ -23,76 +23,82 @@
 package com.intel.dleyna.lib;
 
 import com.intel.dleyna.lib.Icon;
-import com.intel.dleyna.lib.IRendererCallback;
+import com.intel.dleyna.lib.IRendererClient;
 
 interface IRendererService {
 
     // Client registration.
-    void registerClient(IRendererCallback cb);
+    void registerClient(IRendererClient client);
 
     // Client de-registration.
-    void unregisterClient(IRendererCallback cb);
+    void unregisterClient(IRendererClient client);
+    
+    /*-----------------+
+     | RendererManager |
+     +-----------------*/
+
+    String[] getRenderers(IRendererClient client);
 
     /*-----------------+
      | IRendererDevice |
      +-----------------*/
 
-    String getDeviceType(String objectPath);
-    String getUniqueDeviceName(String objectPath);
-    String getFriendlyName(String objectPath);
-    String getIconURL(String objectPath);
-    String getManufacturer(String objectPath);
-    String getManufacturerURL(String objectPath);
-    String getModelDescription(String objectPath);
-    String getModelName(String objectPath);
-    String getModelNumber(String objectPath);
-    String getSerialNumber(String objectPath);
-    String getPresentationURL(String objectPath);
-    String getProtocolInfo(String objectPath);
-    Icon getIcon(String objectPath);
-    void cancel(String objectPath);
+    String getDeviceType(IRendererClient client, String objectPath);
+    String getUniqueDeviceName(IRendererClient client, String objectPath);
+    String getFriendlyName(IRendererClient client, String objectPath);
+    String getIconURL(IRendererClient client, String objectPath);
+    String getManufacturer(IRendererClient client, String objectPath);
+    String getManufacturerURL(IRendererClient client, String objectPath);
+    String getModelDescription(IRendererClient client, String objectPath);
+    String getModelName(IRendererClient client, String objectPath);
+    String getModelNumber(IRendererClient client, String objectPath);
+    String getSerialNumber(IRendererClient client, String objectPath);
+    String getPresentationURL(IRendererClient client, String objectPath);
+    String getProtocolInfo(IRendererClient client, String objectPath);
+    Icon getIcon(IRendererClient client, String objectPath);
+    void cancel(IRendererClient client, String objectPath);
 
     /*---------------------+
      | IRendererController |
      +---------------------*/
 
-    void next(String objectPath);
-    void previous(String objectPath);
-    void pause(String objectPath);
-    void playPause(String objectPath);
-    void stop(String objectPath);
-    void play(String objectPath);
-    void seek(String objectPath, long offset);
-    void setPosition(String objectPath, long position);
-    void openUri(String objectPath, String uri);
-    String getPlaybackStatus(String objectPath);
-    double getRate(String objectPath);
-    void setRate(String objectPath, double rate);
-    Bundle getMetadata(String objectPath);
-    double getVolume(String objectPath);
-    void setVolume(String objectPath, double volume);
-    long getPosition(String objectPath);
-    long getMinimumRate(String objectPath);
-    long getMaximumRate(String objectPath);
-    boolean getCanGoNext(String objectPath);
-    boolean getCanGoPrevious(String objectPath);
-    boolean getCanPlay(String objectPath);
-    boolean getCanPause(String objectPath);
-    boolean getCanSeek(String objectPath);
-    boolean getCanControl(String objectPath);
-    int getNumberOfTracks(String objectPath);
-    void goToTrack(String objectPath, int track);
-    int getCurrentTrack(String objectPath);
-    void openUriEx(String objectPath, String uri, String metadata);
-    double[] getTransportPlaySpeeds(String objectPath);
-    boolean getMute(String objectPath);
-    void setMute(String objectPath, boolean value);
+    void next(IRendererClient client, String objectPath);
+    void previous(IRendererClient client, String objectPath);
+    void pause(IRendererClient client, String objectPath);
+    void playPause(IRendererClient client, String objectPath);
+    void stop(IRendererClient client, String objectPath);
+    void play(IRendererClient client, String objectPath);
+    void seek(IRendererClient client, String objectPath, long offset);
+    void setPosition(IRendererClient client, String objectPath, long position);
+    void openUri(IRendererClient client, String objectPath, String uri);
+    String getPlaybackStatus(IRendererClient client, String objectPath);
+    double getRate(IRendererClient client, String objectPath);
+    void setRate(IRendererClient client, String objectPath, double rate);
+    Bundle getMetadata(IRendererClient client, String objectPath);
+    double getVolume(IRendererClient client, String objectPath);
+    void setVolume(IRendererClient client, String objectPath, double volume);
+    long getPosition(IRendererClient client, String objectPath);
+    long getMinimumRate(IRendererClient client, String objectPath);
+    long getMaximumRate(IRendererClient client, String objectPath);
+    boolean getCanGoNext(IRendererClient client, String objectPath);
+    boolean getCanGoPrevious(IRendererClient client, String objectPath);
+    boolean getCanPlay(IRendererClient client, String objectPath);
+    boolean getCanPause(IRendererClient client, String objectPath);
+    boolean getCanSeek(IRendererClient client, String objectPath);
+    boolean getCanControl(IRendererClient client, String objectPath);
+    int getNumberOfTracks(IRendererClient client, String objectPath);
+    void goToTrack(IRendererClient client, String objectPath, int track);
+    int getCurrentTrack(IRendererClient client, String objectPath);
+    void openUriEx(IRendererClient client, String objectPath, String uri, String metadata);
+    double[] getTransportPlaySpeeds(IRendererClient client, String objectPath);
+    boolean getMute(IRendererClient client, String objectPath);
+    void setMute(IRendererClient client, String objectPath, boolean value);
 
     /*-------------------+
      | IRendererPushHost |
      +-------------------*/
 
-    String hostFile(String objectPath, String path);
-    void removeFile(String objectPath, String path);
+    String hostFile(IRendererClient client, String objectPath, String path);
+    void removeFile(IRendererClient client, String objectPath, String path);
 
 }

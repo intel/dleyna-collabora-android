@@ -22,6 +22,7 @@
 package com.intel.dleyna.lib;
 
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 
 import android.app.Activity;
@@ -151,6 +152,7 @@ public class RendererManager {
             } catch (RemoteException e) {
                 if (LOG) Log.e(TAG, "disconnect: unregisterClient: " + e);
             }
+            serviceConnected = false;
         }
         if (serviceBound) {
             context.unbindService(rendererConnection);
@@ -169,6 +171,10 @@ public class RendererManager {
 
         public void onServiceConnected(ComponentName className, IBinder b) {
             if (LOG) Log.i(TAG, "onServiceConnected: bound=" + serviceBound + " connected=" + serviceConnected);
+            // Note: the service could have been re-bound and re-connected automatically
+            // following a service process crash, in which case serviceBound would be false
+            // here. So set it true.
+            serviceBound = true;
             serviceConnected = true;
             rendererService = IRendererService.Stub.asInterface(b);
             try {
@@ -197,8 +203,48 @@ public class RendererManager {
      * @throws RemoteException no connection to the background renderer service
      */
     public Renderer[] getRenderers() throws RemoteException {
-        // TODO: fetch them from the service, update our local copy.
-        return (Renderer[]) renderers.values().toArray();
+        if (!serviceConnected) {
+            throw new RemoteException();
+        }
+
+        // In what follows we construct a new map representing the new current set
+        // of renderers, reusing the Renderer objects of any renderers that were already
+        // in the previous map. Then we substitute the new map for the previous one.
+
+        String[] newObjectIds = rendererService.getRenderers(rendererCallback);
+        // newObjectIds is the new complete set of object ids according to the service
+        if (LOG) Log.i(TAG, "getRenderers: " + newObjectIds);
+
+        if (newObjectIds != null && newObjectIds.length > 0) {
+            for (Renderer r : renderers.values()) {
+                r.setIsObsolete(true);
+            }
+            // the 'obsolete' flag is set for all elements of the previous map
+            List<Renderer> deltaRenderers = new LinkedList<Renderer>();
+            for (String objectPath : newObjectIds) {
+                Renderer r = renderers.get(objectPath);
+                if (r == null) {
+                    r = new Renderer(objectPath);
+                    deltaRenderers.add(new Renderer(objectPath));
+                } else {
+                    r.setIsObsolete(false);
+                }
+            }
+            // deltaRenderers is the set of renderers that appeared since the previous set was built
+            // the 'obsolete' flag is set only for the truly obsolete elements of the previous map
+            HashMap<String, Renderer> nextRenderers = new HashMap<String, Renderer>();
+            for (Renderer r : renderers.values()) {
+                if (!r.getIsObsolete()) {
+                    nextRenderers.put(r.getObjectPath(), r);
+                }
+            }
+            for (Renderer r : deltaRenderers) {
+                nextRenderers.put(r.getObjectPath(), r);
+            }
+            // nextRenderers is the new current map of renderers.
+            renderers = nextRenderers;
+        }
+        return renderers.values().toArray(new Renderer[renderers.size()]);
     }
 
     /**
@@ -229,7 +275,7 @@ public class RendererManager {
      * The callbacks run on some arbitrary Binder thread.
      * We forward the calls to the main thread by using {@link #handler}.
      */
-    private final IRendererCallback rendererCallback = new IRendererCallback.Stub() {
+    private final IRendererClient rendererCallback = new IRendererClient.Stub() {
 
         /*------------------------+
          | RendererManager.Events |

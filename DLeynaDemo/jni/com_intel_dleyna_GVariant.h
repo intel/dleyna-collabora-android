@@ -119,6 +119,14 @@ JNIEXPORT jdoubleArray JNICALL Java_com_intel_dleyna_GVariant_getArrayOfDoubleNa
 JNIEXPORT jobjectArray JNICALL Java_com_intel_dleyna_GVariant_getArrayOfStringNative
   (JNIEnv *, jclass, jlong);
 
+/*
+ * Class:     com_intel_dleyna_GVariant
+ * Method:    getChildValueNative
+ * Signature: (JI)J
+ */
+JNIEXPORT jlong JNICALL Java_com_intel_dleyna_GVariant_getChildValueNative
+  (JNIEnv *, jclass, jlong, jint);
+
 #ifdef __cplusplus
 }
 #endif
