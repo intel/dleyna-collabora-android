@@ -236,13 +236,13 @@ public class GVariant {
     private static native String[] getArrayOfStringNative(long peer);
 
     /**
-     * Return the the child at the given index, à la g_variant_get_child_value().
+     * Get the the child at the given index, à la g_variant_get_child_value().
      * <p>
      * This GVariant object must be a container (variant, maybe, array, tuple, or dictionary).
      * @param index index of the child to return
      * @return the child at the given index
      */
-    public GVariant getChildValue(int index) {
+    public GVariant getChildAtIndex(int index) {
         GVariant child = new GVariant(getChildValueNative(peer, index));
         // TODO: verify this: I think the ref count got bumped when we obtained it by
         // g_variant_get_child_value(). It gets bumped again in our new GVariant().
@@ -252,4 +252,28 @@ public class GVariant {
     }
 
     private static native long getChildValueNative(long peer, int index);
+
+    /**
+     * Get the the child of the given native GVariant container at the given index,
+     * à la g_variant_get_child_value().
+     * @param nativeContainer the native GVariant container (variant, maybe, array, tuple, or dictionary).
+     * @param index index to the child
+     * @return the child at the given index
+     */
+    public static GVariant getFromNativeContainerAtIndex(long nativeContainer, int index) {
+        GVariant container = new GVariant(nativeContainer);
+        GVariant elem = container.getChildAtIndex(index);
+        container.free();
+        return elem;
+    }
+
+    /**
+     * Get the string describing the type of this object, à la g_variant_get_type_string().
+     * @return the type string
+     */
+    public String getTypeString() {
+        return getTypeStringNative(peer);
+    }
+
+    private static native String getTypeStringNative(long peer);
 }

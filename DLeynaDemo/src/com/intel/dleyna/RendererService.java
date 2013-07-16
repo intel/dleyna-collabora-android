@@ -34,7 +34,7 @@ import com.intel.dleyna.lib.IRendererClient;
 import com.intel.dleyna.lib.IRendererService;
 import com.intel.dleyna.lib.Icon;
 
-public class RendererService extends Service {
+public class RendererService extends Service implements IConnectorClient {
 
     private static final boolean LOG = true;
     private static final String TAG = "RendererService";
@@ -47,6 +47,9 @@ public class RendererService extends Service {
 
     private Connector connector;
 
+    private RemoteCallbackList<IRendererClient> clients =
+            new RemoteCallbackList<IRendererClient>();
+
     public RendererService() {
         JNI.initialize();
         JNI.cleanTempDir();
@@ -58,7 +61,7 @@ public class RendererService extends Service {
     public IBinder onBind(Intent intent) {
         if (LOG) Log.i(TAG, "onBind");
 
-        connector = new Connector(MANAGER_OBJECT_PATH);
+        connector = new Connector(this, MANAGER_OBJECT_PATH);
 
         // Create and start the daemon thread.
         daemonThread = new Thread(daemonRunnable, DAEMON_THREAD_NAME);
@@ -107,9 +110,6 @@ public class RendererService extends Service {
     public native void dleynaMainLoopQuit(Connector c);
 
     private final IBinder binder = new IRendererService.Stub() {
-
-        private RemoteCallbackList<IRendererClient> clients =
-                new RemoteCallbackList<IRendererClient>();
 
         public void registerClient(IRendererClient client) {
             if (LOG) Log.i(TAG, "registerClient");
@@ -340,4 +340,56 @@ public class RendererService extends Service {
         public void removeFile(IRendererClient client, String objectPath, String path) {
         }
     };
+
+    /*------------------+
+     | IConnectorClient |
+     +------------------*/
+
+    public boolean onNotify(String objPath, String ifaceName, String notifName, long params,
+            long gErrPtr) {
+
+        GVariant gvParams = new GVariant(params);
+
+        if (LOG) Log.i(TAG, "onNotify: " + objPath + " " + ifaceName + " " + notifName + " " +
+                gvParams.getTypeString());
+
+        if (notifName.equals("FoundRenderer")) {
+            GVariant gvObjPathRenderer = gvParams.getChildAtIndex(0);
+            String objPathRenderer = gvObjPathRenderer.getString();
+            gvObjPathRenderer.free();
+            if (LOG) Log.i(TAG, "onNotify: FoundRenderer: " + objPathRenderer);
+
+            int n = clients.beginBroadcast();
+            for (int i = 0; i < n; i++) {
+                try {
+                    clients.getBroadcastItem(i).onRendererFound(objPathRenderer);
+                } catch (RemoteException e) {
+                    // The RemoteCallbackList removes dead objects.
+                }
+            }
+            clients.finishBroadcast();
+
+        } else if (notifName.equals("LostRenderer")) {
+                GVariant gvObjPathRenderer = gvParams.getChildAtIndex(0);
+                String objPathRenderer = gvObjPathRenderer.getString();
+                gvObjPathRenderer.free();
+                if (LOG) Log.i(TAG, "onNotify: LostRenderer: " + objPathRenderer);
+
+                int n = clients.beginBroadcast();
+                for (int i = 0; i < n; i++) {
+                    try {
+                        clients.getBroadcastItem(i).onRendererLost(objPathRenderer);
+                    } catch (RemoteException e) {
+                        // The RemoteCallbackList removes dead objects.
+                    }
+                }
+                clients.finishBroadcast();
+
+        } else if (notifName.equals("PropertiesChanged")) {
+            if (LOG) Log.i(TAG, "onNotify: PropertiesChanged:");
+        }
+
+        gvParams.free();
+        return true;
+    }
 }

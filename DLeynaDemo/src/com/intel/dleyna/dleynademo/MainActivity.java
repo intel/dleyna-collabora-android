@@ -184,9 +184,11 @@ public class MainActivity extends Activity {
         }
 
         public void onRendererFound(Renderer r) {
+            writeTty("Found Renderer: " + r.getObjectPath() + '\n');
         }
 
         public void onRendererLost(Renderer r) {
+            writeTty("Lost Renderer: " + r.getObjectPath() + '\n');
         }
     });
 

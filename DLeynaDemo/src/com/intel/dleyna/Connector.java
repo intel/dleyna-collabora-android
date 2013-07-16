@@ -69,11 +69,15 @@ public class Connector {
 
     private GMainLoop gMainLoop;
 
+    private IConnectorClient client;
+
     /**
      * Construct a connector instance.
+     * @param client who will get callbacks
      * @param managerObjectPath identifies the manager object for this connector
      */
-    public Connector(String managerObjectPath) {
+    public Connector(IConnectorClient client, String managerObjectPath) {
+        this.client = client;
         this.managerObjectPath = managerObjectPath;
     }
 
@@ -184,7 +188,7 @@ public class Connector {
      */
     public int publishObject(String objectPath, boolean isRoot, int interfaceIndex,
             long dispatchCb) {
-        if (LOG) Log.i(TAG, "publishObject: " + objectPath);
+        if (LOG) Log.i(TAG, "publishObject: " + objectPath + " " + isRoot + " " + interfaceIndex);
 
         // Add this object to the collection.
         lastAssignedObjectId++;
@@ -269,30 +273,27 @@ public class Connector {
                 invocation.done = true;
                 invocation.success = success;
                 // Remove the wrapper around the response.
-                GVariant tuple = new GVariant(result);
-                invocation.result = tuple.getChildValue(0);
-                tuple.free();
+                invocation.result = GVariant.getFromNativeContainerAtIndex(result, 0);
                 invocation.notify();
             }
         } else {
             throw new Error("No pending result!");
         }
-   }
+    }
 
     /**
      * Upward call on the g_main_loop.
      * Broadcasted notification of some event from a remote object.
-     * @param objectPath
-     * @param interfaceName
-     * @param notificationName
-     * @param parameters native GVariant
+     * @param objPath
+     * @param ifaceName
+     * @param notifName
+     * @param params parameters as a native GVariant
      * @param gErrPtr native pointer to GError
      * @return ?
      */
-    public boolean notify(String objectPath, String interfaceName, String notificationName,
-            long parameters, long gErrPtr) {
-        if (LOG) Log.i(TAG, "notify");
-        return false;
+    public boolean notify(String objPath, String ifaceName, String notifName, long params,
+            long gErrPtr) {
+        return client.onNotify(objPath, ifaceName, notifName, params, gErrPtr);
     }
 
     /**
