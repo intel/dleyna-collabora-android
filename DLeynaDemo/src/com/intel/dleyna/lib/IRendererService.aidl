@@ -38,6 +38,7 @@ interface IRendererService {
      +-----------------*/
 
     String[] getRenderers(IRendererClient client);
+    void rescan(IRendererClient client);
 
     /*-----------------+
      | IRendererDevice |

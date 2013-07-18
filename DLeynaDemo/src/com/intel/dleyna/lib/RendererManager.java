@@ -257,7 +257,10 @@ public class RendererManager {
      * @throws RemoteException no connection to the background renderer service
      */
     public void rescan() throws RemoteException {
-        // TODO
+        if (!serviceConnected) {
+            throw new RemoteException();
+        }
+        rendererService.rescan(rendererCallback);
     }
 
     /**

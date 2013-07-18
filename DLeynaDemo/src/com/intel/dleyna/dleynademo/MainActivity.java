@@ -61,6 +61,7 @@ public class MainActivity extends Activity {
     private Button connectButton;
     private Button disconnectButton;
     private Button listButton;
+    private Button rescanButton;
 
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -76,6 +77,8 @@ public class MainActivity extends Activity {
         disconnectButton.setOnClickListener(disconnectButtonListener);
         listButton = (Button) findViewById(R.id.list_renderers_button);
         listButton.setOnClickListener(listButtonListener);
+        rescanButton = (Button) findViewById(R.id.rescan_button);
+        rescanButton.setOnClickListener(rescanButtonListener);
         showHelp();
     }
 
@@ -167,6 +170,17 @@ public class MainActivity extends Activity {
         }
     };
 
+    private final OnClickListener rescanButtonListener = new OnClickListener() {
+        public void onClick(View v) {
+            try {
+                rendererMgr.rescan();
+                writeTty("OK rescan sent.\n");
+            } catch (RemoteException e) {
+                e.printStackTrace();
+            }
+        }
+    };
+
     private RendererManager rendererMgr = new RendererManager(new RendererManager.Events() {
 
         public void onConnected() {
@@ -193,11 +207,11 @@ public class MainActivity extends Activity {
     });
 
     private void setEnabledStateOfWidgets() {
-        if (App.LOG) Log.i(TAG, "MainActivity: setEnabledStateOfWidgets: connState=" + connState);
         clearButton.setEnabled(true);
         connectButton.setEnabled(connState == CONN_DISCONNECTED);
         disconnectButton.setEnabled(connState == CONN_CONNECTED);
         listButton.setEnabled(connState == CONN_CONNECTED);
+        rescanButton.setEnabled(connState == CONN_CONNECTED);
     }
 
     private void writeTty(CharSequence cs) {
