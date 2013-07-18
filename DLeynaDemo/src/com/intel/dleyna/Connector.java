@@ -1,9 +1,9 @@
 package com.intel.dleyna;
 
-import com.intel.dleyna.lib.IRendererClient;
-
 import android.util.Log;
 import android.util.SparseArray;
+
+import com.intel.dleyna.lib.IRendererClient;
 
 
 /**
@@ -24,13 +24,13 @@ import android.util.SparseArray;
  * {@link #watchClient(String)},
  * {@link #unwatchClient(String)},
  * {@link #setClientLostCallback(long)},
- * {@link #publishObject(long, String, boolean, int, long)},
- * {@link #publishSubtree(long, String, long[], long)},
- * {@link #unpublishObject(long, int)},
- * {@link #unpublishSubtree(long, int)},
+ * {@link #publishObject(String, boolean, int, long)},
+ * {@link #publishSubtree(String, long[], long)},
+ * {@link #unpublishObject(int)},
+ * {@link #unpublishSubtree(int)},
  * {@link #returnResponse(long, long)},
  * {@link #returnError(long, long)},
- * {@link #notify(long, String, String, String, Object, int)}
+ * {@link #notify(String, String, String, long, long)}
  * <p>
  * Then {@link #disconnect()} and {@link #shutdown()} will be called, in that order,
  * on the daemon thread, just after the g_main_loop exits.
@@ -69,11 +69,15 @@ public class Connector {
 
     private GMainLoop gMainLoop;
 
+    private IConnectorClient client;
+
     /**
      * Construct a connector instance.
+     * @param client who will get callbacks
      * @param managerObjectPath identifies the manager object for this connector
      */
-    public Connector(String managerObjectPath) {
+    public Connector(IConnectorClient client, String managerObjectPath) {
+        this.client = client;
         this.managerObjectPath = managerObjectPath;
     }
 
@@ -176,21 +180,20 @@ public class Connector {
     /**
      * Upward call on the g_main_loop.
      * Notification that a new remote object is available.
-     * @param connectorId
      * @param objectPath
      * @param isRoot
      * @param interfaceIndex
      * @param dispatchCb
      * @return the id of the object
      */
-    public int publishObject(long connectorId, String objectPath, boolean isRoot,
-            int interfaceIndex, long dispatchCb) {
-        if (LOG) Log.i(TAG, "publishObject: " + objectPath);
+    public int publishObject(String objectPath, boolean isRoot, int interfaceIndex,
+            long dispatchCb) {
+        if (LOG) Log.i(TAG, "publishObject: " + objectPath + " " + isRoot + " " + interfaceIndex);
 
         // Add this object to the collection.
         lastAssignedObjectId++;
-        RemoteObject ro = new RemoteObject(lastAssignedObjectId, connectorId, objectPath,
-                isRoot, interfaceIndex, dispatchCb);
+        RemoteObject ro = new RemoteObject(lastAssignedObjectId, objectPath, isRoot,
+                interfaceIndex, dispatchCb);
         objects.append(ro.id, ro);
 
         // If it's the manager object, note its id and unblock waitForManagerObject().
@@ -207,14 +210,12 @@ public class Connector {
     /**
      * Upward call on the g_main_loop.
      * Notification that a new remote subtree is available.
-     * @param connectorId
      * @param objectPath
      * @param dispatchCb
      * @param interfaceFilterCb
      * @return the id of the subtree
      */
-    public int publishSubtree(long connectorId, String objectPath, long[] dispatchCb,
-            long interfaceFilterCb) {
+    public int publishSubtree(String objectPath, long[] dispatchCb, long interfaceFilterCb) {
         if (LOG) Log.i(TAG, "publishSubtree");
         return 0;
     }
@@ -222,20 +223,18 @@ public class Connector {
     /**
      * Upward call on the g_main_loop.
      * Notification that the given remote object is no longer available.
-     * @param connectorId
      * @param ObjectId
      */
-    public void unpublishObject(long connectorId, int ObjectId) {
+    public void unpublishObject(int ObjectId) {
         if (LOG) Log.i(TAG, "unpublishObject");
     }
 
     /**
      * Upward call on the g_main_loop.
      * Notification that the given remote subtree is no longer available.
-     * @param connectorId
      * @param objectId
      */
-    public void unpublishSubtree(long connectorId, int objectId) {
+    public void unpublishSubtree(int objectId) {
         if (LOG) Log.i(TAG, "unpublishSubtree");
     }
 
@@ -274,31 +273,27 @@ public class Connector {
                 invocation.done = true;
                 invocation.success = success;
                 // Remove the wrapper around the response.
-                GVariant tuple = new GVariant(result);
-                invocation.result = tuple.getChildValue(0);
-                tuple.free();
+                invocation.result = GVariant.getFromNativeContainerAtIndex(result, 0);
                 invocation.notify();
             }
         } else {
             throw new Error("No pending result!");
         }
-   }
+    }
 
     /**
      * Upward call on the g_main_loop.
      * Broadcasted notification of some event from a remote object.
-     * @param connectorId
-     * @param objectPath
-     * @param interfaceName
-     * @param notificationName
-     * @param parameters
-     * @param errorCode
+     * @param objPath
+     * @param ifaceName
+     * @param notifName
+     * @param params parameters as a native GVariant
+     * @param gErrPtr native pointer to GError
      * @return ?
      */
-    public boolean notify(long connectorId, String objectPath, String interfaceName,
-            String notificationName, Object parameters, int errorCode) {
-        if (LOG) Log.i(TAG, "notify");
-        return false;
+    public boolean notify(String objPath, String ifaceName, String notifName, long params,
+            long gErrPtr) {
+        return client.onNotify(objPath, ifaceName, notifName, params, gErrPtr);
     }
 
     /**

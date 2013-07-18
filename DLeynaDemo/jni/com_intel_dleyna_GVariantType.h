@@ -19,6 +19,8 @@ extern "C" {
 #define com_intel_dleyna_GVariantType_OBJECT_PATH 111L
 #undef com_intel_dleyna_GVariantType_ARRAY
 #define com_intel_dleyna_GVariantType_ARRAY 97L
+#undef com_intel_dleyna_GVariantType_TUPLE
+#define com_intel_dleyna_GVariantType_TUPLE 114L
 /*
  * Class:     com_intel_dleyna_GVariantType
  * Method:    free

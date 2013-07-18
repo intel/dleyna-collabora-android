@@ -34,9 +34,10 @@ static jmethodID    sMIDShutdown;
 static jmethodID    sMIDConnect;
 static jmethodID    sMIDDisconnect;
 static jmethodID    sMIDSetClientLostCB;
-static jmethodID    sMIDPubishObject;
+static jmethodID    sMIDPublishObject;
 static jmethodID    sMIDReturnResponse;
 static jmethodID    sMIDReturnError;
+static jmethodID    sMIDNotify;
 
 static dleyna_connector_connected_cb_t      sSayConnected;
 static dleyna_connector_disconnected_cb_t   sSayDisconnected;
@@ -68,9 +69,10 @@ static gboolean initialize(
     sMIDConnect         = (*sEnv)->GetMethodID(sEnv, clazz, "connect", "(Ljava/lang/String;JJ)V");
     sMIDDisconnect      = (*sEnv)->GetMethodID(sEnv, clazz, "disconnect", "()V");
     sMIDSetClientLostCB = (*sEnv)->GetMethodID(sEnv, clazz, "setClientLostCallback", "(J)V");
-    sMIDPubishObject    = (*sEnv)->GetMethodID(sEnv, clazz, "publishObject", "(JLjava/lang/String;ZIJ)I");
+    sMIDPublishObject   = (*sEnv)->GetMethodID(sEnv, clazz, "publishObject", "(Ljava/lang/String;ZIJ)I");
     sMIDReturnResponse  = (*sEnv)->GetMethodID(sEnv, clazz, "returnResponse", "(JJ)V");
     sMIDReturnError     = (*sEnv)->GetMethodID(sEnv, clazz, "returnError", "(JJ)V");
+    sMIDNotify          = (*sEnv)->GetMethodID(sEnv, clazz, "notify", "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;JJ)Z");
 
     // Invoke peer.
     jmethodID mid = (*sEnv)->GetMethodID(sEnv, clazz, "initialize", "(Ljava/lang/String;Ljava/lang/String;I)Z");
@@ -140,12 +142,10 @@ static guint publish_object(
     guint iface_index,
     const dleyna_connector_dispatch_cb_t *cb_table_1)
 {
-    LOGI("connector.publish_object: id=%p path=%s root=%d ifindex=%d cb=%p",
-            peer, object_path, root, iface_index, cb_table_1[0]);
+    LOGI("connector.publish_object");
     jstring objectPath = (*sEnv)->NewStringUTF(sEnv, object_path);
-    return (*sEnv)->CallIntMethod(sEnv, sPeer, sMIDPubishObject,
-            PTR_TO_JLONG(peer), objectPath, (jboolean)root, (jint)iface_index,
-            PTR_TO_JLONG(cb_table_1[0])); 
+    return (*sEnv)->CallIntMethod(sEnv, sPeer, sMIDPublishObject, objectPath,
+            (jboolean)root, (jint)iface_index, PTR_TO_JLONG(cb_table_1[0])); 
 }
 
 static guint publish_subtree(
@@ -198,7 +198,12 @@ static gboolean notify(
     GError **error)
 {
     LOGI("connector.notify");
-    return FALSE;
+    jstring objPath = (*sEnv)->NewStringUTF(sEnv, object_path);
+    jstring ifaceName = (*sEnv)->NewStringUTF(sEnv, interface_name);
+    jstring notifName = (*sEnv)->NewStringUTF(sEnv, notification_name);
+    // TODO: allocate error buffer and pass pointer to that?
+    return (gboolean)(*sEnv)->CallBooleanMethod(sEnv, sPeer, sMIDNotify, objPath,
+            ifaceName, notifName, PTR_TO_JLONG(parameters), PTR_TO_JLONG(error));
 }
 
 static dleyna_connector_t connector = {
