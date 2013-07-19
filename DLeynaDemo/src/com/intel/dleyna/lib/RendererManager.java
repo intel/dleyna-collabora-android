@@ -148,7 +148,7 @@ public class RendererManager {
         if (serviceConnected) {
             if (LOG) Log.i(TAG, "disconnect: unregistering client");
             try {
-                rendererService.unregisterClient(rendererCallback);
+                rendererService.unregisterClient(rendererClient);
             } catch (RemoteException e) {
                 if (LOG) Log.e(TAG, "disconnect: unregisterClient: " + e);
             }
@@ -178,7 +178,7 @@ public class RendererManager {
             serviceConnected = true;
             rendererService = IRendererService.Stub.asInterface(b);
             try {
-                rendererService.registerClient(rendererCallback);
+                rendererService.registerClient(rendererClient);
                 listener.onConnected();
             } catch (RemoteException e) {
                 // I'm supposing that if we get here, then onServiceDisconnected()
@@ -211,7 +211,7 @@ public class RendererManager {
         // of renderers, reusing the Renderer objects of any renderers that were already
         // in the previous map. Then we substitute the new map for the previous one.
 
-        String[] newObjectIds = rendererService.getRenderers(rendererCallback);
+        String[] newObjectIds = rendererService.getRenderers(rendererClient);
         // newObjectIds is the new complete set of object ids according to the service
         if (LOG) Log.i(TAG, "getRenderers: " + newObjectIds);
 
@@ -224,8 +224,8 @@ public class RendererManager {
             for (String objectPath : newObjectIds) {
                 Renderer r = renderers.get(objectPath);
                 if (r == null) {
-                    r = new Renderer(objectPath);
-                    deltaRenderers.add(new Renderer(objectPath));
+                    r = new Renderer(RendererManager.this, objectPath);
+                    deltaRenderers.add(r);
                 } else {
                     r.setIsObsolete(false);
                 }
@@ -260,7 +260,7 @@ public class RendererManager {
         if (!serviceConnected) {
             throw new RemoteException();
         }
-        rendererService.rescan(rendererCallback);
+        rendererService.rescan(rendererClient);
     }
 
     /**
@@ -274,11 +274,13 @@ public class RendererManager {
     }
 
     /**
-     * Callbacks from the Renderer service via Binder are handled here.
+     * This is the Binder that we pass to the RendererService.
+     * It serves both to identify us as a particular client of the RendererService, and
+     * to receive callbacks from the RendererService.
      * The callbacks run on some arbitrary Binder thread.
-     * We forward the calls to the main thread by using {@link #handler}.
+     * We forward the callbacks to the main thread by using {@link #handler}.
      */
-    private final IRendererClient rendererCallback = new IRendererClient.Stub() {
+    private final IRendererClient rendererClient = new IRendererClient.Stub() {
 
         /*------------------------+
          | RendererManager.Events |
@@ -291,7 +293,7 @@ public class RendererManager {
                     if (renderers.containsKey(objectPath)) {
                         if (LOG) Log.e(TAG, "onRendererFound: REDUNDANT: " + objectPath);
                     } else {
-                        Renderer r = new Renderer(objectPath);
+                        Renderer r = new Renderer(RendererManager.this, objectPath);
                         renderers.put(objectPath, r);
                         listener.onRendererFound(r);
                     }
@@ -522,6 +524,14 @@ public class RendererManager {
             });
         }
      };
+
+     IRendererService getRendererService() {
+         return rendererService;
+     }
+
+     IRendererClient getRendererClient() {
+         return rendererClient;
+     }
 
     /**
      * Asynchronous Renderer Manager events.

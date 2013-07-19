@@ -43,6 +43,8 @@ public class RendererService extends Service implements IConnectorClient {
 
     private static final String MANAGER_OBJECT_PATH = "/com/intel/dLeynaRenderer";
 
+    private static final String ERR_NO_MANAGER = "No manager object " + MANAGER_OBJECT_PATH;
+
     private Thread daemonThread;
 
     private Connector connector;
@@ -121,53 +123,37 @@ public class RendererService extends Service implements IConnectorClient {
             clients.unregister(client);
         }
 
-//      How to broadcast clients:
-//      {
-//          int n = clients.beginBroadcast();
-//          for (int i = 0; i < n; i++) {
-//              try {
-//                  clients.getBroadcastItem(i).aMethod();
-//              } catch (RemoteException e) {
-//                  // The RemoteCallbackList removes dead objects.
-//              }
-//          }
-//          clients.finishBroadcast();
-//      }
-
         /*-----------------+
          | RendererManager |
          +-----------------*/
 
-        private static final String INTF_RENDERER_MANAGER = "com.intel.dLeynaRenderer.Manager";
+        private static final String INTF_MANAGER = "com.intel.dLeynaRenderer.Manager";
 
-        public String[] getRenderers(IRendererClient client) throws RemoteException {
-            RemoteObject mgrObj = connector.getManagerObject();
-            if (LOG) Log.i(TAG, "getRenderers: mrgObj=" + mgrObj);
-            if (mgrObj == null) {
-                return null;
+        public String[] getRenderers(IRendererClient client) {
+            String[] result = null;
+            RemoteObject mo = connector.getManagerObject();
+            if (mo != null) {
+                Invocation invo = connector.dispatch(client, mo, INTF_MANAGER, "GetRenderers", null);
+                if (invo.success) {
+                    result = invo.result.getArrayOfString();
+                }
+                invo.result.free();
             }
-            Invocation invocation = connector.dispatch(client, mgrObj, INTF_RENDERER_MANAGER, "GetRenderers", null);
-            String[] result = invocation.result.getArrayOfString();
-            if (LOG) Log.i(TAG, "getRenderers: n=" + result.length);
-            for (int i=0; i < result.length; i++) {
-                if (LOG) Log.i(TAG, "getRenderers: result[" + i + "]=" + result[i]);
-            }
-            invocation.result.free();
             return result;
         }
 
         public void rescan(IRendererClient client) throws RemoteException {
-            RemoteObject mgrObj = connector.getManagerObject();
-            if (LOG) Log.i(TAG, "rescan: mrgObj=" + mgrObj);
-            if (mgrObj != null) {
-                Invocation invocation = connector.dispatch(client, mgrObj, INTF_RENDERER_MANAGER, "Rescan", null);
-                if (LOG) Log.i(TAG, "rescan: result: " + invocation.result);
+            RemoteObject mo = connector.getManagerObject();
+            if (mo != null) {
+                connector.dispatch(client, mo, INTF_MANAGER, "Rescan", null);
             }
         }
 
         /*-----------------+
          | IRendererDevice |
          +-----------------*/
+
+        private static final String INTF_DEVICE = "com.intel.dLeynaRenderer.RendererDevice";
 
         public String getDeviceType(IRendererClient client, String objectPath) {
             return null;
@@ -227,6 +213,8 @@ public class RendererService extends Service implements IConnectorClient {
         /*--------------------+
         | IRendererController |
         +---------------------*/
+
+        private static final String INTF_CONTROLLER = "org.mpris.MediaPlayer2.Player";
 
         public void next(IRendererClient client, String objectPath) {
         }

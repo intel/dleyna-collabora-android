@@ -43,13 +43,17 @@ import android.os.RemoteException;
  */
 public class Renderer implements IRendererDevice, IRendererController, IRendererPushHost {
 
+    /** Our manager. */
+    private RendererManager manager;
+
     /** Identifies this renderer to the background renderer service. */
     private final String objectPath;
 
     private List<IRendererControllerEvents> controllerListeners = new LinkedList<IRendererControllerEvents>();
 
     /** The package-visible constructor */
-    Renderer(String objectPath) {
+    Renderer(RendererManager manager, String objectPath) {
+        this.manager = manager;
         this.objectPath = objectPath;
     }
 
@@ -66,58 +70,87 @@ public class Renderer implements IRendererDevice, IRendererController, IRenderer
      +-----------------*/
 
     public String getDeviceType() throws RemoteException {
-        return null;
+        IRendererService service = manager.getRendererService();
+        IRendererClient client = manager.getRendererClient();
+        return service.getDeviceType(client, objectPath);
     }
 
     public String getUniqueDeviceName() throws RemoteException {
-        return null;
+        IRendererService service = manager.getRendererService();
+        IRendererClient client = manager.getRendererClient();
+        return service.getUniqueDeviceName(client, objectPath);
     }
 
     public String getFriendlyName() throws RemoteException {
-        return null;
+        IRendererService service = manager.getRendererService();
+        IRendererClient client = manager.getRendererClient();
+        return service.getFriendlyName(client, objectPath);
     }
 
     public String getIconURL() throws RemoteException {
-        return null;
+        IRendererService service = manager.getRendererService();
+        IRendererClient client = manager.getRendererClient();
+        return service.getIconURL(client, objectPath);
     }
 
     public String getManufacturer() throws RemoteException {
-        return null;
+        IRendererService service = manager.getRendererService();
+        IRendererClient client = manager.getRendererClient();
+        return service.getManufacturer(client, objectPath);
     }
 
     public String getManufacturerURL() throws RemoteException {
-        return null;
+        IRendererService service = manager.getRendererService();
+        IRendererClient client = manager.getRendererClient();
+        return service.getManufacturerURL(client, objectPath);
     }
 
     public String getModelDescription() throws RemoteException {
-        return null;
+        IRendererService service = manager.getRendererService();
+        IRendererClient client = manager.getRendererClient();
+        return service.getModelDescription(client, objectPath);
     }
 
     public String getModelName() throws RemoteException {
-        return null;
+        IRendererService service = manager.getRendererService();
+        IRendererClient client = manager.getRendererClient();
+        return service.getModelName(client, objectPath);
     }
 
     public String getModelNumber() throws RemoteException {
-        return null;
+        IRendererService service = manager.getRendererService();
+        IRendererClient client = manager.getRendererClient();
+        return service.getModelNumber(client, objectPath);
     }
 
     public String getSerialNumber() throws RemoteException {
-        return null;
+        IRendererService service = manager.getRendererService();
+        IRendererClient client = manager.getRendererClient();
+        return service.getSerialNumber(client, objectPath);
     }
 
     public String getPresentationURL() throws RemoteException {
-        return null;
+        IRendererService service = manager.getRendererService();
+        IRendererClient client = manager.getRendererClient();
+        return service.getPresentationURL(client, objectPath);
     }
 
     public String getProtocolInfo() throws RemoteException {
-        return null;
+        IRendererService service = manager.getRendererService();
+        IRendererClient client = manager.getRendererClient();
+        return service.getProtocolInfo(client, objectPath);
     }
 
     public void cancel() throws RemoteException {
+        IRendererService service = manager.getRendererService();
+        IRendererClient client = manager.getRendererClient();
+        service.cancel(client, objectPath);
     }
 
-    public Icon getIcon() {
-         return null;
+    public Icon getIcon() throws RemoteException {
+        IRendererService service = manager.getRendererService();
+        IRendererClient client = manager.getRendererClient();
+        return service.getIcon(client, objectPath);
     }
 
     /*---------------------+
