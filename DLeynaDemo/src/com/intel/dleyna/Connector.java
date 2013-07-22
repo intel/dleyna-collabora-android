@@ -273,7 +273,8 @@ public class Connector {
                 invocation.done = true;
                 invocation.success = success;
                 // Remove the wrapper around the response.
-                invocation.result = GVariant.getFromNativeContainerAtIndex(result, 0);
+                invocation.result = result == 0 ? null :
+                        GVariant.getFromNativeContainerAtIndex(result, 0);
                 invocation.notify();
             }
         } else {

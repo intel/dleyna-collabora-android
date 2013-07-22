@@ -156,6 +156,15 @@ public class RendererService extends Service implements IConnectorClient {
             return result;
         }
 
+        public void rescan(IRendererClient client) throws RemoteException {
+            RemoteObject mgrObj = connector.getManagerObject();
+            if (LOG) Log.i(TAG, "rescan: mrgObj=" + mgrObj);
+            if (mgrObj != null) {
+                Invocation invocation = connector.dispatch(client, mgrObj, INTF_RENDERER_MANAGER, "Rescan", null);
+                if (LOG) Log.i(TAG, "rescan: result: " + invocation.result);
+            }
+        }
+
         /*-----------------+
          | IRendererDevice |
          +-----------------*/
