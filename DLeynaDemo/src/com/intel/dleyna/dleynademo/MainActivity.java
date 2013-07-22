@@ -34,6 +34,7 @@ import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.TextView;
 
+import com.intel.dleyna.lib.IRendererController;
 import com.intel.dleyna.lib.Renderer;
 import com.intel.dleyna.lib.RendererManager;
 
@@ -197,12 +198,65 @@ public class MainActivity extends Activity {
             writeTty("Disconnected.\n");
         }
 
-        public void onRendererFound(Renderer r) {
+        public void onRendererFound(final Renderer r) {
             writeTty("Found Renderer: " + r.getObjectPath() + '\n');
-        }
-
-        public void onRendererLost(Renderer r) {
-            writeTty("Lost Renderer: " + r.getObjectPath() + '\n');
+            r.addListener(new Renderer.ControllerEvents() {
+                String objPath = r.getObjectPath();
+                public void onPlaybackStatusChanged(IRendererController c, String status) {
+                    writeTty("(!) " + objPath + " PlaybackStatus: " + status + "\n");
+                }
+                public void onRateChanged(IRendererController c, double rate) {
+                    writeTty("(!) " + objPath + " Rate: " + rate + "\n");
+                }
+                public void onMetadataChanged(IRendererController c, Bundle metadata) {
+                    writeTty("(!) " + objPath + " Metadata: " + "?" + "\n"); // TODO
+                }
+                public void onVolumeChanged(IRendererController c, double volume) {
+                    writeTty("(!) " + objPath + " Volume: " + volume + "\n");
+                }
+                public void onMinimumRateChanged(IRendererController c, double rate) {
+                    writeTty("(!) " + objPath + " MinimumRate: " + rate + "\n");
+                }
+                public void onMaximumRateChanged(IRendererController c, double rate) {
+                    writeTty("(!) " + objPath + " MaximumRate: " + rate + "\n");
+                }
+                public void onCanGoNextChanged(IRendererController c, boolean value) {
+                    writeTty("(!) " + objPath + " CanGoNext: " + value + "\n");
+                }
+                public void onCanGoPreviousChanged(IRendererController c, boolean value) {
+                    writeTty("(!) " + objPath + " CanGoPrevious: " + value + "\n");
+                }
+                public void onTrackChanged(IRendererController c, int track) {
+                    writeTty("(!) " + objPath + " Track: " + track + "\n");
+                }
+                public void onPositionChanged(IRendererController c, long position) {
+                    writeTty("(!) " + objPath + " Position: " + position + "\n");
+                }
+                public void onCanPlayChanged(IRendererController c, boolean value) {
+                    writeTty("(!) " + objPath + " CanPlay: " + value + "\n");
+                }
+                public void onCanPauseChanged(IRendererController c, boolean value) {
+                    writeTty("(!) " + objPath + " CanPause: " + value + "\n");
+                }
+                public void onCanSeekChanged(IRendererController c, boolean value) {
+                    writeTty("(!) " + objPath + " CanSeek: " + value + "\n");
+                }
+                public void onCanControlChanged(IRendererController c, boolean value) {
+                    writeTty("(!) " + objPath + " CanControl: " + value + "\n");
+                }
+                public void onTransportPlaySpeedsChanged(IRendererController c, double[] speeds) {
+                    writeTty("(!) " + objPath + " TransportPlaySpeeds: " + speeds + "\n");
+                }
+                public void onCurrentTrackChanged(IRendererController c, int track) {
+                    writeTty("(!) " + objPath + " CurrentTrack: " + track + "\n");
+                }
+                public void onNumberOfTracksChanged(IRendererController c, int n) {
+                    writeTty("(!) " + objPath + " NumberOfTracks: " + n + "\n");
+                }
+                public void onMuteChanged(IRendererController c, boolean value) {
+                    writeTty("(!) " + objPath + " Mute: " + value + "\n");
+                }
+            });
         }
     });
 

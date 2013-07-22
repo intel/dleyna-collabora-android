@@ -11,6 +11,8 @@ extern "C" {
 #define com_intel_dleyna_GVariantType_BOOLEAN 98L
 #undef com_intel_dleyna_GVariantType_UINT32
 #define com_intel_dleyna_GVariantType_UINT32 117L
+#undef com_intel_dleyna_GVariantType_INT64
+#define com_intel_dleyna_GVariantType_INT64 120L
 #undef com_intel_dleyna_GVariantType_DOUBLE
 #define com_intel_dleyna_GVariantType_DOUBLE 100L
 #undef com_intel_dleyna_GVariantType_STRING

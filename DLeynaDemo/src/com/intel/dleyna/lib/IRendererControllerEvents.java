@@ -59,24 +59,31 @@ public interface IRendererControllerEvents {
 
     /**
      * Notification that the volume level has changed.
-     * @param c
+     * @param c the controller
      * @param volume the new volume level
      */
     public void onVolumeChanged(IRendererController c, double volume);
+
+    /**
+     * Notification that the position has changed.
+     * @param c the controller
+     * @param position the position in microseconds
+     */
+    public void onPositionChanged(IRendererController c, long position);
 
     /**
      * Notification that the minimum playback rate has changed.
      * @param c the controller
      * @param rate the new minimum playback rate
      */
-    public void onMinimumRateChanged(IRendererController c, long rate);
+    public void onMinimumRateChanged(IRendererController c, double rate);
 
     /**
      * Notification that the maximum playback rate has changed.
      * @param c the controller
      * @param rate the new maximum playback rate
      */
-    public void onMaximumRateChanged(IRendererController c, long rate);
+    public void onMaximumRateChanged(IRendererController c, double rate);
 
     /**
      * Notification that this renderer's ability to do
@@ -94,18 +101,32 @@ public interface IRendererControllerEvents {
     public void onCanGoPreviousChanged(IRendererController c, boolean value);
 
     /**
-     * Notification that this renderer's number of tracks has changed.
+     * Notification that the ability to play has changed.
      * @param c the controller
-     * @param n the new number of tracks
+     * @param value the new ability-to-play value
      */
-    public void onNumberOfTracksChanged(IRendererController c, int n);
+    public void onCanPlayChanged(IRendererController c, boolean value);
 
     /**
-     * Notification that the current track number has changed.
+     * Notification that the ability to pause has changed.
      * @param c the controller
-     * @param track the new current track number
+     * @param value the new ability-to-pause value
      */
-    public void onTrackChanged(IRendererController c, int track);
+    public void onCanPauseChanged(IRendererController c, boolean value);
+
+    /**
+     * Notification that the ability to seek has changed.
+     * @param c the controller
+     * @param value the new ability-to-seek value
+     */
+    public void onCanSeekChanged(IRendererController c, boolean value);
+
+    /**
+     * Notification that the ability to control has changed.
+     * @param c the controller
+     * @param value the new ability-to-control value
+     */
+    public void onCanControlChanged(IRendererController c, boolean value);
 
     /**
      * Notification that the supported playback rates have changed.
@@ -113,6 +134,21 @@ public interface IRendererControllerEvents {
      * @param speeds the new set of supported playback rates
      */
     public void onTransportPlaySpeedsChanged(IRendererController c, double[] speeds);
+
+    /**
+     * Notification that the current track number has changed.
+     * @param c the controller
+     * @param track the new current track number
+     */
+    public void onCurrentTrackChanged(IRendererController c, int track);
+
+    /**
+     * Notification that this renderer's number of tracks has changed.
+     * @param c the controller
+     * @param n the new number of tracks
+     */
+    public void onNumberOfTracksChanged(IRendererController c, int n);
+
     /**
      * Notification that this renderer's mute state has changed.
      * @param c the controller

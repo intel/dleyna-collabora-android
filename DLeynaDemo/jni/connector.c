@@ -72,7 +72,7 @@ static gboolean initialize(
     sMIDPublishObject   = (*sEnv)->GetMethodID(sEnv, clazz, "publishObject", "(Ljava/lang/String;ZIJ)I");
     sMIDReturnResponse  = (*sEnv)->GetMethodID(sEnv, clazz, "returnResponse", "(JJ)V");
     sMIDReturnError     = (*sEnv)->GetMethodID(sEnv, clazz, "returnError", "(JJ)V");
-    sMIDNotify          = (*sEnv)->GetMethodID(sEnv, clazz, "notify", "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;JJ)Z");
+    sMIDNotify          = (*sEnv)->GetMethodID(sEnv, clazz, "notify", "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;J)V");
 
     // Invoke peer.
     jmethodID mid = (*sEnv)->GetMethodID(sEnv, clazz, "initialize", "(Ljava/lang/String;Ljava/lang/String;I)Z");
@@ -201,9 +201,8 @@ static gboolean notify(
     jstring objPath = (*sEnv)->NewStringUTF(sEnv, object_path);
     jstring ifaceName = (*sEnv)->NewStringUTF(sEnv, interface_name);
     jstring notifName = (*sEnv)->NewStringUTF(sEnv, notification_name);
-    // TODO: allocate error buffer and pass pointer to that?
-    return (gboolean)(*sEnv)->CallBooleanMethod(sEnv, sPeer, sMIDNotify, objPath,
-            ifaceName, notifName, PTR_TO_JLONG(parameters), PTR_TO_JLONG(error));
+    (*sEnv)->CallVoidMethod(sEnv, sPeer, sMIDNotify, objPath, ifaceName, notifName, PTR_TO_JLONG(parameters));
+    return TRUE;
 }
 
 static dleyna_connector_t connector = {

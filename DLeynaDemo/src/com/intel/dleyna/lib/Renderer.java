@@ -307,10 +307,10 @@ public class Renderer implements IRendererDevice, IRendererController, IRenderer
         public void onVolumeChanged(IRendererController c, double volume) {
         }
 
-        public void onMinimumRateChanged(IRendererController c, long rate) {
+        public void onMinimumRateChanged(IRendererController c, double rate) {
         }
 
-        public void onMaximumRateChanged(IRendererController c, long rate) {
+        public void onMaximumRateChanged(IRendererController c, double rate) {
         }
 
         public void onCanGoNextChanged(IRendererController c, boolean value) {
@@ -319,13 +319,31 @@ public class Renderer implements IRendererDevice, IRendererController, IRenderer
         public void onCanGoPreviousChanged(IRendererController c, boolean value) {
         }
 
-        public void onNumberOfTracksChanged(IRendererController c, int n) {
-        }
-
         public void onTrackChanged(IRendererController c, int track) {
         }
 
+        public void onPositionChanged(IRendererController c, long position) {
+        }
+
+        public void onCanPlayChanged(IRendererController c, boolean value) {
+        }
+
+        public void onCanPauseChanged(IRendererController c, boolean value) {
+        }
+
+        public void onCanSeekChanged(IRendererController c, boolean value) {
+        }
+
+        public void onCanControlChanged(IRendererController c, boolean value) {
+        }
+
         public void onTransportPlaySpeedsChanged(IRendererController c, double[] speeds) {
+        }
+
+        public void onCurrentTrackChanged(IRendererController c, int track) {
+        }
+
+        public void onNumberOfTracksChanged(IRendererController c, int n) {
         }
 
         public void onMuteChanged(IRendererController c, boolean value) {

@@ -22,6 +22,7 @@
 package com.intel.dleyna.lib;
 
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -320,208 +321,138 @@ public class RendererManager {
          | IRendererControllerEvents |
          +---------------------------*/
 
-        public void onPlaybackStatusChanged(final String objectPath, final String status) {
-            if (LOG) Log.i(TAG, "onPlaybackStatusChanged: " + objectPath + " " + status);
+        public void onControllerPropertiesChanged(String objectPath, final Bundle props)
+                throws RemoteException {
+            if (LOG) logControllerPropertiesChanged(objectPath, props);
+            final Renderer r = renderers.get(objectPath);
+            if (r == null) {
+                if (LOG) Log.e(TAG, "CtlrPropChange: MISSING: " + objectPath);
+                return;
+            }
+
             handler.post(new Runnable() {
                 public void run() {
-                    Renderer r = renderers.get(objectPath);
-                    if (r == null) {
-                        if (LOG) Log.e(TAG, "onPlaybackStatusChanged: MISSING: " + objectPath);
-                    } else {
-                        List<IRendererControllerEvents> listeners = r.getControllerListeners();
-                        for (IRendererControllerEvents l : listeners) {
-                            l.onPlaybackStatusChanged(r, status);
+                    for (IRendererControllerEvents l : r.getControllerListeners()) {
+                        for (Iterator<String> it = props.keySet().iterator(); it.hasNext(); ) {
+                            String propName = it.next();
+                            RendererControllerProps.Enum e = RendererControllerProps.getEnum(propName);
+                            switch (e) {
+                            case PLAYBACK_STATUS:
+                                l.onPlaybackStatusChanged(r, props.getString(propName));
+                                break;
+                            case CAN_GO_NEXT:
+                                l.onCanGoNextChanged(r, props.getBoolean(propName));
+                                break;
+                            case CAN_GO_PREVIOUS:
+                                l.onCanGoPreviousChanged(r, props.getBoolean(propName));
+                                break;
+                            case CAN_PLAY:
+                                l.onCanPlayChanged(r, props.getBoolean(propName));
+                                break;
+                            case CAN_PAUSE:
+                                l.onCanPauseChanged(r, props.getBoolean(propName));
+                                break;
+                            case CAN_SEEK:
+                                l.onCanSeekChanged(r, props.getBoolean(propName));
+                                break;
+                            case CAN_CONTROL:
+                                l.onCanControlChanged(r, props.getBoolean(propName));
+                                break;
+                            case MUTE:
+                                l.onMuteChanged(r, props.getBoolean(propName));
+                                break;
+                            case RATE:
+                                l.onRateChanged(r, props.getDouble(propName));
+                                break;
+                            case VOLUME:
+                                l.onVolumeChanged(r, props.getDouble(propName));
+                                break;
+                            case MINIMUM_RATE:
+                                l.onMinimumRateChanged(r, props.getDouble(propName));
+                                break;
+                            case MAXIMUM_RATE:
+                                l.onMaximumRateChanged(r, props.getDouble(propName));
+                                break;
+                            case POSITION:
+                                l.onPositionChanged(r, props.getLong(propName));
+                                break;
+                            case METADATA:
+                                // TODO
+                                break;
+                            case TRANSPORT_PLAY_SPEEDS:
+                                l.onTransportPlaySpeedsChanged(r, props.getDoubleArray(propName));
+                                break;
+                            case CURRENT_TRACK:
+                                l.onCurrentTrackChanged(r, props.getInt(propName));
+                            case NUMBER_OF_TRACKS:
+                                l.onNumberOfTracksChanged(r, props.getInt(propName));
+                                break;
+                            case UNKNOWN:
+                                Log.e(TAG, "Unknown renderer controller property: " + propName);
+                                break;
+                            default:
+                                Log.e(TAG, "Unhandled renderer controller property: " + propName);
+                                break;
+                            }
                         }
                     }
                 }
             });
         }
 
-        public void onRateChanged(final String objectPath, final double rate) {
-            if (LOG) Log.i(TAG, "onRateChanged: " + objectPath + " " + rate);
-            handler.post(new Runnable() {
-                public void run() {
-                    Renderer r = renderers.get(objectPath);
-                    if (r == null) {
-                        if (LOG) Log.e(TAG, "onRateChanged: MISSING: " + objectPath);
-                    } else {
-                        List<IRendererControllerEvents> listeners = r.getControllerListeners();
-                        for (IRendererControllerEvents l : listeners) {
-                            l.onRateChanged(r, rate);
-                        }
-                    }
+        private void logControllerPropertiesChanged(String objectPath, Bundle props) {
+            Log.i(TAG, "CtlrPropChange: " + objectPath);
+            Iterator<String> it = props.keySet().iterator();
+            while (it.hasNext()) {
+                String propName = it.next();
+                RendererControllerProps.Enum e = RendererControllerProps.getEnum(propName);
+                switch (e) {
+                case PLAYBACK_STATUS:
+                    String s = props.getString(propName);
+                    if (LOG) Log.i(TAG, "CtlrPropChange: " + propName + ": " + s);
+                    break;
+                case CAN_GO_NEXT:
+                case CAN_GO_PREVIOUS:
+                case CAN_PLAY:
+                case CAN_PAUSE:
+                case CAN_SEEK:
+                case CAN_CONTROL:
+                case MUTE:
+                    boolean b = props.getBoolean(propName);
+                    if (LOG) Log.i(TAG, "CtlrPropChange: " + propName + ": " + b);
+                    break;
+                case RATE:
+                case VOLUME:
+                case MINIMUM_RATE:
+                case MAXIMUM_RATE:
+                    double d = props.getDouble(propName);
+                    if (LOG) Log.i(TAG, "CtlrPropChange: " + propName + ": " + d);
+                    break;
+                case POSITION:
+                    long l = props.getLong(propName);
+                    if (LOG) Log.i(TAG, "CtlrPropChange: " + propName + ": " + l);
+                    break;
+                case METADATA:
+                    // TODO
+                    if (LOG) Log.i(TAG, "CtlrPropChange: " + propName + ": " + "?");
+                    break;
+                case TRANSPORT_PLAY_SPEEDS:
+                    double[] ad = props.getDoubleArray(propName);
+                    if (LOG) Log.i(TAG, "CtlrPropChange: " + propName + ": " + ad);
+                    break;
+                case CURRENT_TRACK:
+                case NUMBER_OF_TRACKS:
+                    int i = props.getInt(propName);
+                    if (LOG) Log.i(TAG, "CtlrPropChange: " + propName + ": " + i);
+                    break;
+                case UNKNOWN:
+                    Log.e(TAG, "Unknown renderer controller property: " + propName);
+                    break;
+                default:
+                    Log.e(TAG, "Unhandled renderer controller property: " + propName);
+                    break;
                 }
-            });
-        }
-
-        public void onMetadataChanged(final String objectPath, final Bundle metadata) {
-            if (LOG) Log.i(TAG, "onMetadataChanged: " + objectPath + " " + metadata);
-            handler.post(new Runnable() {
-                public void run() {
-                    Renderer r = renderers.get(objectPath);
-                    if (r == null) {
-                        if (LOG) Log.e(TAG, "onMetadataChanged: MISSING: " + objectPath);
-                    } else {
-                        List<IRendererControllerEvents> listeners = r.getControllerListeners();
-                        for (IRendererControllerEvents l : listeners) {
-                            l.onMetadataChanged(r, metadata);
-                        }
-                    }
-                }
-            });
-        }
-
-        public void onVolumeChanged(final String objectPath, final double volume) {
-            if (LOG) Log.i(TAG, "onVolumeChanged: " + objectPath + " " + volume);
-            handler.post(new Runnable() {
-                public void run() {
-                    Renderer r = renderers.get(objectPath);
-                    if (r == null) {
-                        if (LOG) Log.e(TAG, "onVolumeChanged: MISSING: " + objectPath);
-                    } else {
-                        List<IRendererControllerEvents> listeners = r.getControllerListeners();
-                        for (IRendererControllerEvents l : listeners) {
-                            l.onVolumeChanged(r, volume);
-                        }
-                    }
-                }
-            });
-        }
-
-        public void onMinimumRateChanged(final String objectPath, final long rate) {
-            if (LOG) Log.i(TAG, "onMinimumRateChanged: " + objectPath + " " + rate);
-            handler.post(new Runnable() {
-                public void run() {
-                    Renderer r = renderers.get(objectPath);
-                    if (r == null) {
-                        if (LOG) Log.e(TAG, "onMinimumRateChanged: MISSING: " + objectPath);
-                    } else {
-                        List<IRendererControllerEvents> listeners = r.getControllerListeners();
-                        for (IRendererControllerEvents l : listeners) {
-                            l.onMinimumRateChanged(r, rate);
-                        }
-                    }
-                }
-            });
-        }
-
-        public void onMaximumRateChanged(final String objectPath, final long rate) {
-            if (LOG) Log.i(TAG, "onMaximumRateChanged: " + objectPath + " " + rate);
-            handler.post(new Runnable() {
-                public void run() {
-                    Renderer r = renderers.get(objectPath);
-                    if (r == null) {
-                        if (LOG) Log.e(TAG, "onMaximumRateChanged: MISSING: " + objectPath);
-                    } else {
-                        List<IRendererControllerEvents> listeners = r.getControllerListeners();
-                        for (IRendererControllerEvents l : listeners) {
-                            l.onMaximumRateChanged(r, rate);
-                        }
-                    }
-                }
-            });
-        }
-
-        public void onCanGoNextChanged(final String objectPath, final boolean value) {
-            if (LOG) Log.i(TAG, "onCanGoNextChanged: " + objectPath + " " + value);
-            handler.post(new Runnable() {
-                public void run() {
-                    Renderer r = renderers.get(objectPath);
-                    if (r == null) {
-                        if (LOG) Log.e(TAG, "onCanGoNextChanged: MISSING: " + objectPath);
-                    } else {
-                        List<IRendererControllerEvents> listeners = r.getControllerListeners();
-                        for (IRendererControllerEvents l : listeners) {
-                            l.onCanGoNextChanged(r, value);
-                        }
-                    }
-                }
-            });
-        }
-
-        public void onCanGoPreviousChanged(final String objectPath, final boolean value) {
-            if (LOG) Log.i(TAG, "onCanGoPreviousChanged: " + objectPath + " " + value);
-            handler.post(new Runnable() {
-                public void run() {
-                    Renderer r = renderers.get(objectPath);
-                    if (r == null) {
-                        if (LOG) Log.e(TAG, "onCanGoPreviousChanged: MISSING: " + objectPath);
-                    } else {
-                        List<IRendererControllerEvents> listeners = r.getControllerListeners();
-                        for (IRendererControllerEvents l : listeners) {
-                            l.onCanGoPreviousChanged(r, value);
-                        }
-                    }
-                }
-            });
-        }
-
-        public void onNumberOfTracksChanged(final String objectPath, final int n) {
-            if (LOG) Log.i(TAG, "onNumberOfTracksChanged: " + objectPath + " " + n);
-            handler.post(new Runnable() {
-                public void run() {
-                    Renderer r = renderers.get(objectPath);
-                    if (r == null) {
-                        if (LOG) Log.e(TAG, "onNumberOfTracksChanged: MISSING: " + objectPath);
-                    } else {
-                        List<IRendererControllerEvents> listeners = r.getControllerListeners();
-                        for (IRendererControllerEvents l : listeners) {
-                            l.onNumberOfTracksChanged(r, n);
-                        }
-                    }
-                }
-            });
-        }
-
-        public void onTrackChanged(final String objectPath, final int track) {
-            if (LOG) Log.i(TAG, "onTrackChanged: " + objectPath + " " + track);
-            handler.post(new Runnable() {
-                public void run() {
-                    Renderer r = renderers.get(objectPath);
-                    if (r == null) {
-                        if (LOG) Log.e(TAG, "onTrackChanged: MISSING: " + objectPath);
-                    } else {
-                        List<IRendererControllerEvents> listeners = r.getControllerListeners();
-                        for (IRendererControllerEvents l : listeners) {
-                            l.onTrackChanged(r, track);
-                        }
-                    }
-                }
-            });
-        }
-
-        public void onTransportPlaySpeedsChanged(final String objectPath, final double[] speeds) {
-            if (LOG) Log.i(TAG, "onTransportPlaySpeedsChanged: " + objectPath + " " + speeds);
-            handler.post(new Runnable() {
-                public void run() {
-                    Renderer r = renderers.get(objectPath);
-                    if (r == null) {
-                        if (LOG) Log.e(TAG, "onTransportPlaySpeedsChanged: MISSING: " + objectPath);
-                    } else {
-                        List<IRendererControllerEvents> listeners = r.getControllerListeners();
-                        for (IRendererControllerEvents l : listeners) {
-                            l.onTransportPlaySpeedsChanged(r, speeds);
-                        }
-                    }
-                }
-            });
-        }
-
-        public void onMuteChanged(final String objectPath, final boolean value) {
-            if (LOG) Log.i(TAG, "onMuteChanged: " + objectPath + " " + value);
-            handler.post(new Runnable() {
-                public void run() {
-                    Renderer r = renderers.get(objectPath);
-                    if (r == null) {
-                        if (LOG) Log.e(TAG, "onMetadataChanged: MISSING: " + objectPath);
-                    } else {
-                        List<IRendererControllerEvents> listeners = r.getControllerListeners();
-                        for (IRendererControllerEvents l : listeners) {
-                            l.onMuteChanged(r, value);
-                        }
-                    }
-                }
-            });
+            }
         }
      };
 

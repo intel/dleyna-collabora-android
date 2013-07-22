@@ -34,17 +34,7 @@ interface IRendererClient {
     /*---------------------------+
      | IRendererControllerEvents |
      +---------------------------*/
+    
+    void onControllerPropertiesChanged(String objectPath, in Bundle props);
 
-    void onPlaybackStatusChanged(String objectPath, String status);
-    void onRateChanged(String objectPath, double rate);
-    void onMetadataChanged(String objectPath, in Bundle metadata);
-    void onVolumeChanged(String objectPath, double volume);
-    void onMinimumRateChanged(String objectPath, long rate);
-    void onMaximumRateChanged(String objectPath, long rate);
-    void onCanGoNextChanged(String objectPath, boolean value);
-    void onCanGoPreviousChanged(String objectPath, boolean value);
-    void onNumberOfTracksChanged(String objectPath, int n);
-    void onTrackChanged(String objectPath, int track);
-    void onTransportPlaySpeedsChanged(String objectPath, in double[] speeds);
-    void onMuteChanged(String objectPath, boolean value);
 }

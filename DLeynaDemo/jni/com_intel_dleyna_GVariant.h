@@ -89,6 +89,14 @@ JNIEXPORT jint JNICALL Java_com_intel_dleyna_GVariant_getUInt32Native
 
 /*
  * Class:     com_intel_dleyna_GVariant
+ * Method:    getInt64Native
+ * Signature: (J)I
+ */
+JNIEXPORT jint JNICALL Java_com_intel_dleyna_GVariant_getInt64Native
+  (JNIEnv *, jclass, jlong);
+
+/*
+ * Class:     com_intel_dleyna_GVariant
  * Method:    getDoubleNative
  * Signature: (J)D
  */
@@ -117,6 +125,14 @@ JNIEXPORT jdoubleArray JNICALL Java_com_intel_dleyna_GVariant_getArrayOfDoubleNa
  * Signature: (J)[Ljava/lang/String;
  */
 JNIEXPORT jobjectArray JNICALL Java_com_intel_dleyna_GVariant_getArrayOfStringNative
+  (JNIEnv *, jclass, jlong);
+
+/*
+ * Class:     com_intel_dleyna_GVariant
+ * Method:    getArrayOfNativeGVariantNative
+ * Signature: (J)[J
+ */
+JNIEXPORT jlongArray JNICALL Java_com_intel_dleyna_GVariant_getArrayOfNativeGVariantNative
   (JNIEnv *, jclass, jlong);
 
 /*
