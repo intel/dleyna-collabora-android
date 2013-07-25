@@ -24,16 +24,16 @@ package com.intel.dleyna.lib;
 
 interface IRendererClient {
 
-    /*-------------------------+
-     | IRendererManager.Events |
-     +-------------------------*/
+    /*---------------------------+
+     | IRendererManager.Listener |
+     +---------------------------*/
 
     void onRendererFound(String objectPath);
     void onRendererLost(String objectPath);
 
-    /*---------------------------+
-     | IRendererControllerEvents |
-     +---------------------------*/
+    /*-----------------------------+
+     | IRendererControllerListener |
+     +-----------------------------*/
     
     void onControllerPropertiesChanged(String objectPath, in Bundle props);
 

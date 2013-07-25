@@ -43,7 +43,7 @@ import android.util.Log;
  * on local networks attached to this device (or on the device itself).
  * Each such DMR is represented by an instance of {@link Renderer}.
  * <p>
- * Use {@link #RendererManager(Events)} to to obtain an instance of this class
+ * Use {@link #RendererManager(Listener)} to to obtain an instance of this class
  * and register for notification of events.
  * <p>
  * Use {@link #connect(Context)} to initiate the connection to the background renderer service.
@@ -53,7 +53,7 @@ import android.util.Log;
  * While connected to the background renderer service,
  * you can use {@link #getRenderers()} to obtain a list of all currently available renderers,
  * and you will be notified of the appearance and disappearance of renderers in callbacks to
- * the {@link Events} object that you passed to {@link #RendererManager(Events)}.
+ * the {@link Listener} object that you passed to {@link #RendererManager(Listener)}.
  * Those notifications will run on the application's main thread.
  */
 public class RendererManager {
@@ -80,7 +80,7 @@ public class RendererManager {
     private boolean serviceConnected;
 
     /** The event listener. */
-    private Events listener;
+    private Listener listener;
 
     /** Maps "object path" strings to renderers. */
     private HashMap<String,Renderer> renderers = new HashMap<String,Renderer>();
@@ -90,12 +90,12 @@ public class RendererManager {
 
     /**
      * You would typically invoke this constructor from {@link Activity#onStart()}.
-     * @param events an instance of your extension of {@link Events},
+     * @param listener an instance of your extension of {@link Listener},
      * for receiving notification of events.
      */
-    public RendererManager(Events events) {
+    public RendererManager(Listener listener) {
         handler = new Handler(Looper.getMainLooper());
-        listener = events;
+        this.listener = listener;
     }
 
     /**
@@ -103,8 +103,8 @@ public class RendererManager {
      * <p>
      * Connection establishment is asynchronous --
      * if this method succeeds, you will later receive a callback to
-     * the {@link Events#onConnected()} method of the Events object you passed to
-     * {@link #RendererManager(Events)}, or to {@link Events#onDisconnected()}
+     * the {@link Listener#onConnected()} method of the Listener object you passed to
+     * {@link #RendererManager(Listener)}, or to {@link Listener#onDisconnected()}
      * if something went wrong in the meantime.
      * <p>
      * This method could fail if, for example, the application package containing
@@ -253,8 +253,8 @@ public class RendererManager {
      * <p>
      * Renderers that haven't responded after a few seconds will be considered unavailable.
      * <p>
-     * This may result in callbacks to {@link Events#onRendererFound(Renderer)} and/or
-     * {@link Events#onRendererLost(Renderer)} on registered observers.
+     * This may result in callbacks to {@link Listener#onRendererFound(Renderer)} and/or
+     * {@link Listener#onRendererLost(Renderer)} on registered observers.
      * @throws RemoteException no connection to the background renderer service
      */
     public void rescan() throws RemoteException {
@@ -284,7 +284,7 @@ public class RendererManager {
     private final IRendererClient rendererClient = new IRendererClient.Stub() {
 
         /*------------------------+
-         | RendererManager.Events |
+         | RendererManager.Listener |
          +------------------------*/
 
         public void onRendererFound(final String objectPath) {
@@ -318,7 +318,7 @@ public class RendererManager {
         }
 
         /*---------------------------+
-         | IRendererControllerEvents |
+         | IRendererControllerListener |
          +---------------------------*/
 
         public void onControllerPropertiesChanged(String objectPath, final Bundle props)
@@ -332,7 +332,7 @@ public class RendererManager {
 
             handler.post(new Runnable() {
                 public void run() {
-                    for (IRendererControllerEvents l : r.getControllerListeners()) {
+                    for (IRendererControllerListener l : r.getControllerListeners()) {
                         for (Iterator<String> it = props.keySet().iterator(); it.hasNext(); ) {
                             String propName = it.next();
                             RendererControllerProps.Enum e = RendererControllerProps.getEnum(propName);
@@ -465,9 +465,9 @@ public class RendererManager {
      }
 
     /**
-     * Asynchronous Renderer Manager events.
+     * Notification of Renderer Manager events.
      */
-    public static class Events {
+    public static class Listener {
         /**
          * Override this to be notified when the connection to the background renderer service
          * has been established.

@@ -49,7 +49,7 @@ public class Renderer implements IRendererDevice, IRendererController, IRenderer
     /** Identifies this renderer to the background renderer service. */
     private final String objectPath;
 
-    private List<IRendererControllerEvents> controllerListeners = new LinkedList<IRendererControllerEvents>();
+    private List<IRendererControllerListener> controllerListeners = new LinkedList<IRendererControllerListener>();
 
     /** The package-visible constructor */
     Renderer(RendererManager manager, String objectPath) {
@@ -57,7 +57,7 @@ public class Renderer implements IRendererDevice, IRendererController, IRenderer
         this.objectPath = objectPath;
     }
 
-    List<IRendererControllerEvents> getControllerListeners() {
+    List<IRendererControllerListener> getControllerListeners() {
         return controllerListeners;
     }
 
@@ -157,8 +157,8 @@ public class Renderer implements IRendererDevice, IRendererController, IRenderer
      | IRendererController |
      +---------------------*/
 
-    public void addListener(IRendererControllerEvents events) {
-        controllerListeners.add(events);
+    public void addControllerListener(IRendererControllerListener listener) {
+        controllerListeners.add(listener);
     }
 
     public void next() throws RemoteException {
@@ -287,13 +287,13 @@ public class Renderer implements IRendererDevice, IRendererController, IRenderer
      +-----------*/
 
     /**
-     * A default implementation of {@link IRendererControllerEvents} whose
+     * A default implementation of {@link IRendererControllerListener} whose
      * methods do nothing.
      * <p>
      * If you are only interested in a subset of the events of the interface,
      * you may find it easier to extend this class than to implement the entire interface.
      */
-    public static class ControllerEvents implements IRendererControllerEvents {
+    public static class ControllerListener implements IRendererControllerListener {
 
         public void onPlaybackStatusChanged(IRendererController c, String status) {
         }

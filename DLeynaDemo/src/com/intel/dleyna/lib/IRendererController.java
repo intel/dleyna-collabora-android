@@ -33,9 +33,9 @@ public interface IRendererController {
      * Register for notification of events from this controller.
      * <p>
      * All event notifications will run on the application's main thread.
-     * @param events an instance of your implementation of {@link IRendererControllerEvents}.
+     * @param listener an instance of your implementation of {@link IRendererControllerListener}.
      */
-    public void addListener(IRendererControllerEvents events);
+    public void addControllerListener(IRendererControllerListener listener);
 
     /**
      * Skip to the next track in the tracklist.

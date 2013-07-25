@@ -24,16 +24,16 @@ package com.intel.dleyna.lib;
 import android.os.Bundle;
 
 /**
- * Asynchronous events from the controller interface of a renderer.
+ * Notifications of events from the controller interface of a renderer.
  * <p>
  * You attach implementations of this interface to instances of {@link IRendererController} by calling
- * {@link IRendererController#addListener(IRendererControllerEvents)}.
+ * {@link IRendererController#addControllerListener(IRendererControllerListener)}.
  * <p>
- * A default implementation of this interface is provided by {@link Renderer.ControllerEvents}.
+ * A default implementation of this interface is provided by {@link Renderer.ControllerListener}.
  * <p>
  * All event notifications will run on the application's main thread.
  */
-public interface IRendererControllerEvents {
+public interface IRendererControllerListener {
 
     /**
      * Notification that the playback status has changed.

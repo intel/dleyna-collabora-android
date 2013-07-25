@@ -182,7 +182,7 @@ public class MainActivity extends Activity {
         }
     };
 
-    private RendererManager rendererMgr = new RendererManager(new RendererManager.Events() {
+    private RendererManager rendererMgr = new RendererManager(new RendererManager.Listener() {
 
         public void onConnected() {
             if (App.LOG) Log.i(TAG, "MainActivity: onConnected");
@@ -200,7 +200,7 @@ public class MainActivity extends Activity {
 
         public void onRendererFound(final Renderer r) {
             writeTty("Found Renderer: " + r.getObjectPath() + '\n');
-            r.addListener(new Renderer.ControllerEvents() {
+            r.addControllerListener(new Renderer.ControllerListener() {
                 String objPath = r.getObjectPath();
                 public void onPlaybackStatusChanged(IRendererController c, String status) {
                     writeTty("(!) " + objPath + " PlaybackStatus: " + status + "\n");
