@@ -74,7 +74,7 @@ public class PushActivity extends Activity {
         rendererMgr.disconnect();
     }
 
-    private RendererManager rendererMgr = new RendererManager(new RendererManager.Events() {
+    private RendererManager rendererMgr = new RendererManager(new RendererManager.Listener() {
 
         public void onConnected() {
         }

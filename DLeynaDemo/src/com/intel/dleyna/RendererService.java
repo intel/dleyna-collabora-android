@@ -33,6 +33,7 @@ import com.intel.dleyna.Connector.Invocation;
 import com.intel.dleyna.lib.IRendererClient;
 import com.intel.dleyna.lib.IRendererService;
 import com.intel.dleyna.lib.Icon;
+import com.intel.dleyna.lib.RendererControllerProps;
 
 public class RendererService extends Service implements IConnectorClient {
 
@@ -42,6 +43,14 @@ public class RendererService extends Service implements IConnectorClient {
     private static final String DAEMON_THREAD_NAME = "RendererDaemon";
 
     private static final String MANAGER_OBJECT_PATH = "/com/intel/dLeynaRenderer";
+
+    private static final String ERR_NO_MANAGER = "No manager object " + MANAGER_OBJECT_PATH;
+
+    private static final String IFACE_MANAGER    = "com.intel.dLeynaRenderer.Manager";
+    private static final String IFACE_DEVICE     = "com.intel.dLeynaRenderer.RendererDevice";
+    private static final String IFACE_CONTROLLER = "org.mpris.MediaPlayer2.Player";
+    private static final String IFACE_PUSH_HOST  = "com.intel.dLeynaRenderer.PushHost";
+    private static final String IFACE_DBUS_PROP  = "org.freedesktop.DBus.Properties";
 
     private Thread daemonThread;
 
@@ -121,47 +130,27 @@ public class RendererService extends Service implements IConnectorClient {
             clients.unregister(client);
         }
 
-//      How to broadcast clients:
-//      {
-//          int n = clients.beginBroadcast();
-//          for (int i = 0; i < n; i++) {
-//              try {
-//                  clients.getBroadcastItem(i).aMethod();
-//              } catch (RemoteException e) {
-//                  // The RemoteCallbackList removes dead objects.
-//              }
-//          }
-//          clients.finishBroadcast();
-//      }
-
         /*-----------------+
          | RendererManager |
          +-----------------*/
 
-        private static final String INTF_RENDERER_MANAGER = "com.intel.dLeynaRenderer.Manager";
-
-        public String[] getRenderers(IRendererClient client) throws RemoteException {
-            RemoteObject mgrObj = connector.getManagerObject();
-            if (LOG) Log.i(TAG, "getRenderers: mrgObj=" + mgrObj);
-            if (mgrObj == null) {
-                return null;
+        public String[] getRenderers(IRendererClient client) {
+            String[] result = null;
+            RemoteObject mo = connector.getManagerObject();
+            if (mo != null) {
+                Invocation invo = connector.dispatch(client, mo, IFACE_MANAGER, "GetRenderers", null);
+                if (invo.success) {
+                    result = invo.result.getArrayOfString();
+                }
+                invo.result.free();
             }
-            Invocation invocation = connector.dispatch(client, mgrObj, INTF_RENDERER_MANAGER, "GetRenderers", null);
-            String[] result = invocation.result.getArrayOfString();
-            if (LOG) Log.i(TAG, "getRenderers: n=" + result.length);
-            for (int i=0; i < result.length; i++) {
-                if (LOG) Log.i(TAG, "getRenderers: result[" + i + "]=" + result[i]);
-            }
-            invocation.result.free();
             return result;
         }
 
         public void rescan(IRendererClient client) throws RemoteException {
-            RemoteObject mgrObj = connector.getManagerObject();
-            if (LOG) Log.i(TAG, "rescan: mrgObj=" + mgrObj);
-            if (mgrObj != null) {
-                Invocation invocation = connector.dispatch(client, mgrObj, INTF_RENDERER_MANAGER, "Rescan", null);
-                if (LOG) Log.i(TAG, "rescan: result: " + invocation.result);
+            RemoteObject mo = connector.getManagerObject();
+            if (mo != null) {
+                connector.dispatch(client, mo, IFACE_MANAGER, "Rescan", null);
             }
         }
 
@@ -354,51 +343,139 @@ public class RendererService extends Service implements IConnectorClient {
      | IConnectorClient |
      +------------------*/
 
-    public boolean onNotify(String objPath, String ifaceName, String notifName, long params,
-            long gErrPtr) {
-
+    public void onNotify(String objPath, String ifaceName, String notifName, long params) {
+        if (LOG) Log.i(TAG, "onNotify: I=" + ifaceName + " N=" + notifName + " O=" + objPath);
         GVariant gvParams = new GVariant(params);
-
-        if (LOG) Log.i(TAG, "onNotify: " + objPath + " " + ifaceName + " " + notifName + " " +
-                gvParams.getTypeString());
-
-        if (notifName.equals("FoundRenderer")) {
-            GVariant gvObjPathRenderer = gvParams.getChildAtIndex(0);
-            String objPathRenderer = gvObjPathRenderer.getString();
-            gvObjPathRenderer.free();
-            if (LOG) Log.i(TAG, "onNotify: FoundRenderer: " + objPathRenderer);
-
-            int n = clients.beginBroadcast();
-            for (int i = 0; i < n; i++) {
-                try {
-                    clients.getBroadcastItem(i).onRendererFound(objPathRenderer);
-                } catch (RemoteException e) {
-                    // The RemoteCallbackList removes dead objects.
-                }
+        if (ifaceName.equals(IFACE_MANAGER)) {
+            if (notifName.equals("FoundRenderer")) {
+                onRendererFound(gvParams);
+            } else if (notifName.equals("LostRenderer")) {
+                onRendererLost(gvParams);
             }
-            clients.finishBroadcast();
-
-        } else if (notifName.equals("LostRenderer")) {
-                GVariant gvObjPathRenderer = gvParams.getChildAtIndex(0);
-                String objPathRenderer = gvObjPathRenderer.getString();
-                gvObjPathRenderer.free();
-                if (LOG) Log.i(TAG, "onNotify: LostRenderer: " + objPathRenderer);
-
-                int n = clients.beginBroadcast();
-                for (int i = 0; i < n; i++) {
-                    try {
-                        clients.getBroadcastItem(i).onRendererLost(objPathRenderer);
-                    } catch (RemoteException e) {
-                        // The RemoteCallbackList removes dead objects.
-                    }
-                }
-                clients.finishBroadcast();
-
-        } else if (notifName.equals("PropertiesChanged")) {
-            if (LOG) Log.i(TAG, "onNotify: PropertiesChanged:");
+        } else if (ifaceName.equals(IFACE_DBUS_PROP)) {
+            if (notifName.equals("PropertiesChanged")) {
+                onDBusPropertiesChanged(objPath, gvParams);
+            }
         }
-
         gvParams.free();
-        return true;
+    }
+
+    private void onRendererFound(GVariant gvParams) {
+        GVariant gvObjPathRenderer = gvParams.getChildAtIndex(0);
+        String objPathRenderer = gvObjPathRenderer.getString();
+        gvObjPathRenderer.free();
+        if (LOG) Log.i(TAG, "RendererFound: " + objPathRenderer);
+        int n = clients.beginBroadcast();
+        for (int i = 0; i < n; i++) {
+            try {
+                clients.getBroadcastItem(i).onRendererFound(objPathRenderer);
+            } catch (RemoteException e) {
+            }
+        }
+        clients.finishBroadcast();
+    }
+
+    private void onRendererLost(GVariant gvParams) {
+        GVariant gvObjPathRenderer = gvParams.getChildAtIndex(0);
+        String objPathRenderer = gvObjPathRenderer.getString();
+        gvObjPathRenderer.free();
+        if (LOG) Log.i(TAG, "RendererLost: " + objPathRenderer);
+        int n = clients.beginBroadcast();
+        for (int i = 0; i < n; i++) {
+            try {
+                clients.getBroadcastItem(i).onRendererLost(objPathRenderer);
+            } catch (RemoteException e) {
+            }
+        }
+        clients.finishBroadcast();
+    }
+
+    private void onDBusPropertiesChanged(String objPath, GVariant gvParams) {
+        GVariant gvIface = gvParams.getChildAtIndex(0);
+        String ifaceName = gvIface.getString();
+        if (ifaceName.equals(IFACE_CONTROLLER)) {
+            GVariant gvDictionary = gvParams.getChildAtIndex(1);
+            onControllerPropertiesChanged(objPath, gvDictionary);
+            gvDictionary.free();
+        }
+        gvIface.free();
+    }
+
+    private void onControllerPropertiesChanged(String objPath, GVariant gvDictionary) {
+        Bundle props = new Bundle();
+        GVariant gvEntries[] = gvDictionary.getArrayOfGVariant();
+        for (GVariant gvEntry : gvEntries) {
+            GVariant gvPropName = gvEntry.getChildAtIndex(0);
+            GVariant gvPropValue = gvEntry.getChildAtIndex(1);
+            addControllerProperty(props, gvPropName.getString(), gvPropValue);
+            gvPropValue.free();
+            gvPropName.free();
+            gvEntry.free();
+        }
+        int n = clients.beginBroadcast();
+        for (int i = 0; i < n; i++) {
+            try {
+                clients.getBroadcastItem(i).onControllerPropertiesChanged(objPath, props);
+            } catch (RemoteException e) {
+            }
+        }
+        clients.finishBroadcast();
+    }
+
+    /** Add the controller property with the given name and value to the given bundle. */
+    private void addControllerProperty(Bundle bundle, String propName, GVariant gvPropValue) {
+        RendererControllerProps.Enum e = RendererControllerProps.getEnum(propName);
+        switch (e) {
+        case PLAYBACK_STATUS:
+            String s = gvPropValue.getString();
+            bundle.putString(propName, s);
+            if (LOG) Log.i(TAG, "CtlrPropChange: " + propName + ": " + s);
+            break;
+        case CAN_GO_NEXT:
+        case CAN_GO_PREVIOUS:
+        case CAN_PLAY:
+        case CAN_PAUSE:
+        case CAN_SEEK:
+        case CAN_CONTROL:
+        case MUTE:
+            boolean b = gvPropValue.getBoolean();
+            bundle.putBoolean(propName, b);
+            if (LOG) Log.i(TAG, "CtlrPropChange: " + propName + ": " + b);
+            break;
+        case RATE:
+        case VOLUME:
+        case MINIMUM_RATE:
+        case MAXIMUM_RATE:
+            double d = gvPropValue.getDouble();
+            bundle.putDouble(propName, d);
+            if (LOG) Log.i(TAG, "CtlrPropChange: " + propName + ": " + d);
+            break;
+        case POSITION:
+            long l = gvPropValue.getInt64();
+            bundle.putLong(propName, l);
+            if (LOG) Log.i(TAG, "CtlrPropChange: " + propName + ": " + l);
+            break;
+        case METADATA:
+            // TODO
+            if (LOG) Log.i(TAG, "CtlrPropChange: " + propName + ": " + "?");
+            break;
+        case TRANSPORT_PLAY_SPEEDS:
+            double[] ad = gvPropValue.getArrayOfDouble();
+            bundle.putDoubleArray(propName, ad);
+            if (LOG) Log.i(TAG, "CtlrPropChange: " + propName + ": " + ad);
+            break;
+        case CURRENT_TRACK:
+        case NUMBER_OF_TRACKS:
+            int i = gvPropValue.getUInt32();
+            bundle.putInt(propName, i);
+            if (LOG) Log.i(TAG, "CtlrPropChange: " + propName + ": " + i);
+            break;
+        case UNKNOWN:
+            Log.e(TAG, "Unknown renderer controller property: " + propName);
+            break;
+        default:
+            Log.w(TAG, "Unhandled renderer controller property: " + propName);
+            break;
+        }
     }
 }

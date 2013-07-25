@@ -22,6 +22,7 @@
 package com.intel.dleyna.lib;
 
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -42,7 +43,7 @@ import android.util.Log;
  * on local networks attached to this device (or on the device itself).
  * Each such DMR is represented by an instance of {@link Renderer}.
  * <p>
- * Use {@link #RendererManager(Events)} to to obtain an instance of this class
+ * Use {@link #RendererManager(Listener)} to to obtain an instance of this class
  * and register for notification of events.
  * <p>
  * Use {@link #connect(Context)} to initiate the connection to the background renderer service.
@@ -52,7 +53,7 @@ import android.util.Log;
  * While connected to the background renderer service,
  * you can use {@link #getRenderers()} to obtain a list of all currently available renderers,
  * and you will be notified of the appearance and disappearance of renderers in callbacks to
- * the {@link Events} object that you passed to {@link #RendererManager(Events)}.
+ * the {@link Listener} object that you passed to {@link #RendererManager(Listener)}.
  * Those notifications will run on the application's main thread.
  */
 public class RendererManager {
@@ -79,7 +80,7 @@ public class RendererManager {
     private boolean serviceConnected;
 
     /** The event listener. */
-    private Events listener;
+    private Listener listener;
 
     /** Maps "object path" strings to renderers. */
     private HashMap<String,Renderer> renderers = new HashMap<String,Renderer>();
@@ -89,12 +90,12 @@ public class RendererManager {
 
     /**
      * You would typically invoke this constructor from {@link Activity#onStart()}.
-     * @param events an instance of your extension of {@link Events},
+     * @param listener an instance of your extension of {@link Listener},
      * for receiving notification of events.
      */
-    public RendererManager(Events events) {
+    public RendererManager(Listener listener) {
         handler = new Handler(Looper.getMainLooper());
-        listener = events;
+        this.listener = listener;
     }
 
     /**
@@ -102,8 +103,8 @@ public class RendererManager {
      * <p>
      * Connection establishment is asynchronous --
      * if this method succeeds, you will later receive a callback to
-     * the {@link Events#onConnected()} method of the Events object you passed to
-     * {@link #RendererManager(Events)}, or to {@link Events#onDisconnected()}
+     * the {@link Listener#onConnected()} method of the Listener object you passed to
+     * {@link #RendererManager(Listener)}, or to {@link Listener#onDisconnected()}
      * if something went wrong in the meantime.
      * <p>
      * This method could fail if, for example, the application package containing
@@ -148,7 +149,7 @@ public class RendererManager {
         if (serviceConnected) {
             if (LOG) Log.i(TAG, "disconnect: unregistering client");
             try {
-                rendererService.unregisterClient(rendererCallback);
+                rendererService.unregisterClient(rendererClient);
             } catch (RemoteException e) {
                 if (LOG) Log.e(TAG, "disconnect: unregisterClient: " + e);
             }
@@ -178,7 +179,7 @@ public class RendererManager {
             serviceConnected = true;
             rendererService = IRendererService.Stub.asInterface(b);
             try {
-                rendererService.registerClient(rendererCallback);
+                rendererService.registerClient(rendererClient);
                 listener.onConnected();
             } catch (RemoteException e) {
                 // I'm supposing that if we get here, then onServiceDisconnected()
@@ -211,7 +212,7 @@ public class RendererManager {
         // of renderers, reusing the Renderer objects of any renderers that were already
         // in the previous map. Then we substitute the new map for the previous one.
 
-        String[] newObjectIds = rendererService.getRenderers(rendererCallback);
+        String[] newObjectIds = rendererService.getRenderers(rendererClient);
         // newObjectIds is the new complete set of object ids according to the service
         if (LOG) Log.i(TAG, "getRenderers: " + newObjectIds);
 
@@ -224,8 +225,8 @@ public class RendererManager {
             for (String objectPath : newObjectIds) {
                 Renderer r = renderers.get(objectPath);
                 if (r == null) {
-                    r = new Renderer(objectPath);
-                    deltaRenderers.add(new Renderer(objectPath));
+                    r = new Renderer(RendererManager.this, objectPath);
+                    deltaRenderers.add(r);
                 } else {
                     r.setIsObsolete(false);
                 }
@@ -252,15 +253,15 @@ public class RendererManager {
      * <p>
      * Renderers that haven't responded after a few seconds will be considered unavailable.
      * <p>
-     * This may result in callbacks to {@link Events#onRendererFound(Renderer)} and/or
-     * {@link Events#onRendererLost(Renderer)} on registered observers.
+     * This may result in callbacks to {@link Listener#onRendererFound(Renderer)} and/or
+     * {@link Listener#onRendererLost(Renderer)} on registered observers.
      * @throws RemoteException no connection to the background renderer service
      */
     public void rescan() throws RemoteException {
         if (!serviceConnected) {
             throw new RemoteException();
         }
-        rendererService.rescan(rendererCallback);
+        rendererService.rescan(rendererClient);
     }
 
     /**
@@ -274,14 +275,16 @@ public class RendererManager {
     }
 
     /**
-     * Callbacks from the Renderer service via Binder are handled here.
+     * This is the Binder that we pass to the RendererService.
+     * It serves both to identify us as a particular client of the RendererService, and
+     * to receive callbacks from the RendererService.
      * The callbacks run on some arbitrary Binder thread.
-     * We forward the calls to the main thread by using {@link #handler}.
+     * We forward the callbacks to the main thread by using {@link #handler}.
      */
-    private final IRendererClient rendererCallback = new IRendererClient.Stub() {
+    private final IRendererClient rendererClient = new IRendererClient.Stub() {
 
         /*------------------------+
-         | RendererManager.Events |
+         | RendererManager.Listener |
          +------------------------*/
 
         public void onRendererFound(final String objectPath) {
@@ -291,7 +294,7 @@ public class RendererManager {
                     if (renderers.containsKey(objectPath)) {
                         if (LOG) Log.e(TAG, "onRendererFound: REDUNDANT: " + objectPath);
                     } else {
-                        Renderer r = new Renderer(objectPath);
+                        Renderer r = new Renderer(RendererManager.this, objectPath);
                         renderers.put(objectPath, r);
                         listener.onRendererFound(r);
                     }
@@ -315,218 +318,156 @@ public class RendererManager {
         }
 
         /*---------------------------+
-         | IRendererControllerEvents |
+         | IRendererControllerListener |
          +---------------------------*/
 
-        public void onPlaybackStatusChanged(final String objectPath, final String status) {
-            if (LOG) Log.i(TAG, "onPlaybackStatusChanged: " + objectPath + " " + status);
+        public void onControllerPropertiesChanged(String objectPath, final Bundle props)
+                throws RemoteException {
+            if (LOG) logControllerPropertiesChanged(objectPath, props);
+            final Renderer r = renderers.get(objectPath);
+            if (r == null) {
+                if (LOG) Log.e(TAG, "CtlrPropChange: MISSING: " + objectPath);
+                return;
+            }
+
             handler.post(new Runnable() {
                 public void run() {
-                    Renderer r = renderers.get(objectPath);
-                    if (r == null) {
-                        if (LOG) Log.e(TAG, "onPlaybackStatusChanged: MISSING: " + objectPath);
-                    } else {
-                        List<IRendererControllerEvents> listeners = r.getControllerListeners();
-                        for (IRendererControllerEvents l : listeners) {
-                            l.onPlaybackStatusChanged(r, status);
+                    for (IRendererControllerListener l : r.getControllerListeners()) {
+                        for (Iterator<String> it = props.keySet().iterator(); it.hasNext(); ) {
+                            String propName = it.next();
+                            RendererControllerProps.Enum e = RendererControllerProps.getEnum(propName);
+                            switch (e) {
+                            case PLAYBACK_STATUS:
+                                l.onPlaybackStatusChanged(r, props.getString(propName));
+                                break;
+                            case CAN_GO_NEXT:
+                                l.onCanGoNextChanged(r, props.getBoolean(propName));
+                                break;
+                            case CAN_GO_PREVIOUS:
+                                l.onCanGoPreviousChanged(r, props.getBoolean(propName));
+                                break;
+                            case CAN_PLAY:
+                                l.onCanPlayChanged(r, props.getBoolean(propName));
+                                break;
+                            case CAN_PAUSE:
+                                l.onCanPauseChanged(r, props.getBoolean(propName));
+                                break;
+                            case CAN_SEEK:
+                                l.onCanSeekChanged(r, props.getBoolean(propName));
+                                break;
+                            case CAN_CONTROL:
+                                l.onCanControlChanged(r, props.getBoolean(propName));
+                                break;
+                            case MUTE:
+                                l.onMuteChanged(r, props.getBoolean(propName));
+                                break;
+                            case RATE:
+                                l.onRateChanged(r, props.getDouble(propName));
+                                break;
+                            case VOLUME:
+                                l.onVolumeChanged(r, props.getDouble(propName));
+                                break;
+                            case MINIMUM_RATE:
+                                l.onMinimumRateChanged(r, props.getDouble(propName));
+                                break;
+                            case MAXIMUM_RATE:
+                                l.onMaximumRateChanged(r, props.getDouble(propName));
+                                break;
+                            case POSITION:
+                                l.onPositionChanged(r, props.getLong(propName));
+                                break;
+                            case METADATA:
+                                // TODO
+                                break;
+                            case TRANSPORT_PLAY_SPEEDS:
+                                l.onTransportPlaySpeedsChanged(r, props.getDoubleArray(propName));
+                                break;
+                            case CURRENT_TRACK:
+                                l.onCurrentTrackChanged(r, props.getInt(propName));
+                            case NUMBER_OF_TRACKS:
+                                l.onNumberOfTracksChanged(r, props.getInt(propName));
+                                break;
+                            case UNKNOWN:
+                                Log.e(TAG, "Unknown renderer controller property: " + propName);
+                                break;
+                            default:
+                                Log.e(TAG, "Unhandled renderer controller property: " + propName);
+                                break;
+                            }
                         }
                     }
                 }
             });
         }
 
-        public void onRateChanged(final String objectPath, final double rate) {
-            if (LOG) Log.i(TAG, "onRateChanged: " + objectPath + " " + rate);
-            handler.post(new Runnable() {
-                public void run() {
-                    Renderer r = renderers.get(objectPath);
-                    if (r == null) {
-                        if (LOG) Log.e(TAG, "onRateChanged: MISSING: " + objectPath);
-                    } else {
-                        List<IRendererControllerEvents> listeners = r.getControllerListeners();
-                        for (IRendererControllerEvents l : listeners) {
-                            l.onRateChanged(r, rate);
-                        }
-                    }
+        private void logControllerPropertiesChanged(String objectPath, Bundle props) {
+            Log.i(TAG, "CtlrPropChange: " + objectPath);
+            Iterator<String> it = props.keySet().iterator();
+            while (it.hasNext()) {
+                String propName = it.next();
+                RendererControllerProps.Enum e = RendererControllerProps.getEnum(propName);
+                switch (e) {
+                case PLAYBACK_STATUS:
+                    String s = props.getString(propName);
+                    if (LOG) Log.i(TAG, "CtlrPropChange: " + propName + ": " + s);
+                    break;
+                case CAN_GO_NEXT:
+                case CAN_GO_PREVIOUS:
+                case CAN_PLAY:
+                case CAN_PAUSE:
+                case CAN_SEEK:
+                case CAN_CONTROL:
+                case MUTE:
+                    boolean b = props.getBoolean(propName);
+                    if (LOG) Log.i(TAG, "CtlrPropChange: " + propName + ": " + b);
+                    break;
+                case RATE:
+                case VOLUME:
+                case MINIMUM_RATE:
+                case MAXIMUM_RATE:
+                    double d = props.getDouble(propName);
+                    if (LOG) Log.i(TAG, "CtlrPropChange: " + propName + ": " + d);
+                    break;
+                case POSITION:
+                    long l = props.getLong(propName);
+                    if (LOG) Log.i(TAG, "CtlrPropChange: " + propName + ": " + l);
+                    break;
+                case METADATA:
+                    // TODO
+                    if (LOG) Log.i(TAG, "CtlrPropChange: " + propName + ": " + "?");
+                    break;
+                case TRANSPORT_PLAY_SPEEDS:
+                    double[] ad = props.getDoubleArray(propName);
+                    if (LOG) Log.i(TAG, "CtlrPropChange: " + propName + ": " + ad);
+                    break;
+                case CURRENT_TRACK:
+                case NUMBER_OF_TRACKS:
+                    int i = props.getInt(propName);
+                    if (LOG) Log.i(TAG, "CtlrPropChange: " + propName + ": " + i);
+                    break;
+                case UNKNOWN:
+                    Log.e(TAG, "Unknown renderer controller property: " + propName);
+                    break;
+                default:
+                    Log.e(TAG, "Unhandled renderer controller property: " + propName);
+                    break;
                 }
-            });
-        }
-
-        public void onMetadataChanged(final String objectPath, final Bundle metadata) {
-            if (LOG) Log.i(TAG, "onMetadataChanged: " + objectPath + " " + metadata);
-            handler.post(new Runnable() {
-                public void run() {
-                    Renderer r = renderers.get(objectPath);
-                    if (r == null) {
-                        if (LOG) Log.e(TAG, "onMetadataChanged: MISSING: " + objectPath);
-                    } else {
-                        List<IRendererControllerEvents> listeners = r.getControllerListeners();
-                        for (IRendererControllerEvents l : listeners) {
-                            l.onMetadataChanged(r, metadata);
-                        }
-                    }
-                }
-            });
-        }
-
-        public void onVolumeChanged(final String objectPath, final double volume) {
-            if (LOG) Log.i(TAG, "onVolumeChanged: " + objectPath + " " + volume);
-            handler.post(new Runnable() {
-                public void run() {
-                    Renderer r = renderers.get(objectPath);
-                    if (r == null) {
-                        if (LOG) Log.e(TAG, "onVolumeChanged: MISSING: " + objectPath);
-                    } else {
-                        List<IRendererControllerEvents> listeners = r.getControllerListeners();
-                        for (IRendererControllerEvents l : listeners) {
-                            l.onVolumeChanged(r, volume);
-                        }
-                    }
-                }
-            });
-        }
-
-        public void onMinimumRateChanged(final String objectPath, final long rate) {
-            if (LOG) Log.i(TAG, "onMinimumRateChanged: " + objectPath + " " + rate);
-            handler.post(new Runnable() {
-                public void run() {
-                    Renderer r = renderers.get(objectPath);
-                    if (r == null) {
-                        if (LOG) Log.e(TAG, "onMinimumRateChanged: MISSING: " + objectPath);
-                    } else {
-                        List<IRendererControllerEvents> listeners = r.getControllerListeners();
-                        for (IRendererControllerEvents l : listeners) {
-                            l.onMinimumRateChanged(r, rate);
-                        }
-                    }
-                }
-            });
-        }
-
-        public void onMaximumRateChanged(final String objectPath, final long rate) {
-            if (LOG) Log.i(TAG, "onMaximumRateChanged: " + objectPath + " " + rate);
-            handler.post(new Runnable() {
-                public void run() {
-                    Renderer r = renderers.get(objectPath);
-                    if (r == null) {
-                        if (LOG) Log.e(TAG, "onMaximumRateChanged: MISSING: " + objectPath);
-                    } else {
-                        List<IRendererControllerEvents> listeners = r.getControllerListeners();
-                        for (IRendererControllerEvents l : listeners) {
-                            l.onMaximumRateChanged(r, rate);
-                        }
-                    }
-                }
-            });
-        }
-
-        public void onCanGoNextChanged(final String objectPath, final boolean value) {
-            if (LOG) Log.i(TAG, "onCanGoNextChanged: " + objectPath + " " + value);
-            handler.post(new Runnable() {
-                public void run() {
-                    Renderer r = renderers.get(objectPath);
-                    if (r == null) {
-                        if (LOG) Log.e(TAG, "onCanGoNextChanged: MISSING: " + objectPath);
-                    } else {
-                        List<IRendererControllerEvents> listeners = r.getControllerListeners();
-                        for (IRendererControllerEvents l : listeners) {
-                            l.onCanGoNextChanged(r, value);
-                        }
-                    }
-                }
-            });
-        }
-
-        public void onCanGoPreviousChanged(final String objectPath, final boolean value) {
-            if (LOG) Log.i(TAG, "onCanGoPreviousChanged: " + objectPath + " " + value);
-            handler.post(new Runnable() {
-                public void run() {
-                    Renderer r = renderers.get(objectPath);
-                    if (r == null) {
-                        if (LOG) Log.e(TAG, "onCanGoPreviousChanged: MISSING: " + objectPath);
-                    } else {
-                        List<IRendererControllerEvents> listeners = r.getControllerListeners();
-                        for (IRendererControllerEvents l : listeners) {
-                            l.onCanGoPreviousChanged(r, value);
-                        }
-                    }
-                }
-            });
-        }
-
-        public void onNumberOfTracksChanged(final String objectPath, final int n) {
-            if (LOG) Log.i(TAG, "onNumberOfTracksChanged: " + objectPath + " " + n);
-            handler.post(new Runnable() {
-                public void run() {
-                    Renderer r = renderers.get(objectPath);
-                    if (r == null) {
-                        if (LOG) Log.e(TAG, "onNumberOfTracksChanged: MISSING: " + objectPath);
-                    } else {
-                        List<IRendererControllerEvents> listeners = r.getControllerListeners();
-                        for (IRendererControllerEvents l : listeners) {
-                            l.onNumberOfTracksChanged(r, n);
-                        }
-                    }
-                }
-            });
-        }
-
-        public void onTrackChanged(final String objectPath, final int track) {
-            if (LOG) Log.i(TAG, "onTrackChanged: " + objectPath + " " + track);
-            handler.post(new Runnable() {
-                public void run() {
-                    Renderer r = renderers.get(objectPath);
-                    if (r == null) {
-                        if (LOG) Log.e(TAG, "onTrackChanged: MISSING: " + objectPath);
-                    } else {
-                        List<IRendererControllerEvents> listeners = r.getControllerListeners();
-                        for (IRendererControllerEvents l : listeners) {
-                            l.onTrackChanged(r, track);
-                        }
-                    }
-                }
-            });
-        }
-
-        public void onTransportPlaySpeedsChanged(final String objectPath, final double[] speeds) {
-            if (LOG) Log.i(TAG, "onTransportPlaySpeedsChanged: " + objectPath + " " + speeds);
-            handler.post(new Runnable() {
-                public void run() {
-                    Renderer r = renderers.get(objectPath);
-                    if (r == null) {
-                        if (LOG) Log.e(TAG, "onTransportPlaySpeedsChanged: MISSING: " + objectPath);
-                    } else {
-                        List<IRendererControllerEvents> listeners = r.getControllerListeners();
-                        for (IRendererControllerEvents l : listeners) {
-                            l.onTransportPlaySpeedsChanged(r, speeds);
-                        }
-                    }
-                }
-            });
-        }
-
-        public void onMuteChanged(final String objectPath, final boolean value) {
-            if (LOG) Log.i(TAG, "onMuteChanged: " + objectPath + " " + value);
-            handler.post(new Runnable() {
-                public void run() {
-                    Renderer r = renderers.get(objectPath);
-                    if (r == null) {
-                        if (LOG) Log.e(TAG, "onMetadataChanged: MISSING: " + objectPath);
-                    } else {
-                        List<IRendererControllerEvents> listeners = r.getControllerListeners();
-                        for (IRendererControllerEvents l : listeners) {
-                            l.onMuteChanged(r, value);
-                        }
-                    }
-                }
-            });
+            }
         }
      };
 
+     IRendererService getRendererService() {
+         return rendererService;
+     }
+
+     IRendererClient getRendererClient() {
+         return rendererClient;
+     }
+
     /**
-     * Asynchronous Renderer Manager events.
+     * Notification of Renderer Manager events.
      */
-    public static class Events {
+    public static class Listener {
         /**
          * Override this to be notified when the connection to the background renderer service
          * has been established.

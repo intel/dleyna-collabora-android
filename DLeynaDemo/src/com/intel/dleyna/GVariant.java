@@ -39,14 +39,26 @@ public class GVariant {
     private long peer;
 
     /**
-     * Construct a new instance given the native instance.
+     * Construct a new instance given the native instance,
+     * and add a reference count to the native instance.
      * @param peer the native instance
      */
     public GVariant(long peer) {
+        this(peer, false);
+    }
+
+    /**
+     * Construct a new instance given the native instance.
+     * @param peer the native instance
+     * @param addReference whether to add a reference to the native instance
+     */
+    public GVariant(long peer, boolean addReference) {
         if (peer == 0) {
-            throw new IllegalArgumentException();
+            throw new IllegalArgumentException("null peer");
         }
-        refSink(peer);
+        if (addReference) {
+            refSink(peer);
+        }
         this.peer = peer;
     }
 
@@ -56,10 +68,11 @@ public class GVariant {
      * but it will be done at garbage collection time if necessary.
      */
     public void free() {
-        if (peer != 0) {
-            unref(peer);
-            peer = 0;
+        if (peer == 0) {
+            throw new IllegalArgumentException("null peer");
         }
+        unref(peer);
+        peer = 0;
     }
 
     private void unref() {
@@ -199,6 +212,15 @@ public class GVariant {
     private static native int getUInt32Native(long peer);
 
     /**
+     * @return the value of this object, which must be of type int64.
+     */
+    public int getInt64() {
+        return getInt64Native(peer);
+    }
+
+    private static native int getInt64Native(long peer);
+
+    /**
      * @return the value of this object, which must be of type double.
      */
     public double getDouble() {
@@ -236,6 +258,20 @@ public class GVariant {
     private static native String[] getArrayOfStringNative(long peer);
 
     /**
+     * @return the value of this object, which must be of type array-of-GVariant.
+     */
+    public GVariant[] getArrayOfGVariant() {
+        long[] angv = getArrayOfNativeGVariantNative(peer);
+        GVariant[] agv = new GVariant[angv.length];
+        for (int i=0; i < angv.length; i++) {
+            agv[i] = new GVariant(angv[i]);
+        }
+        return agv;
+    }
+
+    private static native long[] getArrayOfNativeGVariantNative(long peer);
+
+    /**
      * Get the the child at the given index, à la g_variant_get_child_value().
      * <p>
      * This GVariant object must be a container (variant, maybe, array, tuple, or dictionary).
@@ -243,12 +279,7 @@ public class GVariant {
      * @return the child at the given index
      */
     public GVariant getChildAtIndex(int index) {
-        GVariant child = new GVariant(getChildValueNative(peer, index));
-        // TODO: verify this: I think the ref count got bumped when we obtained it by
-        // g_variant_get_child_value(). It gets bumped again in our new GVariant().
-        // So we have to decrement the ref count here.
-        child.unref();
-        return child;
+        return new GVariant(getChildValueNative(peer, index), false);
     }
 
     private static native long getChildValueNative(long peer, int index);

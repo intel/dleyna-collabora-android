@@ -43,17 +43,21 @@ import android.os.RemoteException;
  */
 public class Renderer implements IRendererDevice, IRendererController, IRendererPushHost {
 
+    /** Our manager. */
+    private RendererManager manager;
+
     /** Identifies this renderer to the background renderer service. */
     private final String objectPath;
 
-    private List<IRendererControllerEvents> controllerListeners = new LinkedList<IRendererControllerEvents>();
+    private List<IRendererControllerListener> controllerListeners = new LinkedList<IRendererControllerListener>();
 
     /** The package-visible constructor */
-    Renderer(String objectPath) {
+    Renderer(RendererManager manager, String objectPath) {
+        this.manager = manager;
         this.objectPath = objectPath;
     }
 
-    List<IRendererControllerEvents> getControllerListeners() {
+    List<IRendererControllerListener> getControllerListeners() {
         return controllerListeners;
     }
 
@@ -66,66 +70,95 @@ public class Renderer implements IRendererDevice, IRendererController, IRenderer
      +-----------------*/
 
     public String getDeviceType() throws RemoteException {
-        return null;
+        IRendererService service = manager.getRendererService();
+        IRendererClient client = manager.getRendererClient();
+        return service.getDeviceType(client, objectPath);
     }
 
     public String getUniqueDeviceName() throws RemoteException {
-        return null;
+        IRendererService service = manager.getRendererService();
+        IRendererClient client = manager.getRendererClient();
+        return service.getUniqueDeviceName(client, objectPath);
     }
 
     public String getFriendlyName() throws RemoteException {
-        return null;
+        IRendererService service = manager.getRendererService();
+        IRendererClient client = manager.getRendererClient();
+        return service.getFriendlyName(client, objectPath);
     }
 
     public String getIconURL() throws RemoteException {
-        return null;
+        IRendererService service = manager.getRendererService();
+        IRendererClient client = manager.getRendererClient();
+        return service.getIconURL(client, objectPath);
     }
 
     public String getManufacturer() throws RemoteException {
-        return null;
+        IRendererService service = manager.getRendererService();
+        IRendererClient client = manager.getRendererClient();
+        return service.getManufacturer(client, objectPath);
     }
 
     public String getManufacturerURL() throws RemoteException {
-        return null;
+        IRendererService service = manager.getRendererService();
+        IRendererClient client = manager.getRendererClient();
+        return service.getManufacturerURL(client, objectPath);
     }
 
     public String getModelDescription() throws RemoteException {
-        return null;
+        IRendererService service = manager.getRendererService();
+        IRendererClient client = manager.getRendererClient();
+        return service.getModelDescription(client, objectPath);
     }
 
     public String getModelName() throws RemoteException {
-        return null;
+        IRendererService service = manager.getRendererService();
+        IRendererClient client = manager.getRendererClient();
+        return service.getModelName(client, objectPath);
     }
 
     public String getModelNumber() throws RemoteException {
-        return null;
+        IRendererService service = manager.getRendererService();
+        IRendererClient client = manager.getRendererClient();
+        return service.getModelNumber(client, objectPath);
     }
 
     public String getSerialNumber() throws RemoteException {
-        return null;
+        IRendererService service = manager.getRendererService();
+        IRendererClient client = manager.getRendererClient();
+        return service.getSerialNumber(client, objectPath);
     }
 
     public String getPresentationURL() throws RemoteException {
-        return null;
+        IRendererService service = manager.getRendererService();
+        IRendererClient client = manager.getRendererClient();
+        return service.getPresentationURL(client, objectPath);
     }
 
     public String getProtocolInfo() throws RemoteException {
-        return null;
+        IRendererService service = manager.getRendererService();
+        IRendererClient client = manager.getRendererClient();
+        return service.getProtocolInfo(client, objectPath);
     }
 
     public void cancel() throws RemoteException {
+        IRendererService service = manager.getRendererService();
+        IRendererClient client = manager.getRendererClient();
+        service.cancel(client, objectPath);
     }
 
-    public Icon getIcon() {
-         return null;
+    public Icon getIcon() throws RemoteException {
+        IRendererService service = manager.getRendererService();
+        IRendererClient client = manager.getRendererClient();
+        return service.getIcon(client, objectPath);
     }
 
     /*---------------------+
      | IRendererController |
      +---------------------*/
 
-    public void addListener(IRendererControllerEvents events) {
-        controllerListeners.add(events);
+    public void addControllerListener(IRendererControllerListener listener) {
+        controllerListeners.add(listener);
     }
 
     public void next() throws RemoteException {
@@ -254,13 +287,13 @@ public class Renderer implements IRendererDevice, IRendererController, IRenderer
      +-----------*/
 
     /**
-     * A default implementation of {@link IRendererControllerEvents} whose
+     * A default implementation of {@link IRendererControllerListener} whose
      * methods do nothing.
      * <p>
      * If you are only interested in a subset of the events of the interface,
      * you may find it easier to extend this class than to implement the entire interface.
      */
-    public static class ControllerEvents implements IRendererControllerEvents {
+    public static class ControllerListener implements IRendererControllerListener {
 
         public void onPlaybackStatusChanged(IRendererController c, String status) {
         }
@@ -274,10 +307,10 @@ public class Renderer implements IRendererDevice, IRendererController, IRenderer
         public void onVolumeChanged(IRendererController c, double volume) {
         }
 
-        public void onMinimumRateChanged(IRendererController c, long rate) {
+        public void onMinimumRateChanged(IRendererController c, double rate) {
         }
 
-        public void onMaximumRateChanged(IRendererController c, long rate) {
+        public void onMaximumRateChanged(IRendererController c, double rate) {
         }
 
         public void onCanGoNextChanged(IRendererController c, boolean value) {
@@ -286,13 +319,31 @@ public class Renderer implements IRendererDevice, IRendererController, IRenderer
         public void onCanGoPreviousChanged(IRendererController c, boolean value) {
         }
 
-        public void onNumberOfTracksChanged(IRendererController c, int n) {
-        }
-
         public void onTrackChanged(IRendererController c, int track) {
         }
 
+        public void onPositionChanged(IRendererController c, long position) {
+        }
+
+        public void onCanPlayChanged(IRendererController c, boolean value) {
+        }
+
+        public void onCanPauseChanged(IRendererController c, boolean value) {
+        }
+
+        public void onCanSeekChanged(IRendererController c, boolean value) {
+        }
+
+        public void onCanControlChanged(IRendererController c, boolean value) {
+        }
+
         public void onTransportPlaySpeedsChanged(IRendererController c, double[] speeds) {
+        }
+
+        public void onCurrentTrackChanged(IRendererController c, int track) {
+        }
+
+        public void onNumberOfTracksChanged(IRendererController c, int n) {
         }
 
         public void onMuteChanged(IRendererController c, boolean value) {

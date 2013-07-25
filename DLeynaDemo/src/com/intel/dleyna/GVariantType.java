@@ -29,6 +29,7 @@ public class GVariantType {
     // Basic types
     public static final char BOOLEAN     = 'b';
     public static final char UINT32      = 'u';
+    public static final char INT64       = 'x';
     public static final char DOUBLE      = 'd';
     public static final char STRING      = 's';
     public static final char OBJECT_PATH = 'o';

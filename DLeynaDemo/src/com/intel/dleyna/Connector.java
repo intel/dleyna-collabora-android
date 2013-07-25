@@ -30,7 +30,7 @@ import com.intel.dleyna.lib.IRendererClient;
  * {@link #unpublishSubtree(int)},
  * {@link #returnResponse(long, long)},
  * {@link #returnError(long, long)},
- * {@link #notify(String, String, String, long, long)}
+ * {@link #notify(String, String, String, long)}
  * <p>
  * Then {@link #disconnect()} and {@link #shutdown()} will be called, in that order,
  * on the daemon thread, just after the g_main_loop exits.
@@ -289,12 +289,9 @@ public class Connector {
      * @param ifaceName
      * @param notifName
      * @param params parameters as a native GVariant
-     * @param gErrPtr native pointer to GError
-     * @return ?
      */
-    public boolean notify(String objPath, String ifaceName, String notifName, long params,
-            long gErrPtr) {
-        return client.onNotify(objPath, ifaceName, notifName, params, gErrPtr);
+    public void notify(String objPath, String ifaceName, String notifName, long params) {
+        client.onNotify(objPath, ifaceName, notifName, params);
     }
 
     /**

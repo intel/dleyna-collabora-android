@@ -96,6 +96,13 @@ JNIEXPORT jboolean JNICALL Java_com_intel_dleyna_GVariant_getBooleanNative(
     return g_variant_get_boolean(gv);
 }
 
+JNIEXPORT jint JNICALL Java_com_intel_dleyna_GVariant_getInt64Native(
+    JNIEnv* env, jclass clazz, jlong _gv)
+{
+    GVariant* gv = JLONG_TO_PTR(_gv);
+    return g_variant_get_int64(gv);
+}
+
 JNIEXPORT jint JNICALL Java_com_intel_dleyna_GVariant_getUInt32Native(
     JNIEnv* env, jclass clazz, jlong _gv)
 {
@@ -121,10 +128,19 @@ JNIEXPORT jstring JNICALL Java_com_intel_dleyna_GVariant_getStringNative(
 JNIEXPORT jdoubleArray JNICALL Java_com_intel_dleyna_GVariant_getArrayOfDoubleNative(
     JNIEnv* env, jclass clazz, jlong _gv)
 {
-    GVariant* gv = JLONG_TO_PTR(_gv);
-    gsize n = g_variant_n_children(gv);
-    // TODO
-    return 0;
+    GVariant* gvA = JLONG_TO_PTR(_gv);
+    gsize n = g_variant_n_children(gvA);
+    jlong* buf = g_malloc_n(n, sizeof(jlong));
+    int i;
+    for (i=0; i < n; i++) {
+        GVariant* gvElem = g_variant_get_child_value(gvA, i);
+        buf[i] = g_variant_get_int32(gvElem);
+        g_variant_unref(gvElem);
+    }
+    jlongArray jA = (*env)->NewLongArray(env, n);
+    (*env)->SetLongArrayRegion(env, jA, 0, n, buf);
+    g_free(buf);
+    return jA;
 }
 
 JNIEXPORT jobjectArray JNICALL Java_com_intel_dleyna_GVariant_getArrayOfStringNative(
@@ -143,6 +159,24 @@ JNIEXPORT jobjectArray JNICALL Java_com_intel_dleyna_GVariant_getArrayOfStringNa
         (*env)->SetObjectArrayElement(env, jA, i, jStr);
         g_variant_unref(gvStr);
     }
+    return jA;
+}
+
+JNIEXPORT jlongArray JNICALL Java_com_intel_dleyna_GVariant_getArrayOfNativeGVariantNative(
+    JNIEnv* env, jclass clazz, jlong _gv)
+{
+    GVariant* gvA = JLONG_TO_PTR(_gv);
+    gsize n = g_variant_n_children(gvA);
+    jlong* buf = g_malloc_n(n, sizeof(jlong));
+    int i;
+    for (i=0; i < n; i++) {
+        GVariant* gvElem = g_variant_get_child_value(gvA, i);
+        buf[i] = PTR_TO_JLONG(gvElem);
+        g_variant_unref(gvElem);
+    }
+    jlongArray jA = (*env)->NewLongArray(env, n);
+    (*env)->SetLongArrayRegion(env, jA, 0, n, buf);
+    g_free(buf);
     return jA;
 }
 
