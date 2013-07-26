@@ -120,6 +120,8 @@ public class RendererService extends Service implements IConnectorClient {
 
     private final IBinder binder = new IRendererService.Stub() {
 
+        // The methods herein are called on some arbitrary binder thread.
+
         public void registerClient(IRendererClient client) {
             if (LOG) Log.i(TAG, "registerClient");
             clients.register(client);

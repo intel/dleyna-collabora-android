@@ -69,7 +69,7 @@ static gboolean initialize(
     sMIDConnect         = (*sEnv)->GetMethodID(sEnv, clazz, "connect", "(Ljava/lang/String;JJ)V");
     sMIDDisconnect      = (*sEnv)->GetMethodID(sEnv, clazz, "disconnect", "()V");
     sMIDSetClientLostCB = (*sEnv)->GetMethodID(sEnv, clazz, "setClientLostCallback", "(J)V");
-    sMIDPublishObject   = (*sEnv)->GetMethodID(sEnv, clazz, "publishObject", "(Ljava/lang/String;ZIJ)I");
+    sMIDPublishObject   = (*sEnv)->GetMethodID(sEnv, clazz, "publishObject", "(Ljava/lang/String;ZLjava/lang/String;J)I");
     sMIDReturnResponse  = (*sEnv)->GetMethodID(sEnv, clazz, "returnResponse", "(JJ)V");
     sMIDReturnError     = (*sEnv)->GetMethodID(sEnv, clazz, "returnError", "(JJ)V");
     sMIDNotify          = (*sEnv)->GetMethodID(sEnv, clazz, "notify", "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;J)V");
@@ -139,13 +139,14 @@ static guint publish_object(
     dleyna_connector_id_t peer,
     const gchar *object_path,
     gboolean root,
-    guint iface_index,
+    const gchar *iface_name,
     const dleyna_connector_dispatch_cb_t *cb_table_1)
 {
     LOGI("connector.publish_object");
     jstring objectPath = (*sEnv)->NewStringUTF(sEnv, object_path);
+    jstring ifaceName = (*sEnv)->NewStringUTF(sEnv, iface_name);
     return (*sEnv)->CallIntMethod(sEnv, sPeer, sMIDPublishObject, objectPath,
-            (jboolean)root, (jint)iface_index, PTR_TO_JLONG(cb_table_1[0])); 
+            (jboolean)root, ifaceName, PTR_TO_JLONG(cb_table_1[0])); 
 }
 
 static guint publish_subtree(

@@ -1,3 +1,24 @@
+/*
+ * dLeyna
+ *
+ * Copyright (C) 2013 Intel Corporation. All rights reserved.
+ *
+ * This program is free software; you can redistribute it and/or modify it
+ * under the terms and conditions of the GNU Lesser General Public License,
+ * version 2.1, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this program; if not, write to the Free Software Foundation, Inc.,
+ * 51 Franklin St - Fifth Floor, Boston, MA 02110-1301 USA.
+ *
+ * Tom Keel <thomas.keel@intel.com>
+ */
+
 package com.intel.dleyna;
 
 import android.util.Log;
@@ -24,7 +45,7 @@ import com.intel.dleyna.lib.IRendererClient;
  * {@link #watchClient(String)},
  * {@link #unwatchClient(String)},
  * {@link #setClientLostCallback(long)},
- * {@link #publishObject(String, boolean, int, long)},
+ * {@link #publishObject(String, boolean, String, long)},
  * {@link #publishSubtree(String, long[], long)},
  * {@link #unpublishObject(int)},
  * {@link #unpublishSubtree(int)},
@@ -44,21 +65,13 @@ public class Connector {
     private static final boolean LOG = true;
     private static final String TAG = "Connector";
 
-    /**
-     * The current set of remote objects.
-     * The first object to show up should be the Manager object
-     * (though we don't presume so),
-     * and it should be around until shutdown.
-     * Renderer objects come and go.
-     */
-    private SparseArray<RemoteObject> objects = new SparseArray<RemoteObject>();
+    /** The current set of remote objects */
+    private RemoteObject.Store remoteObjects = new RemoteObject.Store();
 
     /** We attribute ids to remote objects starting with 1. */
     private int lastAssignedObjectId;
 
-    /**
-     * The current set of pending method invocations.
-     */
+    /** The current set of pending method invocations. */
     private SparseArray<Invocation> pendingInvocations = new SparseArray<Invocation>();
 
     /** We attribute ids to outstanding method invocations starting with 1. */
@@ -82,7 +95,7 @@ public class Connector {
     }
 
     public RemoteObject getManagerObject() {
-        return objects.get(managerObjectId);
+        return remoteObjects.getById(managerObjectId);
     }
 
     public void waitForManagerObject() {
@@ -179,22 +192,22 @@ public class Connector {
 
     /**
      * Upward call on the g_main_loop.
-     * Notification that a new remote object is available.
-     * @param objectPath
-     * @param isRoot
-     * @param interfaceIndex
-     * @param dispatchCb
+     * Notification that a new remote object interface is available.
+     * @param objectPath id of the object
+     * @param isRoot whether this is the root of all remote objects
+     * @param ifaceName name of an interface for this object
+     * @param dispatchCb function for invoking methods of the given interface on the given object
      * @return the id of the object
      */
-    public int publishObject(String objectPath, boolean isRoot, int interfaceIndex,
+    public int publishObject(String objectPath, boolean isRoot, String ifaceName,
             long dispatchCb) {
-        if (LOG) Log.i(TAG, "publishObject: " + objectPath + " " + isRoot + " " + interfaceIndex);
+        if (LOG) Log.i(TAG, "publishObject: " + objectPath + " " + isRoot + " " + ifaceName);
 
         // Add this object to the collection.
         lastAssignedObjectId++;
-        RemoteObject ro = new RemoteObject(lastAssignedObjectId, objectPath, isRoot,
-                interfaceIndex, dispatchCb);
-        objects.append(ro.id, ro);
+        RemoteObject ro = new RemoteObject(lastAssignedObjectId, objectPath, isRoot, ifaceName,
+                dispatchCb);
+        remoteObjects.add(ro);
 
         // If it's the manager object, note its id and unblock waitForManagerObject().
         if (objectPath.equals(managerObjectPath)) {
@@ -223,10 +236,11 @@ public class Connector {
     /**
      * Upward call on the g_main_loop.
      * Notification that the given remote object is no longer available.
-     * @param ObjectId
+     * @param objectId
      */
-    public void unpublishObject(int ObjectId) {
+    public void unpublishObject(int objectId) {
         if (LOG) Log.i(TAG, "unpublishObject");
+        remoteObjects.remove(objectId);
     }
 
     /**
