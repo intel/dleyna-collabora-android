@@ -70,7 +70,7 @@ public class RendererService extends Service implements IConnectorClient {
     public IBinder onBind(Intent intent) {
         if (LOG) Log.i(TAG, "onBind");
 
-        connector = new Connector(this, MANAGER_OBJECT_PATH);
+        connector = new Connector(this);
 
         // Create and start the daemon thread.
         daemonThread = new Thread(daemonRunnable, DAEMON_THREAD_NAME);

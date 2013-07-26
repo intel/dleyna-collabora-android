@@ -77,8 +77,7 @@ public class Connector {
     /** We attribute ids to outstanding method invocations starting with 1. */
     private int lastAssignedInvocationId;
 
-    private String managerObjectPath;
-    private int managerObjectId;
+    private RemoteObject managerObject;
 
     private GMainLoop gMainLoop;
 
@@ -87,20 +86,18 @@ public class Connector {
     /**
      * Construct a connector instance.
      * @param client who will get callbacks
-     * @param managerObjectPath identifies the manager object for this connector
      */
-    public Connector(IConnectorClient client, String managerObjectPath) {
+    public Connector(IConnectorClient client) {
         this.client = client;
-        this.managerObjectPath = managerObjectPath;
     }
 
     public RemoteObject getManagerObject() {
-        return remoteObjects.getById(managerObjectId);
+        return managerObject;
     }
 
     public void waitForManagerObject() {
         synchronized(this) {
-            while (managerObjectId == 0) {
+            while (managerObject == null) {
                 try {
                     this.wait();
                 } catch (InterruptedException e) {
@@ -194,7 +191,7 @@ public class Connector {
      * Upward call on the g_main_loop.
      * Notification that a new remote object interface is available.
      * @param objectPath id of the object
-     * @param isRoot whether this is the root of all remote objects
+     * @param isRoot whether this is the root object, aka the Manager object
      * @param ifaceName name of an interface for this object
      * @param dispatchCb function for invoking methods of the given interface on the given object
      * @return the id of the object
@@ -210,9 +207,9 @@ public class Connector {
         remoteObjects.add(ro);
 
         // If it's the manager object, note its id and unblock waitForManagerObject().
-        if (objectPath.equals(managerObjectPath)) {
+        if (isRoot) {
             synchronized (this) {
-                managerObjectId = lastAssignedObjectId;
+                managerObject = ro;
                 this.notify();
             }
         }
