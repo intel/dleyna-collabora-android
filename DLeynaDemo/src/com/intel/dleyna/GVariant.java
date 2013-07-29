@@ -87,6 +87,10 @@ public class GVariant {
         free();
     }
 
+    public long getPeer() {
+        return peer;
+    }
+
     /**
      * Construct a new instance of type boolean.
      * @param value the boolean value
@@ -192,6 +196,18 @@ public class GVariant {
     }
 
     private static native long newArrayNative(GVariant[] gva, long elemType);
+
+    /**
+     * Construct a new instance of type tuple of two strings.
+     * @param s1 fist string
+     * @param s2 second string
+     * @return the new instance
+     */
+    public static GVariant newStringPair(String s1, String s2) {
+        return new GVariant(newStringPairNative(s1, s2));
+    }
+
+    private static native long newStringPairNative(String s1, String s2);
 
     /**
      * @return the value of this object, which must be of type boolean.

@@ -20,10 +20,10 @@ JNIEXPORT void JNICALL Java_com_intel_dleyna_Connector_setJNIEnvNative
 /*
  * Class:     com_intel_dleyna_Connector
  * Method:    dispatchNative
- * Signature: (JLjava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lcom/intel/dleyna/GVariant;J)V
+ * Signature: (JLjava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;JJ)V
  */
 JNIEXPORT void JNICALL Java_com_intel_dleyna_Connector_dispatchNative
-  (JNIEnv *, jobject, jlong, jstring, jstring, jstring, jstring, jobject, jlong);
+  (JNIEnv *, jobject, jlong, jstring, jstring, jstring, jstring, jlong, jlong);
 
 #ifdef __cplusplus
 }

@@ -163,9 +163,26 @@ public class MainActivity extends Activity {
             if (renderers == null || renderers.length == 0) {
                 writeTty("No renderers.\n");
             } else {
-                int n = 1;
+                int i = 1;
                 for (Renderer r : renderers) {
-                    writeTty(n + "/" + renderers.length + " " + r.getObjectPath() + "\n");
+                    writeTty(i + "/" + renderers.length + " " + r.getObjectPath() + "\n");
+                    try {
+                        writeTty("      " + r.getDeviceType() + "\n");
+                        writeTty("      " + r.getUniqueDeviceName() + "\n");
+                        writeTty("      " + r.getFriendlyName() + "\n");
+                        writeTty("      " + r.getIconURL() + "\n");
+                        writeTty("      " + r.getManufacturer() + "\n");
+                        writeTty("      " + r.getManufacturerURL() + "\n");
+                        writeTty("      " + r.getModelDescription() + "\n");
+                        writeTty("      " + r.getModelName() + "\n");
+                        writeTty("      " + r.getModelNumber() + "\n");
+                        writeTty("      " + r.getSerialNumber() + "\n");
+                        writeTty("      " + r.getPresentationURL() + "\n");
+                        writeTty("      " + r.getProtocolInfo() + "\n");
+                    } catch (RemoteException e) {
+                        e.printStackTrace();
+                    }
+                    i++;
                 }
             }
         }

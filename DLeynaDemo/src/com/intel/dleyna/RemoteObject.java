@@ -45,6 +45,7 @@ public class RemoteObject {
 
     /**
      * A set of remote objects, searchable by either integer id or (objectPath, ifaceName).
+     * All methods are thread-safe.
      */
     public static class Store {
 
@@ -52,22 +53,24 @@ public class RemoteObject {
 
         private HashMap<String,RemoteObject> objectsByName = new HashMap<String,RemoteObject>();
 
-        public void add(RemoteObject ro) {
+        public synchronized void add(RemoteObject ro) {
             objectsById.append(ro.id, ro);
             objectsByName.put(ro.ifaceName + ro.objectPath, ro);
         }
 
-        public void remove(int id) {
+        public synchronized void remove(int id) {
             RemoteObject ro = objectsById.get(id);
-            objectsById.delete(id);
-            objectsByName.remove(ro.ifaceName + ro.objectPath);
+            if (ro != null) {
+                objectsById.delete(id);
+                objectsByName.remove(ro.ifaceName + ro.objectPath);
+            }
         }
 
-        public RemoteObject getById(int id) {
+        public synchronized RemoteObject getById(int id) {
             return objectsById.get(id);
         }
 
-        public RemoteObject getByName(String objectPath, String ifaceName) {
+        public synchronized RemoteObject getByName(String objectPath, String ifaceName) {
             return objectsByName.get(ifaceName + objectPath);
         }
     }

@@ -95,6 +95,10 @@ public class Connector {
         return managerObject;
     }
 
+    public RemoteObject getRemoteObject(String objectPath, String ifaceName) {
+        return remoteObjects.getByName(objectPath, ifaceName);
+    }
+
     public void waitForManagerObject() {
         synchronized(this) {
             while (managerObject == null) {
@@ -283,9 +287,11 @@ public class Connector {
             synchronized(invocation) {
                 invocation.done = true;
                 invocation.success = success;
-                // Remove the wrapper around the response.
-                invocation.result = result == 0 ? null :
-                        GVariant.getFromNativeContainerAtIndex(result, 0);
+                if (success && result != 0) {
+                    invocation.result = GVariant.getFromNativeContainerAtIndex(result, 0);
+                }
+                // Note: in the failure case, we leave invocation.result null rather than
+                // sending up the GError.
                 invocation.notify();
             }
         } else {
@@ -311,13 +317,17 @@ public class Connector {
      * We transfer the call to the daemon thread, and wait for the response.
      * @param client the client
      * @param obj the remote object info
-     * @param args
+     * @param iface name of the interface
+     * @param meth name of the method
+     * @param gvArgs arguments to the method
+     * @return description of the pending method invocation
      */
     public Invocation dispatch(final IRendererClient client, final RemoteObject obj, final String iface,
-            final String func, final GVariant args) {
+            final String meth, GVariant gvArgs) {
 
-        if (LOG) Log.i(TAG, "dispatch: " + client.asBinder() + " " + obj + " " + " " + iface + " "
-                + func + " " + args);
+        final long args = gvArgs == null ? 0 : gvArgs.getPeer();
+        if (LOG) Log.i(TAG, "dispatch: " + obj.dispatchCb + " " + obj.objectPath + " " + " " + iface + " "
+                + meth + " " + args);
 
         // Add a new Invocation in our list of pending Invocations.
         final int id;
@@ -332,7 +342,7 @@ public class Connector {
         gMainLoop.gIdleAdd(new Runnable() {
             public void run() {
                 if (LOG) Log.i(TAG, "dispatch: RUNNING");
-                dispatchNative(obj.dispatchCb, client.asBinder().toString(), obj.objectPath, iface, func, args, id);
+                dispatchNative(obj.dispatchCb, client.asBinder().toString(), obj.objectPath, iface, meth, args, id);
             }
         });
 
@@ -352,7 +362,7 @@ public class Connector {
     }
 
     private native void dispatchNative(long dispatchFuncAddr, String sender, String objectId,
-            String iface, String method, GVariant args, long msgId);
+            String iface, String method, long args, long msgId);
 
     /**
      * The status of a dispatched method invocation.
@@ -364,7 +374,7 @@ public class Connector {
         public boolean done = false;
         /** Did this invocation succeed? */
         public boolean success = false;
-        /** If success, output parameters as a GVariant, else as GError. */
+        /** If success, output parameters as a GVariant, else null. */
         public GVariant result = null;
 
         Invocation(int id) {

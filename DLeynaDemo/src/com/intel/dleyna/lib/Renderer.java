@@ -26,6 +26,7 @@ import java.util.List;
 
 import android.os.Bundle;
 import android.os.RemoteException;
+import android.util.Log;
 
 /**
  * Instances of this class correspond to Digital Media Renderers

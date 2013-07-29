@@ -230,7 +230,7 @@ extern const dleyna_connector_t *dleyna_connector_get_interface(void)
 
 JNIEXPORT void JNICALL Java_com_intel_dleyna_Connector_dispatchNative(
     JNIEnv* env, jobject peer, jlong _dispatchFunc, jstring sender,
-    jstring objId, jstring iface, jstring method, jobject args, jlong msgId)
+    jstring objId, jstring iface, jstring method, jlong _args, jlong _msgId)
 {
     const char* senderC = (*env)->GetStringUTFChars(env, sender, NULL);
     const char* objIdC = (*env)->GetStringUTFChars(env, objId, NULL);
@@ -238,7 +238,13 @@ JNIEXPORT void JNICALL Java_com_intel_dleyna_Connector_dispatchNative(
     const char* methodC = (*env)->GetStringUTFChars(env, method, NULL);
 
     dleyna_connector_dispatch_cb_t dispatchFunc = JLONG_TO_PTR(_dispatchFunc);
-    dispatchFunc(peer, senderC, objIdC, ifaceC, methodC, args, JLONG_TO_PTR(msgId));
+    GVariant* args = JLONG_TO_PTR(_args);
+    dleyna_connector_msg_id_t msgId = JLONG_TO_PTR(_msgId); 
+
+    LOGI("connector.dispatch: peer=%p sender=%s obj=%s iface=%s meth=%s args=%p msgId=%p",
+            peer, senderC, objIdC, ifaceC, methodC, args, msgId);
+
+    dispatchFunc(peer, senderC, objIdC, ifaceC, methodC, args, msgId);
 
     (*env)->ReleaseStringUTFChars(env, sender, senderC);
     (*env)->ReleaseStringUTFChars(env, objId, objIdC);
