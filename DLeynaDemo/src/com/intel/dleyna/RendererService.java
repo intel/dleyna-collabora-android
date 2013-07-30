@@ -70,7 +70,7 @@ public class RendererService extends Service implements IConnectorClient {
     public IBinder onBind(Intent intent) {
         if (LOG) Log.i(TAG, "onBind");
 
-        connector = new Connector(this, MANAGER_OBJECT_PATH);
+        connector = new Connector(this);
 
         // Create and start the daemon thread.
         daemonThread = new Thread(daemonRunnable, DAEMON_THREAD_NAME);
@@ -120,6 +120,8 @@ public class RendererService extends Service implements IConnectorClient {
 
     private final IBinder binder = new IRendererService.Stub() {
 
+        // The methods herein are called on some arbitrary binder thread.
+
         public void registerClient(IRendererClient client) {
             if (LOG) Log.i(TAG, "registerClient");
             clients.register(client);
@@ -147,7 +149,7 @@ public class RendererService extends Service implements IConnectorClient {
             return result;
         }
 
-        public void rescan(IRendererClient client) throws RemoteException {
+        public void rescan(IRendererClient client) {
             RemoteObject mo = connector.getManagerObject();
             if (mo != null) {
                 connector.dispatch(client, mo, IFACE_MANAGER, "Rescan", null);
@@ -159,58 +161,79 @@ public class RendererService extends Service implements IConnectorClient {
          +-----------------*/
 
         public String getDeviceType(IRendererClient client, String objectPath) {
-            return null;
+            return getStringValuedDeviceProperty(client, objectPath, "DeviceType");
         }
 
         public String getUniqueDeviceName(IRendererClient client, String objectPath) {
-            return null;
+            return getStringValuedDeviceProperty(client, objectPath, "UDN");
         }
 
         public String getFriendlyName(IRendererClient client, String objectPath) {
-            return null;
+            return getStringValuedDeviceProperty(client, objectPath, "FriendlyName");
         }
 
         public String getIconURL(IRendererClient client, String objectPath) {
-            return null;
+            return getStringValuedDeviceProperty(client, objectPath, "IconURL");
         }
 
         public String getManufacturer(IRendererClient client, String objectPath) {
-            return null;
+            return getStringValuedDeviceProperty(client, objectPath, "Manufacturer");
         }
 
         public String getManufacturerURL(IRendererClient client, String objectPath) {
-            return null;
+            return getStringValuedDeviceProperty(client, objectPath, "ManufacturerUrl");
         }
 
         public String getModelDescription(IRendererClient client, String objectPath) {
-            return null;
+            return getStringValuedDeviceProperty(client, objectPath, "ModelDescription");
         }
 
         public String getModelName(IRendererClient client, String objectPath) {
-            return null;
+            return getStringValuedDeviceProperty(client, objectPath, "ModelName");
         }
 
         public String getModelNumber(IRendererClient client, String objectPath) {
-            return null;
+            return getStringValuedDeviceProperty(client, objectPath, "ModelNumber");
         }
 
         public String getSerialNumber(IRendererClient client, String objectPath) {
-            return null;
+            return getStringValuedDeviceProperty(client, objectPath, "SerialNumber");
         }
 
         public String getPresentationURL(IRendererClient client, String objectPath) {
-            return null;
+            return getStringValuedDeviceProperty(client, objectPath, "PresentationURL");
         }
 
         public String getProtocolInfo(IRendererClient client, String objectPath) {
-            return null;
+            return getStringValuedDeviceProperty(client, objectPath, "ProtocolInfo");
         }
 
         public Icon getIcon(IRendererClient client, String objectPath) {
+            // TODO
             return null;
         }
 
         public void cancel(IRendererClient client, String objectPath) {
+            // TODO
+        }
+
+        private String getStringValuedDeviceProperty(IRendererClient client, String objectPath, String propName) {
+            if (LOG) Log.i(TAG, "getStringDeviceProp: obj=" + objectPath + " prop=" + propName);
+            String result = null;
+            RemoteObject ro = connector.getRemoteObject(objectPath, IFACE_DBUS_PROP);
+            if (ro != null) {
+                GVariant args = GVariant.newStringPair(IFACE_DEVICE, propName);
+                Invocation invo = connector.dispatch(client, ro, IFACE_DBUS_PROP, "Get", args);
+                args.free();
+                if (invo.success) {
+                    result = invo.result.getChildAtIndex(0).getString();
+                    invo.result.free();
+                } else {
+                    if (LOG) Log.w(TAG, "getStringDeviceProp: invocation FAIL");
+                }
+            }
+            if (LOG) Log.i(TAG, "getStringDeviceProp: result=" + result);
+            return result;
         }
 
         /*--------------------+

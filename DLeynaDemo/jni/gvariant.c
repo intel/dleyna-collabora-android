@@ -89,6 +89,20 @@ JNIEXPORT jlong JNICALL Java_com_intel_dleyna_GVariant_newArrayNative(
     return 0;
 }
 
+JNIEXPORT jlong JNICALL Java_com_intel_dleyna_GVariant_newStringPairNative(
+    JNIEnv* env, jclass clazz, jstring str1, jstring str2)
+{
+    const jbyte* str1C = (*env)->GetStringUTFChars(env, str1, NULL);
+    const jbyte* str2C = (*env)->GetStringUTFChars(env, str2, NULL);
+    if (str1C == NULL || str2C == NULL) {
+        return 0;
+    }
+    GVariant* gv = g_variant_new("(ss)", str1C, str2C);
+    (*env)->ReleaseStringUTFChars(env, str1, str1C);
+    (*env)->ReleaseStringUTFChars(env, str2, str2C);
+    return PTR_TO_JLONG(gv);
+}
+
 JNIEXPORT jboolean JNICALL Java_com_intel_dleyna_GVariant_getBooleanNative(
     JNIEnv* env, jclass clazz, jlong _gv)
 {
@@ -130,15 +144,15 @@ JNIEXPORT jdoubleArray JNICALL Java_com_intel_dleyna_GVariant_getArrayOfDoubleNa
 {
     GVariant* gvA = JLONG_TO_PTR(_gv);
     gsize n = g_variant_n_children(gvA);
-    jlong* buf = g_malloc_n(n, sizeof(jlong));
+    jdouble* buf = g_malloc_n(n, sizeof(jdouble));
     int i;
     for (i=0; i < n; i++) {
         GVariant* gvElem = g_variant_get_child_value(gvA, i);
-        buf[i] = g_variant_get_int32(gvElem);
+        buf[i] = g_variant_get_double(gvElem);
         g_variant_unref(gvElem);
     }
-    jlongArray jA = (*env)->NewLongArray(env, n);
-    (*env)->SetLongArrayRegion(env, jA, 0, n, buf);
+    jdoubleArray jA = (*env)->NewDoubleArray(env, n);
+    (*env)->SetDoubleArrayRegion(env, jA, 0, n, buf);
     g_free(buf);
     return jA;
 }

@@ -1,3 +1,24 @@
+/*
+ * dLeyna
+ *
+ * Copyright (C) 2013 Intel Corporation. All rights reserved.
+ *
+ * This program is free software; you can redistribute it and/or modify it
+ * under the terms and conditions of the GNU Lesser General Public License,
+ * version 2.1, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this program; if not, write to the Free Software Foundation, Inc.,
+ * 51 Franklin St - Fifth Floor, Boston, MA 02110-1301 USA.
+ *
+ * Tom Keel <thomas.keel@intel.com>
+ */
+
 package com.intel.dleyna;
 
 import android.util.Log;
@@ -24,7 +45,7 @@ import com.intel.dleyna.lib.IRendererClient;
  * {@link #watchClient(String)},
  * {@link #unwatchClient(String)},
  * {@link #setClientLostCallback(long)},
- * {@link #publishObject(String, boolean, int, long)},
+ * {@link #publishObject(String, boolean, String, long)},
  * {@link #publishSubtree(String, long[], long)},
  * {@link #unpublishObject(int)},
  * {@link #unpublishSubtree(int)},
@@ -44,28 +65,19 @@ public class Connector {
     private static final boolean LOG = true;
     private static final String TAG = "Connector";
 
-    /**
-     * The current set of remote objects.
-     * The first object to show up should be the Manager object
-     * (though we don't presume so),
-     * and it should be around until shutdown.
-     * Renderer objects come and go.
-     */
-    private SparseArray<RemoteObject> objects = new SparseArray<RemoteObject>();
+    /** The current set of remote objects */
+    private RemoteObject.Store remoteObjects = new RemoteObject.Store();
 
     /** We attribute ids to remote objects starting with 1. */
     private int lastAssignedObjectId;
 
-    /**
-     * The current set of pending method invocations.
-     */
+    /** The current set of pending method invocations. */
     private SparseArray<Invocation> pendingInvocations = new SparseArray<Invocation>();
 
     /** We attribute ids to outstanding method invocations starting with 1. */
     private int lastAssignedInvocationId;
 
-    private String managerObjectPath;
-    private int managerObjectId;
+    private RemoteObject managerObject;
 
     private GMainLoop gMainLoop;
 
@@ -74,20 +86,22 @@ public class Connector {
     /**
      * Construct a connector instance.
      * @param client who will get callbacks
-     * @param managerObjectPath identifies the manager object for this connector
      */
-    public Connector(IConnectorClient client, String managerObjectPath) {
+    public Connector(IConnectorClient client) {
         this.client = client;
-        this.managerObjectPath = managerObjectPath;
     }
 
     public RemoteObject getManagerObject() {
-        return objects.get(managerObjectId);
+        return managerObject;
+    }
+
+    public RemoteObject getRemoteObject(String objectPath, String ifaceName) {
+        return remoteObjects.getByName(objectPath, ifaceName);
     }
 
     public void waitForManagerObject() {
         synchronized(this) {
-            while (managerObjectId == 0) {
+            while (managerObject == null) {
                 try {
                     this.wait();
                 } catch (InterruptedException e) {
@@ -179,27 +193,27 @@ public class Connector {
 
     /**
      * Upward call on the g_main_loop.
-     * Notification that a new remote object is available.
-     * @param objectPath
-     * @param isRoot
-     * @param interfaceIndex
-     * @param dispatchCb
+     * Notification that a new remote object interface is available.
+     * @param objectPath id of the object
+     * @param isRoot whether this is the root object, aka the Manager object
+     * @param ifaceName name of an interface for this object
+     * @param dispatchCb function for invoking methods of the given interface on the given object
      * @return the id of the object
      */
-    public int publishObject(String objectPath, boolean isRoot, int interfaceIndex,
+    public int publishObject(String objectPath, boolean isRoot, String ifaceName,
             long dispatchCb) {
-        if (LOG) Log.i(TAG, "publishObject: " + objectPath + " " + isRoot + " " + interfaceIndex);
+        if (LOG) Log.i(TAG, "publishObject: " + objectPath + " " + isRoot + " " + ifaceName);
 
         // Add this object to the collection.
         lastAssignedObjectId++;
-        RemoteObject ro = new RemoteObject(lastAssignedObjectId, objectPath, isRoot,
-                interfaceIndex, dispatchCb);
-        objects.append(ro.id, ro);
+        RemoteObject ro = new RemoteObject(lastAssignedObjectId, objectPath, isRoot, ifaceName,
+                dispatchCb);
+        remoteObjects.add(ro);
 
         // If it's the manager object, note its id and unblock waitForManagerObject().
-        if (objectPath.equals(managerObjectPath)) {
+        if (isRoot) {
             synchronized (this) {
-                managerObjectId = lastAssignedObjectId;
+                managerObject = ro;
                 this.notify();
             }
         }
@@ -223,10 +237,11 @@ public class Connector {
     /**
      * Upward call on the g_main_loop.
      * Notification that the given remote object is no longer available.
-     * @param ObjectId
+     * @param objectId
      */
-    public void unpublishObject(int ObjectId) {
+    public void unpublishObject(int objectId) {
         if (LOG) Log.i(TAG, "unpublishObject");
+        remoteObjects.remove(objectId);
     }
 
     /**
@@ -272,9 +287,11 @@ public class Connector {
             synchronized(invocation) {
                 invocation.done = true;
                 invocation.success = success;
-                // Remove the wrapper around the response.
-                invocation.result = result == 0 ? null :
-                        GVariant.getFromNativeContainerAtIndex(result, 0);
+                if (success && result != 0) {
+                    invocation.result = GVariant.getFromNativeContainerAtIndex(result, 0);
+                }
+                // Note: in the failure case, we leave invocation.result null rather than
+                // sending up the GError.
                 invocation.notify();
             }
         } else {
@@ -300,13 +317,17 @@ public class Connector {
      * We transfer the call to the daemon thread, and wait for the response.
      * @param client the client
      * @param obj the remote object info
-     * @param args
+     * @param iface name of the interface
+     * @param meth name of the method
+     * @param gvArgs arguments to the method
+     * @return description of the pending method invocation
      */
     public Invocation dispatch(final IRendererClient client, final RemoteObject obj, final String iface,
-            final String func, final GVariant args) {
+            final String meth, GVariant gvArgs) {
 
-        if (LOG) Log.i(TAG, "dispatch: " + client.asBinder() + " " + obj + " " + " " + iface + " "
-                + func + " " + args);
+        final long args = gvArgs == null ? 0 : gvArgs.getPeer();
+        if (LOG) Log.i(TAG, "dispatch: " + obj.dispatchCb + " " + obj.objectPath + " " + " " + iface + " "
+                + meth + " " + args);
 
         // Add a new Invocation in our list of pending Invocations.
         final int id;
@@ -321,7 +342,7 @@ public class Connector {
         gMainLoop.gIdleAdd(new Runnable() {
             public void run() {
                 if (LOG) Log.i(TAG, "dispatch: RUNNING");
-                dispatchNative(obj.dispatchCb, client.asBinder().toString(), obj.objectPath, iface, func, args, id);
+                dispatchNative(obj.dispatchCb, client.asBinder().toString(), obj.objectPath, iface, meth, args, id);
             }
         });
 
@@ -341,7 +362,7 @@ public class Connector {
     }
 
     private native void dispatchNative(long dispatchFuncAddr, String sender, String objectId,
-            String iface, String method, GVariant args, long msgId);
+            String iface, String method, long args, long msgId);
 
     /**
      * The status of a dispatched method invocation.
@@ -353,7 +374,7 @@ public class Connector {
         public boolean done = false;
         /** Did this invocation succeed? */
         public boolean success = false;
-        /** If success, output parameters as a GVariant, else as GError. */
+        /** If success, output parameters as a GVariant, else null. */
         public GVariant result = null;
 
         Invocation(int id) {

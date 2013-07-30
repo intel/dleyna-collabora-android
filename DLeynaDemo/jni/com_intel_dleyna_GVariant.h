@@ -73,6 +73,14 @@ JNIEXPORT jlong JNICALL Java_com_intel_dleyna_GVariant_newArrayNative
 
 /*
  * Class:     com_intel_dleyna_GVariant
+ * Method:    newStringPairNative
+ * Signature: (Ljava/lang/String;Ljava/lang/String;)J
+ */
+JNIEXPORT jlong JNICALL Java_com_intel_dleyna_GVariant_newStringPairNative
+  (JNIEnv *, jclass, jstring, jstring);
+
+/*
+ * Class:     com_intel_dleyna_GVariant
  * Method:    getBooleanNative
  * Signature: (J)Z
  */
