@@ -255,52 +255,6 @@ public class Connector {
 
     /**
      * Upward call on the g_main_loop.
-     * Asynchronous positive return from a dispatched method invocation.
-     * @param messageId
-     * @param paramsAsGVariant
-     */
-    public void returnResponse(long messageId, long paramsAsGVariant) {
-        if (LOG) Log.i(TAG, "returnResponse: messageId=" + messageId + " result=" + paramsAsGVariant);
-        returnResult((int)messageId, true, paramsAsGVariant);
-    }
-
-    /**
-     * Upward call on the g_main_loop.
-     * Asynchronous negative return from a dispatched method invocation.
-     * @param messageId
-     * @param errorAsGError
-     */
-    public void returnError(long messageId, long errorAsGError) {
-        if (LOG) Log.i(TAG, "returnError: messageId=" + messageId + " err=" + errorAsGError);
-        returnResult((int)messageId, false, errorAsGError);
-    }
-
-    private void returnResult(int id, boolean success, long result) {
-        Invocation invocation;
-        synchronized(pendingInvocations) {
-            invocation = pendingInvocations.get(id);
-            if (invocation != null) {
-                pendingInvocations.remove(id);
-            }
-        }
-        if (invocation != null) {
-            synchronized(invocation) {
-                invocation.done = true;
-                invocation.success = success;
-                if (success && result != 0) {
-                    invocation.result = GVariant.getFromNativeContainerAtIndex(result, 0);
-                }
-                // Note: in the failure case, we leave invocation.result null rather than
-                // sending up the GError.
-                invocation.notify();
-            }
-        } else {
-            throw new Error("No pending result!");
-        }
-    }
-
-    /**
-     * Upward call on the g_main_loop.
      * Broadcasted notification of some event from a remote object.
      * @param objPath
      * @param ifaceName
@@ -363,6 +317,52 @@ public class Connector {
 
     private native void dispatchNative(long dispatchFuncAddr, String sender, String objectId,
             String iface, String method, long args, long msgId);
+
+    /**
+     * Upward call on the g_main_loop.
+     * Asynchronous positive return from a dispatched method invocation.
+     * @param messageId
+     * @param paramsAsGVariant
+     */
+    public void returnResponse(long messageId, long paramsAsGVariant) {
+        if (LOG) Log.i(TAG, "returnResponse: messageId=" + messageId + " result=" + paramsAsGVariant);
+        returnResult((int)messageId, true, paramsAsGVariant);
+    }
+
+    /**
+     * Upward call on the g_main_loop.
+     * Asynchronous negative return from a dispatched method invocation.
+     * @param messageId
+     * @param errorAsGError
+     */
+    public void returnError(long messageId, long errorAsGError) {
+        if (LOG) Log.i(TAG, "returnError: messageId=" + messageId + " err=" + errorAsGError);
+        returnResult((int)messageId, false, errorAsGError);
+    }
+
+    private void returnResult(int id, boolean success, long result) {
+        Invocation invocation;
+        synchronized(pendingInvocations) {
+            invocation = pendingInvocations.get(id);
+            if (invocation != null) {
+                pendingInvocations.remove(id);
+            }
+        }
+        if (invocation != null) {
+            synchronized(invocation) {
+                invocation.done = true;
+                invocation.success = success;
+                if (success && result != 0) {
+                    invocation.result = GVariant.getFromNativeContainerAtIndex(result, 0);
+                }
+                // Note: in the failure case, we leave invocation.result null rather than
+                // sending up the GError.
+                invocation.notify();
+            }
+        } else {
+            throw new Error("No pending result!");
+        }
+    }
 
     /**
      * The status of a dispatched method invocation.
