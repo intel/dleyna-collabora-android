@@ -27,18 +27,28 @@
 
 
 typedef struct {
-    JNIEnv* env;
-    jobject runnable;
+    JNIEnv*   env;
+    jmethodID runMID;
 } This;
 
-static gboolean run(gpointer _this) {
-    This* this = (This*)_this;
+typedef struct {
+    This*   this;
+    jobject runnable;
+} Invocation;
+
+static gboolean run(gpointer _invo) {
+    Invocation* invo = (Invocation*)_invo;
+    This* this = invo->this;
     JNIEnv* env = this->env;
-    jobject runnable = this->runnable;
-    jclass runnableClass = (*env)->GetObjectClass(env, runnable);
-    jmethodID runMID = (*env)->GetMethodID(env, runnableClass, "run", "()V");
-    (*env)->CallVoidMethod(env, runnable, runMID);
+    jobject runnable = invo->runnable;
+    if (this->runMID == NULL) {
+        jclass runnableClass = (*env)->GetObjectClass(env, runnable);
+        this->runMID = (*env)->GetMethodID(env, runnableClass, "run", "()V");
+    }
+    LOGI("gmainloop: run: runnable=%p", runnable);
+    (*env)->CallVoidMethod(env, runnable, this->runMID);
     (*env)->DeleteGlobalRef(env, runnable);
+    g_free(invo);
     return FALSE;
 }
 
@@ -56,10 +66,13 @@ JNIEXPORT jlong JNICALL Java_com_intel_dleyna_GMainLoop_freeNative
     g_free(JLONG_TO_PTR(_this));
 }
 
-JNIEXPORT void JNICALL Java_com_intel_dleyna_GMainLoop_gIdleAddNative
+JNIEXPORT void JNICALL Java_com_intel_dleyna_GMainLoop_idleAddNative
     (JNIEnv* env, jobject peer, jlong _this, jobject runnable)
 {
     This* this = JLONG_TO_PTR(_this);
-    this->runnable = (*env)->NewGlobalRef(env, runnable);
-    g_idle_add(run, this);
+    Invocation* invo = g_malloc0(sizeof(Invocation));
+    invo->this = this;
+    invo->runnable = (*env)->NewGlobalRef(env, runnable);
+    LOGI("gmainloop: idleAddNative: runnable=%p", invo->runnable);
+    g_idle_add(run, invo);
 }

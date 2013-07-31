@@ -23,6 +23,7 @@ package com.intel.dleyna.dleynademo;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.RemoteException;
 import android.text.method.ScrollingMovementMethod;
@@ -54,14 +55,18 @@ public class MainActivity extends Activity {
 
     private int connState = CONN_DISCONNECTED;
 
+    private AsyncTask<Renderer, String, Void> listTask;
+    private boolean listTaskBusy = false;
+
     private Prefs prefs = Prefs.getInstance();
 
     // Widgets.
     private TextView ttyTextView;
     private Button clearButton;
     private Button connectButton;
-    private Button disconnectButton;
+    private Button disconnButton;
     private Button listButton;
+    private Button cancelButton;
     private Button rescanButton;
 
     public void onCreate(Bundle savedInstanceState) {
@@ -74,10 +79,12 @@ public class MainActivity extends Activity {
         clearButton.setOnClickListener(clearButtonListener);
         connectButton = (Button) findViewById(R.id.connect_button);
         connectButton.setOnClickListener(connectButtonListener);
-        disconnectButton = (Button) findViewById(R.id.disconnect_button);
-        disconnectButton.setOnClickListener(disconnectButtonListener);
+        disconnButton = (Button) findViewById(R.id.disconnect_button);
+        disconnButton.setOnClickListener(disconnectButtonListener);
         listButton = (Button) findViewById(R.id.list_renderers_button);
         listButton.setOnClickListener(listButtonListener);
+        cancelButton = (Button) findViewById(R.id.cancel_button);
+        cancelButton.setOnClickListener(cancelButtonListener);
         rescanButton = (Button) findViewById(R.id.rescan_button);
         rescanButton.setOnClickListener(rescanButtonListener);
         showHelp();
@@ -163,27 +170,62 @@ public class MainActivity extends Activity {
             if (renderers == null || renderers.length == 0) {
                 writeTty("No renderers.\n");
             } else {
-                int i = 1;
-                for (Renderer r : renderers) {
-                    writeTty(i + "/" + renderers.length + " " + r.getObjectPath() + "\n");
-                    try {
-                        writeTty("      " + r.getDeviceType() + "\n");
-                        writeTty("      " + r.getUniqueDeviceName() + "\n");
-                        writeTty("      " + r.getFriendlyName() + "\n");
-                        writeTty("      " + r.getIconURL() + "\n");
-                        writeTty("      " + r.getManufacturer() + "\n");
-                        writeTty("      " + r.getManufacturerURL() + "\n");
-                        writeTty("      " + r.getModelDescription() + "\n");
-                        writeTty("      " + r.getModelName() + "\n");
-                        writeTty("      " + r.getModelNumber() + "\n");
-                        writeTty("      " + r.getSerialNumber() + "\n");
-                        writeTty("      " + r.getPresentationURL() + "\n");
-                        writeTty("      " + r.getProtocolInfo() + "\n");
-                    } catch (RemoteException e) {
-                        e.printStackTrace();
+                listTask = new AsyncTask<Renderer, String, Void>() {
+                    private Renderer r = null;
+                    protected void onPreExecute() {
+                        listTaskBusy = true;
+                        setEnabledStateOfWidgets();
                     }
-                    i++;
+                    protected Void doInBackground(Renderer... renderers) {
+                        for (int i=0; i < renderers.length; i++) {
+                            r = renderers[i];
+                            publishProgress((i+1) + "/" + renderers.length + " " + r.getObjectPath());
+                            try {
+                                publishProgress("\t" + r.getDeviceType());
+                                publishProgress("\t" + r.getUniqueDeviceName());
+                                publishProgress("\t" + r.getFriendlyName());
+                                publishProgress("\t" + r.getIconURL());
+                                publishProgress("\t" + r.getManufacturer());
+                                publishProgress("\t" + r.getManufacturerURL());
+                                publishProgress("\t" + r.getModelDescription());
+                                publishProgress("\t" + r.getModelName());
+                                publishProgress("\t" + r.getModelNumber());
+                                publishProgress("\t" + r.getSerialNumber());
+                                publishProgress("\t" + r.getPresentationURL());
+                                publishProgress("\t" + r.getProtocolInfo());
+                            } catch (RemoteException e) {
+                                e.printStackTrace();
+                            }
+                        }
+                        return null;
+                    }
+                    protected void onProgressUpdate(String... s) {
+                        writeTty(s[0] + "\n");
+                    }
+                    protected void onPostExecute(Void v) {
+                        listTaskBusy = false;
+                        setEnabledStateOfWidgets();
+                    }
+                    protected void onCancelled() {
+                        listTaskBusy = false;
+                        setEnabledStateOfWidgets();
+                    }
+                }.execute(renderers);
+            }
+        }
+    };
+
+    private final OnClickListener cancelButtonListener = new OnClickListener() {
+        public void onClick(View v) {
+            Renderer[] renderers = null;
+            try {
+                renderers = rendererMgr.getRenderers();
+                for (Renderer r : renderers) {
+                    r.cancel();
                 }
+                listTask.cancel(true);
+            } catch (RemoteException e) {
+                e.printStackTrace();
             }
         }
     };
@@ -275,14 +317,19 @@ public class MainActivity extends Activity {
                 }
             });
         }
+
+        public void onRendererLost(final Renderer r) {
+            writeTty("Lost Renderer: " + r.getObjectPath() + '\n');
+        }
     });
 
     private void setEnabledStateOfWidgets() {
         clearButton.setEnabled(true);
         connectButton.setEnabled(connState == CONN_DISCONNECTED);
-        disconnectButton.setEnabled(connState == CONN_CONNECTED);
-        listButton.setEnabled(connState == CONN_CONNECTED);
-        rescanButton.setEnabled(connState == CONN_CONNECTED);
+        disconnButton.setEnabled(connState == CONN_CONNECTED && !listTaskBusy);
+        listButton.setEnabled(connState == CONN_CONNECTED && !listTaskBusy);
+        rescanButton.setEnabled(connState == CONN_CONNECTED && !listTaskBusy);
+        cancelButton.setEnabled(connState == CONN_CONNECTED && listTaskBusy);
     }
 
     private void writeTty(CharSequence cs) {

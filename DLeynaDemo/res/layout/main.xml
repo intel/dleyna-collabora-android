@@ -63,13 +63,6 @@
                 android:layout_weight="1"
                 android:text="@string/disconnect" />
 
-            <Button
-                android:id="@+id/list_renderers_button"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="@string/list_renderers" />
-
         </TableRow>
 
         <TableRow
@@ -83,7 +76,26 @@
                 android:layout_weight="1"
                 android:text="@string/rescan" />
 
+            <Button
+                android:id="@+id/list_renderers_button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/list_renderers" />
+
         </TableRow>
-    </LinearLayout>
+
+        <TableRow
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content" >
+            <Button
+                android:id="@+id/cancel_button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/cancel" />
+
+        </TableRow>
+        </LinearLayout>
 
 </LinearLayout>
