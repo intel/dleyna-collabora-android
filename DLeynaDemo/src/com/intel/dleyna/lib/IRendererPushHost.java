@@ -24,7 +24,8 @@ package com.intel.dleyna.lib;
 import android.os.RemoteException;
 
 /**
- * The PushHost portion of the Renderer API.
+ * The PushHost portion of the Renderer API:
+ * methods for creating/removing files hosted by web server(s) on the local device.
  */
 public interface IRendererPushHost {
 

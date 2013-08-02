@@ -40,6 +40,11 @@ import android.os.RemoteException;
  * The connection to the background renderer service that you initiate with
  * {@link RendererManager#connect(android.content.Context)} must be established for the methods of this
  * class to succeed. Otherwise, they will throw a {@link RemoteException}.
+ * <p>
+ * Since Renderers are usually on remote devices, and thus prone to arbitrary delays,
+ * you should never invoke methods that interact with Renderers from the UI thread.
+ * Perhaps the simplest way to manage the required multi-threading is to use an
+ * {@link android.os.AsyncTask}.
  */
 public class Renderer implements IRendererDevice, IRendererController, IRendererPushHost {
 
@@ -280,74 +285,6 @@ public class Renderer implements IRendererDevice, IRendererController, IRenderer
     }
 
     public void removeFile(String path) throws RemoteException {
-    }
-
-    /*-----------+
-     | Callbacks |
-     +-----------*/
-
-    /**
-     * A default implementation of {@link IRendererControllerListener} whose
-     * methods do nothing.
-     * <p>
-     * If you are only interested in a subset of the events of the interface,
-     * you may find it easier to extend this class than to implement the entire interface.
-     */
-    public static class ControllerListener implements IRendererControllerListener {
-
-        public void onPlaybackStatusChanged(IRendererController c, String status) {
-        }
-
-        public void onRateChanged(IRendererController c, double rate) {
-        }
-
-        public void onMetadataChanged(IRendererController c, Bundle metadata) {
-        }
-
-        public void onVolumeChanged(IRendererController c, double volume) {
-        }
-
-        public void onMinimumRateChanged(IRendererController c, double rate) {
-        }
-
-        public void onMaximumRateChanged(IRendererController c, double rate) {
-        }
-
-        public void onCanGoNextChanged(IRendererController c, boolean value) {
-        }
-
-        public void onCanGoPreviousChanged(IRendererController c, boolean value) {
-        }
-
-        public void onTrackChanged(IRendererController c, int track) {
-        }
-
-        public void onPositionChanged(IRendererController c, long position) {
-        }
-
-        public void onCanPlayChanged(IRendererController c, boolean value) {
-        }
-
-        public void onCanPauseChanged(IRendererController c, boolean value) {
-        }
-
-        public void onCanSeekChanged(IRendererController c, boolean value) {
-        }
-
-        public void onCanControlChanged(IRendererController c, boolean value) {
-        }
-
-        public void onTransportPlaySpeedsChanged(IRendererController c, double[] speeds) {
-        }
-
-        public void onCurrentTrackChanged(IRendererController c, int track) {
-        }
-
-        public void onNumberOfTracksChanged(IRendererController c, int n) {
-        }
-
-        public void onMuteChanged(IRendererController c, boolean value) {
-        }
     }
 
     /*---------------------+

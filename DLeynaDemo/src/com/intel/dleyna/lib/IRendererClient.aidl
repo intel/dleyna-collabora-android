@@ -24,9 +24,9 @@ package com.intel.dleyna.lib;
 
 interface IRendererClient {
 
-    /*---------------------------+
-     | IRendererManager.Listener |
-     +---------------------------*/
+    /*--------------------------+
+     | IRendererManagerListener |
+     +--------------------------*/
 
     void onRendererFound(String objectPath);
     void onRendererLost(String objectPath);
@@ -34,7 +34,7 @@ interface IRendererClient {
     /*-----------------------------+
      | IRendererControllerListener |
      +-----------------------------*/
-    
+
     void onControllerPropertiesChanged(String objectPath, in Bundle props);
 
 }

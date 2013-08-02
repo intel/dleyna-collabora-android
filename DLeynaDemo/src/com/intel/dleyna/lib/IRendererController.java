@@ -25,7 +25,14 @@ import android.os.Bundle;
 import android.os.RemoteException;
 
 /**
- * The Controller portion of the Renderer API.
+ * The Controller portion of the Renderer API:
+ * methods for controlling the playback of media content on a Renderer.
+ * <p>
+ * Since Renderers are usually on remote devices, and thus prone to arbitrary delays,
+ * you should never invoke the methods of this interface from the UI thread
+ * (with one exception: {@link #addControllerListener(IRendererControllerListener)}).
+ * Perhaps the simplest way to manage the required multi-threading is to use an
+ * {@link android.os.AsyncTask}.
  */
 public interface IRendererController {
 
@@ -225,51 +232,51 @@ public interface IRendererController {
     public long getMaximumRate() throws RemoteException;
 
     /**
-     * Query whether this renderer can currently do {@link #next()}.
+     * Query whether this Renderer can currently do {@link #next()}.
      * @return true if and only if can currently do {@link #next()}
      * @throws RemoteException no connection to the background renderer service
      */
     public boolean getCanGoNext() throws RemoteException;
 
     /**
-     * Query whether this renderer can currently do {@link #previous()}.
-     * @return true if and only if this renderer can currently do {@link #previous()}
+     * Query whether this Renderer can currently do {@link #previous()}.
+     * @return true if and only if this Renderer can currently do {@link #previous()}
      * @throws RemoteException no connection to the background renderer service
      */
     public boolean getCanGoPrevious() throws RemoteException;
 
     /**
-     * Query whether this renderer can currently do {@link #play()} or {@link #playPause()}.
-     * @return true if and only if this renderer can currently do {@link #play()} or {@link #playPause()}
+     * Query whether this Renderer can currently do {@link #play()} or {@link #playPause()}.
+     * @return true if and only if this Renderer can currently do {@link #play()} or {@link #playPause()}
      * @throws RemoteException no connection to the background renderer service
      */
     public boolean getCanPlay() throws RemoteException;
     /**
-     * Query whether this renderer can currently do {@link #pause()}.
-     * @return true if and only if this renderer can currently do {@link #pause()}
+     * Query whether this Renderer can currently do {@link #pause()}.
+     * @return true if and only if this Renderer can currently do {@link #pause()}
      * @throws RemoteException no connection to the background renderer service
      */
     public boolean getCanPause() throws RemoteException;
 
     /**
-     * Query whether this renderer can currently do {@link #seek(long)}.
-     * @return true if and only if this renderer can currently do {@link #seek(long)}
+     * Query whether this Renderer can currently do {@link #seek(long)}.
+     * @return true if and only if this Renderer can currently do {@link #seek(long)}
      * @throws RemoteException no connection to the background renderer service
      */
     public boolean getCanSeek() throws RemoteException;
 
     /**
-     * Query whether this renderer can be controlled.
+     * Query whether this Renderer can be controlled.
      * <p>
-     * This property describes an intrinsic property of this renderer
+     * This property describes an intrinsic property of this Renderer
      * that is not expected to change.
      * <p>
      * If this property is false, then methods that query the ability to perform specific operations,
      * like {@link #getCanPlay()}, {@link #getCanPause()}, etc. all return false,
-     * and methods that attempt to control the renderer,
+     * and methods that attempt to control the Renderer,
      * like {@link #play()}, {@link #pause()}, {@link #setVolume(double)}, etc.
      * have no effect.
-     * @return true if and only if this renderer can can be controlled
+     * @return true if and only if this Renderer can can be controlled
      * @throws RemoteException no connection to the background renderer service
      */
     public boolean getCanControl() throws RemoteException;
@@ -309,23 +316,23 @@ public interface IRendererController {
     public void openUriEx(String uri, String metadata) throws RemoteException;
 
     /**
-     * Get the playback rates supported by this renderer.
+     * Get the playback rates supported by this Renderer.
      * <p>
      * This returns playback rates that can be used with {@link #setRate(double)}.
-     * @return the playback rates supported by this renderer
+     * @return the playback rates supported by this Renderer
      * @throws RemoteException no connection to the background renderer service
      */
     public double[] getTransportPlaySpeeds() throws RemoteException;
 
     /**
-     * Get this renderer's current mute state.
+     * Get this Renderer's current mute state.
      * @return the current mute statue
      * @throws RemoteException no connection to the background renderer service
      */
     public boolean getMute() throws RemoteException;
 
     /**
-     * Set this renderer's mute state.
+     * Set this Renderer's mute state.
      * @param value the new mute state
      * @throws RemoteException no connection to the background renderer service
      */

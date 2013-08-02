@@ -37,7 +37,9 @@ import android.widget.TextView;
 
 import com.intel.dleyna.lib.IRendererController;
 import com.intel.dleyna.lib.Renderer;
+import com.intel.dleyna.lib.RendererControllerListener;
 import com.intel.dleyna.lib.RendererManager;
+import com.intel.dleyna.lib.RendererManagerListener;
 
 /**
  * This is the main Activity of the dLeyna demo app.
@@ -241,7 +243,7 @@ public class MainActivity extends Activity {
         }
     };
 
-    private RendererManager rendererMgr = new RendererManager(new RendererManager.Listener() {
+    private RendererManager rendererMgr = new RendererManager(new RendererManagerListener() {
 
         public void onConnected() {
             if (App.LOG) Log.i(TAG, "MainActivity: onConnected");
@@ -259,7 +261,7 @@ public class MainActivity extends Activity {
 
         public void onRendererFound(final Renderer r) {
             writeTty("Found Renderer: " + r.getObjectPath() + '\n');
-            r.addControllerListener(new Renderer.ControllerListener() {
+            r.addControllerListener(new RendererControllerListener() {
                 String objPath = r.getObjectPath();
                 public void onPlaybackStatusChanged(IRendererController c, String status) {
                     writeTty("(!) " + objPath + " PlaybackStatus: " + status + "\n");
