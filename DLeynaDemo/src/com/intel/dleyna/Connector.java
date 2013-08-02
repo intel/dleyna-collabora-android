@@ -255,12 +255,77 @@ public class Connector {
 
     /**
      * Upward call on the g_main_loop.
+     * Broadcasted notification of some event from a remote object.
+     * @param objPath
+     * @param ifaceName
+     * @param notifName
+     * @param params parameters as a native GVariant
+     */
+    public void notify(String objPath, String ifaceName, String notifName, long params) {
+        client.onNotify(objPath, ifaceName, notifName, params);
+    }
+
+    /**
+     * Downward call to invoke a method in the native service.
+     * This is called on an arbitrary binder thread.
+     * We transfer the call to the daemon thread, and wait for the response.
+     * @param client the client
+     * @param obj the remote object info
+     * @param iface name of the interface
+     * @param meth name of the method
+     * @param gvArgs arguments to the method
+     * @return description of the finished method invocation
+     */
+    public Invocation dispatch(final IRendererClient client, final RemoteObject obj,
+            final String iface, final String meth, GVariant gvArgs) {
+
+        final long args = gvArgs == null ? 0 : gvArgs.getPeer();
+        final Invocation invocation;
+
+        synchronized(pendingInvocations) {
+            // Add a new Invocation to our list of pending Invocations.
+            invocation = new Invocation(++lastAssignedInvocationId);
+            pendingInvocations.append(invocation.id, invocation);
+
+            if (LOG) Log.i(TAG, String.format(
+                    "dispatch: SCHEDUL id=%d meth=%s args=0x%08x obj=%s iface=%s f=0x%08x",
+                    invocation.id, meth, args, obj.objectPath, iface, obj.dispatchCb));
+
+            // Schedule the invocation to run on the g_main_loop.
+            gMainLoop.idleAdd(new Runnable() {
+                public void run() {
+                    if (LOG) Log.i(TAG, "dispatch: RUNNING id=" + invocation.id);
+                    dispatchNative(obj.dispatchCb, client.asBinder().toString(), obj.objectPath,
+                            iface, meth, args, invocation.id);
+                }
+            });
+        }
+
+        // Wait for the response.
+        if (LOG) Log.i(TAG, "dispatch: WAITING id=" + invocation.id);
+        synchronized (invocation) {
+            while (!invocation.done) {
+                try {
+                    invocation.wait();
+                } catch (InterruptedException e) {
+                }
+            }
+        }
+
+        if (LOG) Log.i(TAG, "dispatch: DONE!!! id=" + invocation.id);
+        return invocation;
+    }
+
+    private native void dispatchNative(long dispatchFuncAddr, String sender, String objectId,
+            String iface, String method, long args, long msgId);
+
+    /**
+     * Upward call on the g_main_loop.
      * Asynchronous positive return from a dispatched method invocation.
      * @param messageId
      * @param paramsAsGVariant
      */
     public void returnResponse(long messageId, long paramsAsGVariant) {
-        if (LOG) Log.i(TAG, "returnResponse: messageId=" + messageId + " result=" + paramsAsGVariant);
         returnResult((int)messageId, true, paramsAsGVariant);
     }
 
@@ -271,11 +336,11 @@ public class Connector {
      * @param errorAsGError
      */
     public void returnError(long messageId, long errorAsGError) {
-        if (LOG) Log.i(TAG, "returnError: messageId=" + messageId + " err=" + errorAsGError);
         returnResult((int)messageId, false, errorAsGError);
     }
 
     private void returnResult(int id, boolean success, long result) {
+        if (LOG) Log.i(TAG, String.format("returnResult: id=%d ok=%B result=0x%08x", id, success, result));
         Invocation invocation;
         synchronized(pendingInvocations) {
             invocation = pendingInvocations.get(id);
@@ -295,74 +360,9 @@ public class Connector {
                 invocation.notify();
             }
         } else {
-            throw new Error("No pending result!");
+            throw new IllegalStateException("No pending result!");
         }
     }
-
-    /**
-     * Upward call on the g_main_loop.
-     * Broadcasted notification of some event from a remote object.
-     * @param objPath
-     * @param ifaceName
-     * @param notifName
-     * @param params parameters as a native GVariant
-     */
-    public void notify(String objPath, String ifaceName, String notifName, long params) {
-        client.onNotify(objPath, ifaceName, notifName, params);
-    }
-
-    /**
-     * Downward call to invoke a method in the native service.
-     * This is called on some binder thread.
-     * We transfer the call to the daemon thread, and wait for the response.
-     * @param client the client
-     * @param obj the remote object info
-     * @param iface name of the interface
-     * @param meth name of the method
-     * @param gvArgs arguments to the method
-     * @return description of the pending method invocation
-     */
-    public Invocation dispatch(final IRendererClient client, final RemoteObject obj, final String iface,
-            final String meth, GVariant gvArgs) {
-
-        final long args = gvArgs == null ? 0 : gvArgs.getPeer();
-        if (LOG) Log.i(TAG, "dispatch: " + obj.dispatchCb + " " + obj.objectPath + " " + " " + iface + " "
-                + meth + " " + args);
-
-        // Add a new Invocation in our list of pending Invocations.
-        final int id;
-        final Invocation invocation;
-        synchronized(pendingInvocations) {
-            id = ++lastAssignedInvocationId;
-            invocation = new Invocation(id);
-            pendingInvocations.append(id, invocation);
-        }
-
-        // Schedule the invocation to run on the g_main_loop.
-        gMainLoop.gIdleAdd(new Runnable() {
-            public void run() {
-                if (LOG) Log.i(TAG, "dispatch: RUNNING");
-                dispatchNative(obj.dispatchCb, client.asBinder().toString(), obj.objectPath, iface, meth, args, id);
-            }
-        });
-
-        // Wait for the response.
-        if (LOG) Log.i(TAG, "dispatch: WAITING id=" + invocation.id);
-        synchronized (invocation) {
-            while (!invocation.done) {
-                try {
-                    invocation.wait();
-                } catch (InterruptedException e) {
-                }
-            }
-        }
-
-        if (LOG) Log.i(TAG, "dispatch: DONE!!!");
-        return invocation;
-    }
-
-    private native void dispatchNative(long dispatchFuncAddr, String sender, String objectId,
-            String iface, String method, long args, long msgId);
 
     /**
      * The status of a dispatched method invocation.

@@ -214,7 +214,11 @@ public class RendererService extends Service implements IConnectorClient {
         }
 
         public void cancel(IRendererClient client, String objectPath) {
-            // TODO
+            RemoteObject ro = connector.getRemoteObject(objectPath, IFACE_DEVICE);
+            if (ro != null) {
+                if (LOG) Log.w(TAG, "*** CANCEL ***");
+                connector.dispatch(client, ro, IFACE_DEVICE, "Cancel", null);
+            }
         }
 
         private String getStringValuedDeviceProperty(IRendererClient client, String objectPath, String propName) {

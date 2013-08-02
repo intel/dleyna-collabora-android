@@ -26,7 +26,7 @@ package com.intel.dleyna;
  * executed on a g_main_loop.
  * <p>
  * Create an instance of this class by calling the constructor {@link #GMainLoop()},
- * and then use {@link #gIdleAdd(Runnable)} to schedule a runnable object.
+ * and then use {@link #idleAdd(Runnable)} to schedule a runnable object.
  * You should use {@link #free()} to reclaim resources when done.
  */
 public class GMainLoop {
@@ -60,13 +60,13 @@ public class GMainLoop {
         free();
     }
 
-    public void gIdleAdd(Runnable r) {
-        gIdleAddNative(peer, r);
+    public void idleAdd(Runnable r) {
+        idleAddNative(peer, r);
     }
 
     private native long allocNative();
 
     private native long freeNative(long peer);
 
-    private native void gIdleAddNative(long peer, Runnable r);
+    private native void idleAddNative(long peer, Runnable r);
 }
