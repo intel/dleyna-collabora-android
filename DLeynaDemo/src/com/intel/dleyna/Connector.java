@@ -352,11 +352,14 @@ public class Connector {
             synchronized(invocation) {
                 invocation.done = true;
                 invocation.success = success;
-                if (success && result != 0) {
-                    invocation.result = GVariant.getFromNativeContainerAtIndex(result, 0);
+                if (success) {
+                    if (result != 0) {
+                        invocation.result = GVariant.getFromNativeContainerAtIndex(result, 0);
+                    }
+                } else {
+                    invocation.errCode = GError.getCodeNative(result);
+                    invocation.errMessage = GError.getMessageNative(result);
                 }
-                // Note: in the failure case, we leave invocation.result null rather than
-                // sending up the GError.
                 invocation.notify();
             }
         } else {
@@ -374,8 +377,12 @@ public class Connector {
         public boolean done = false;
         /** Did this invocation succeed? */
         public boolean success = false;
-        /** If success, output parameters as a GVariant, else null. */
+        /** If success, output parameters as a GVariant, or null if void output. */
         public GVariant result = null;
+        /** If failure, error code. */
+        public int errCode;
+        /** If failure, error message */
+        public String errMessage;
 
         Invocation(int id) {
             this.id = id;

@@ -37,69 +37,70 @@ interface IRendererService {
      | RendererManager |
      +-----------------*/
 
-    String[] getRenderers(IRendererClient client);
-    void rescan(IRendererClient client);
+    String[] getRenderers(IRendererClient client, out Bundle extras);
+    void rescan(IRendererClient client, out Bundle extras);
 
     /*-----------------+
      | IRendererDevice |
      +-----------------*/
 
-    String getDeviceType(IRendererClient client, String objectPath);
-    String getUniqueDeviceName(IRendererClient client, String objectPath);
-    String getFriendlyName(IRendererClient client, String objectPath);
-    String getIconURL(IRendererClient client, String objectPath);
-    String getManufacturer(IRendererClient client, String objectPath);
-    String getManufacturerURL(IRendererClient client, String objectPath);
-    String getModelDescription(IRendererClient client, String objectPath);
-    String getModelName(IRendererClient client, String objectPath);
-    String getModelNumber(IRendererClient client, String objectPath);
-    String getSerialNumber(IRendererClient client, String objectPath);
-    String getPresentationURL(IRendererClient client, String objectPath);
-    String getProtocolInfo(IRendererClient client, String objectPath);
-    Icon getIcon(IRendererClient client, String objectPath);
-    void cancel(IRendererClient client, String objectPath);
+    String getDeviceType(IRendererClient client, String objectPath, out Bundle extras);
+    String getUniqueDeviceName(IRendererClient client, String objectPath, out Bundle extras);
+    String getFriendlyName(IRendererClient client, String objectPath, out Bundle extras);
+    String getIconURL(IRendererClient client, String objectPath, out Bundle extras);
+    String getManufacturer(IRendererClient client, String objectPath, out Bundle extras);
+    String getManufacturerURL(IRendererClient client, String objectPath, out Bundle extras);
+    String getModelDescription(IRendererClient client, String objectPath, out Bundle extras);
+    String getModelName(IRendererClient client, String objectPath, out Bundle extras);
+    String getModelNumber(IRendererClient client, String objectPath, out Bundle extras);
+    String getSerialNumber(IRendererClient client, String objectPath, out Bundle extras);
+    String getPresentationURL(IRendererClient client, String objectPath, out Bundle extras);
+    String getProtocolInfo(IRendererClient client, String objectPath, out Bundle extras);
+    Icon getIcon(IRendererClient client, String objectPath, out Bundle extras);
+    void cancel(IRendererClient client, String objectPath, out Bundle extras);
 
     /*---------------------+
      | IRendererController |
      +---------------------*/
 
-    void next(IRendererClient client, String objectPath);
-    void previous(IRendererClient client, String objectPath);
-    void pause(IRendererClient client, String objectPath);
-    void playPause(IRendererClient client, String objectPath);
-    void stop(IRendererClient client, String objectPath);
-    void play(IRendererClient client, String objectPath);
-    void seek(IRendererClient client, String objectPath, long offset);
-    void setPosition(IRendererClient client, String objectPath, long position);
-    void openUri(IRendererClient client, String objectPath, String uri);
-    String getPlaybackStatus(IRendererClient client, String objectPath);
-    double getRate(IRendererClient client, String objectPath);
-    void setRate(IRendererClient client, String objectPath, double rate);
-    Bundle getMetadata(IRendererClient client, String objectPath);
-    double getVolume(IRendererClient client, String objectPath);
-    void setVolume(IRendererClient client, String objectPath, double volume);
-    long getPosition(IRendererClient client, String objectPath);
-    long getMinimumRate(IRendererClient client, String objectPath);
-    long getMaximumRate(IRendererClient client, String objectPath);
-    boolean getCanGoNext(IRendererClient client, String objectPath);
-    boolean getCanGoPrevious(IRendererClient client, String objectPath);
-    boolean getCanPlay(IRendererClient client, String objectPath);
-    boolean getCanPause(IRendererClient client, String objectPath);
-    boolean getCanSeek(IRendererClient client, String objectPath);
-    boolean getCanControl(IRendererClient client, String objectPath);
-    int getNumberOfTracks(IRendererClient client, String objectPath);
-    void goToTrack(IRendererClient client, String objectPath, int track);
-    int getCurrentTrack(IRendererClient client, String objectPath);
-    void openUriEx(IRendererClient client, String objectPath, String uri, String metadata);
-    double[] getTransportPlaySpeeds(IRendererClient client, String objectPath);
-    boolean getMute(IRendererClient client, String objectPath);
-    void setMute(IRendererClient client, String objectPath, boolean value);
+    void next(IRendererClient client, String objectPath, out Bundle extras);
+    void previous(IRendererClient client, String objectPath, out Bundle extras);
+    void pause(IRendererClient client, String objectPath, out Bundle extras);
+    void playPause(IRendererClient client, String objectPath, out Bundle extras);
+    void stop(IRendererClient client, String objectPath, out Bundle extras);
+    void play(IRendererClient client, String objectPath, out Bundle extras);
+    void seek(IRendererClient client, String objectPath, long offset, out Bundle extras);
+    void setPosition(IRendererClient client, String objectPath, long position, out Bundle extras);
+    void openUri(IRendererClient client, String objectPath, String uri, out Bundle extras);
+    String getPlaybackStatus(IRendererClient client, String objectPath, out Bundle extras);
+    double getRate(IRendererClient client, String objectPath, out Bundle extras);
+    void setRate(IRendererClient client, String objectPath, double rate, out Bundle extras);
+    Bundle getMetadata(IRendererClient client, String objectPath, out Bundle extras);
+    double getVolume(IRendererClient client, String objectPath, out Bundle extras);
+    void setVolume(IRendererClient client, String objectPath, double volume, out Bundle extras);
+    long getPosition(IRendererClient client, String objectPath, out Bundle extras);
+    long getMinimumRate(IRendererClient client, String objectPath, out Bundle extras);
+    long getMaximumRate(IRendererClient client, String objectPath, out Bundle extras);
+    boolean getCanGoNext(IRendererClient client, String objectPath, out Bundle extras);
+    boolean getCanGoPrevious(IRendererClient client, String objectPath, out Bundle extras);
+    boolean getCanPlay(IRendererClient client, String objectPath, out Bundle extras);
+    boolean getCanPause(IRendererClient client, String objectPath, out Bundle extras);
+    boolean getCanSeek(IRendererClient client, String objectPath, out Bundle extras);
+    boolean getCanControl(IRendererClient client, String objectPath, out Bundle extras);
+    int getNumberOfTracks(IRendererClient client, String objectPath, out Bundle extras);
+    void goToTrack(IRendererClient client, String objectPath, int track, out Bundle extras);
+    int getCurrentTrack(IRendererClient client, String objectPath, out Bundle extras);
+    void openUriEx(IRendererClient client, String objectPath, String uri, String metadata,
+            out Bundle extras);
+    double[] getTransportPlaySpeeds(IRendererClient client, String objectPath, out Bundle extras);
+    boolean getMute(IRendererClient client, String objectPath, out Bundle extras);
+    void setMute(IRendererClient client, String objectPath, boolean value, out Bundle extras);
 
     /*-------------------+
      | IRendererPushHost |
      +-------------------*/
 
-    String hostFile(IRendererClient client, String objectPath, String path);
-    void removeFile(IRendererClient client, String objectPath, String path);
+    String hostFile(IRendererClient client, String objectPath, String path, out Bundle extras);
+    void removeFile(IRendererClient client, String objectPath, String path, out Bundle extras);
 
 }

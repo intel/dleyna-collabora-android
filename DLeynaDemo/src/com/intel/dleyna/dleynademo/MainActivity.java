@@ -35,6 +35,7 @@ import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.TextView;
 
+import com.intel.dleyna.lib.DLeynaException;
 import com.intel.dleyna.lib.IRendererController;
 import com.intel.dleyna.lib.Renderer;
 import com.intel.dleyna.lib.RendererControllerListener;
@@ -168,6 +169,8 @@ public class MainActivity extends Activity {
                 renderers = rendererMgr.getRenderers();
             } catch (RemoteException e) {
                 e.printStackTrace();
+            } catch (DLeynaException e) {
+                e.printStackTrace();
             }
             if (renderers == null || renderers.length == 0) {
                 writeTty("No renderers.\n");
@@ -196,6 +199,8 @@ public class MainActivity extends Activity {
                                 publishProgress("\t" + r.getPresentationURL());
                                 publishProgress("\t" + r.getProtocolInfo());
                             } catch (RemoteException e) {
+                                e.printStackTrace();
+                            } catch (DLeynaException e) {
                                 e.printStackTrace();
                             }
                         }
@@ -228,6 +233,8 @@ public class MainActivity extends Activity {
                 listTask.cancel(true);
             } catch (RemoteException e) {
                 e.printStackTrace();
+            } catch (DLeynaException e) {
+                e.printStackTrace();
             }
         }
     };
@@ -238,6 +245,8 @@ public class MainActivity extends Activity {
                 rendererMgr.rescan();
                 writeTty("OK rescan sent.\n");
             } catch (RemoteException e) {
+                e.printStackTrace();
+            } catch (DLeynaException e) {
                 e.printStackTrace();
             }
         }

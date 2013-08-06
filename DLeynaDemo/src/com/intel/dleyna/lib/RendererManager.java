@@ -204,8 +204,9 @@ public class RendererManager {
      * Get all known renderers.
      * @return all currently known renderers
      * @throws RemoteException no connection to the background renderer service
+     * @throws DLeynaException failure reported by the background renderer service
      */
-    public Renderer[] getRenderers() throws RemoteException {
+    public Renderer[] getRenderers() throws RemoteException, DLeynaException {
         if (!serviceConnected) {
             throw new RemoteException();
         }
@@ -214,7 +215,11 @@ public class RendererManager {
         // of renderers, reusing the Renderer objects of any renderers that were already
         // in the previous map. Then we substitute the new map for the previous one.
 
-        String[] newObjectIds = rendererService.getRenderers(rendererClient);
+        Bundle extras = new Bundle();
+        String[] newObjectIds = rendererService.getRenderers(rendererClient, extras);
+        if (extras.containsKey(Extras.KEY_ERR_MSG)) {
+            throw new DLeynaException(extras.getString(Extras.KEY_ERR_MSG));
+        }
         // newObjectIds is the new complete set of object ids according to the service
         if (LOG) Log.i(TAG, "getRenderers: " + newObjectIds);
 
@@ -258,20 +263,26 @@ public class RendererManager {
      * This may result in callbacks to {@link RendererManagerListener#onRendererFound(Renderer)}
      * and/or {@link RendererManagerListener#onRendererLost(Renderer)} on registered observers.
      * @throws RemoteException no connection to the background renderer service
+     * @throws DLeynaException failure reported by the background renderer service
      */
-    public void rescan() throws RemoteException {
+    public void rescan() throws RemoteException, DLeynaException {
         if (!serviceConnected) {
             throw new RemoteException();
         }
-        rendererService.rescan(rendererClient);
+        Bundle extras = new Bundle();
+        rendererService.rescan(rendererClient, extras);
+        if (extras.containsKey(Extras.KEY_ERR_MSG)) {
+            throw new DLeynaException(extras.getString(Extras.KEY_ERR_MSG));
+        }
     }
 
     /**
      * Get the version number of this implementation of dLeyna-renderer.
      * @return version number
      * @throws RemoteException no connection to the background renderer service
+     * @throws DLeynaException failure reported by the background renderer service
      */
-    public String getVersion() throws RemoteException {
+    public String getVersion() throws RemoteException, DLeynaException {
         // TODO
         return null;
     }
@@ -285,9 +296,9 @@ public class RendererManager {
      */
     private final IRendererClient rendererClient = new IRendererClient.Stub() {
 
-        /*------------------------+
-         | RendererManager.Listener |
-         +------------------------*/
+        /*-------------------------+
+         | RendererManagerListener |
+         +-------------------------*/
 
         public void onRendererFound(final String objectPath) {
             if (LOG) Log.i(TAG, "onRendererFound: " + objectPath);
@@ -323,8 +334,7 @@ public class RendererManager {
          | IRendererControllerListener |
          +-----------------------------*/
 
-        public void onControllerPropertiesChanged(String objectPath, final Bundle props)
-                throws RemoteException {
+        public void onControllerPropertiesChanged(String objectPath, final Bundle props) {
             if (LOG) logControllerPropertiesChanged(objectPath, props);
             final Renderer r = renderers.get(objectPath);
             if (r == null) {

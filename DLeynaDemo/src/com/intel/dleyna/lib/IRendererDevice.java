@@ -30,9 +30,7 @@ import android.os.RemoteException;
  * and a method for canceling pending operations on a Renderer.
  * <p>
  * Since Renderers are usually on remote devices, and thus prone to arbitrary delays,
- * you should never invoke the methods of this interface
- * (except for {@link #cancel()})
- * directly from the UI thread.
+ * you should never invoke the methods of this interface from the UI thread.
  * Perhaps the simplest way to manage the required multi-threading is to use an
  * {@link android.os.AsyncTask}.
  */
@@ -44,78 +42,89 @@ public interface IRendererDevice {
      * Example: {@code "urn:schemas-upnp-org:device:MediaRenderer:1"}.
      * @return the UPnP device type
      * @throws RemoteException no connection to the background renderer service
+     * @throws DLeynaException failure reported by the background renderer service
      */
-    public String getDeviceType() throws RemoteException;
+    public String getDeviceType() throws RemoteException, DLeynaException;
 
     /**
      * Get this Renderer's unique device name.
      * @return the unique device name
      * @throws RemoteException no connection to the background renderer service
+     * @throws DLeynaException failure reported by the background renderer service
      */
-    public String getUniqueDeviceName() throws RemoteException;
+    public String getUniqueDeviceName() throws RemoteException, DLeynaException;
 
     /**
      * Get this Renderer's friendly name.
      * @return the friendly name
      * @throws RemoteException no connection to the background renderer service
+     * @throws DLeynaException failure reported by the background renderer service
      */
-    public String getFriendlyName() throws RemoteException;
+    public String getFriendlyName() throws RemoteException, DLeynaException;
 
     /**
      * Get a URL pointing to an icon that graphically identifies this Renderer.
      * @return the icon URL, or null if this property is not implemented.
      * @throws RemoteException no connection to the background renderer service
+     * @throws DLeynaException failure reported by the background renderer service
      */
+    public String getIconURL() throws RemoteException, DLeynaException;
 
-    public String getIconURL() throws RemoteException;
     /**
      * Get the name of this Renderer's manufacturer.
      * @return the manufacturer's name
      * @throws RemoteException no connection to the background renderer service
+     * @throws DLeynaException failure reported by the background renderer service
      */
-    public String getManufacturer() throws RemoteException;
+    public String getManufacturer() throws RemoteException, DLeynaException;
 
     /**
      * Get a URL pointing to this Renderer's manufacturer's web site.
      * @return the manufacturer's URL, or null if this property is not implemented.
      * @throws RemoteException no connection to the background renderer service
+     * @throws DLeynaException failure reported by the background renderer service
      */
-    public String getManufacturerURL() throws RemoteException;
+    public String getManufacturerURL() throws RemoteException, DLeynaException;
 
     /**
      * Get a description of this Renderer.
      * @return the description, or null if this property is not implemented.
      * @throws RemoteException no connection to the background renderer service
+     * @throws DLeynaException failure reported by the background renderer service
      */
-    public String getModelDescription() throws RemoteException;
+    public String getModelDescription() throws RemoteException, DLeynaException;
 
     /**
      * Get this Renderer's model name.
      * @return the model name
      * @throws RemoteException no connection to the background renderer service
+     * @throws DLeynaException failure reported by the background renderer service
      */
-    public String getModelName() throws RemoteException;
+    public String getModelName() throws RemoteException, DLeynaException;
 
     /**
      * Get this Renderer's model number.
      * @return the model number, or null if this property is not implemented.
      * @throws RemoteException no connection to the background renderer service
+     * @throws DLeynaException failure reported by the background renderer service
      */
-    public String getModelNumber() throws RemoteException;
+    public String getModelNumber() throws RemoteException, DLeynaException;
 
     /**
      * Get this Renderer's serial number.
      * @return the serial number, or null if this property is not implemented.
      * @throws RemoteException no connection to the background renderer service
+     * @throws DLeynaException failure reported by the background renderer service
      */
-    public String getSerialNumber() throws RemoteException;
+    public String getSerialNumber() throws RemoteException, DLeynaException;
 
     /**
      * Get this Renderer's presentation URL: a link to its HTML management interface.
      * @return the presentation URL, or null if this property is not implemented.
      * @throws RemoteException no connection to the background renderer service
+     * @throws DLeynaException failure reported by the background renderer service
      */
-    public String getPresentationURL() throws RemoteException;
+    public String getPresentationURL() throws RemoteException, DLeynaException;
 
     /**
      * Get a string that identifies all of the file formats and network protocol combinations
@@ -135,14 +144,15 @@ public interface IRendererDevice {
      * and <a href="http://www.dlna.org/">the DLNA Guidelines</a>.
      * @return the protocol info string
      * @throws RemoteException no connection to the background renderer service
+     * @throws DLeynaException failure reported by the background renderer service
      */
-    public String getProtocolInfo() throws RemoteException;
+    public String getProtocolInfo() throws RemoteException, DLeynaException;
 
     /**
      * Get the device icon.
      * @return the device icon.
      */
-    public Icon getIcon() throws RemoteException;
+    public Icon getIcon() throws RemoteException, DLeynaException;
 
     /**
      * Cancel all pending method invocations this client has issued to this Renderer.
@@ -158,6 +168,7 @@ public interface IRendererDevice {
      * For example, pending invocations of methods of the {@link IRendererController}
      * interface will also be cancelled.
      * @throws RemoteException no connection to the background renderer service
+     * @throws DLeynaException failure reported by the background renderer service
      */
-    public void cancel() throws RemoteException;
+    public void cancel() throws RemoteException, DLeynaException;
 }
