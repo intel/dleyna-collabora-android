@@ -30,6 +30,7 @@ import android.os.RemoteException;
 import android.util.Log;
 
 import com.intel.dleyna.Connector.Invocation;
+import com.intel.dleyna.lib.Extras;
 import com.intel.dleyna.lib.IRendererClient;
 import com.intel.dleyna.lib.IRendererService;
 import com.intel.dleyna.lib.Icon;
@@ -136,23 +137,30 @@ public class RendererService extends Service implements IConnectorClient {
          | RendererManager |
          +-----------------*/
 
-        public String[] getRenderers(IRendererClient client) {
+        public String[] getRenderers(IRendererClient client, Bundle extras) {
             String[] result = null;
             RemoteObject mo = connector.getManagerObject();
             if (mo != null) {
                 Invocation invo = connector.dispatch(client, mo, IFACE_MANAGER, "GetRenderers", null);
                 if (invo.success) {
                     result = invo.result.getArrayOfString();
+                    invo.result.free();
+                } else {
+                    extras.putInt(Extras.KEY_ERR_CODE, invo.errCode);
+                    extras.putString(Extras.KEY_ERR_MSG, invo.errMessage);
                 }
-                invo.result.free();
             }
             return result;
         }
 
-        public void rescan(IRendererClient client) {
+        public void rescan(IRendererClient client, Bundle extras) {
             RemoteObject mo = connector.getManagerObject();
             if (mo != null) {
-                connector.dispatch(client, mo, IFACE_MANAGER, "Rescan", null);
+                Invocation invo = connector.dispatch(client, mo, IFACE_MANAGER, "Rescan", null);
+                if (!invo.success) {
+                    extras.putInt(Extras.KEY_ERR_CODE, invo.errCode);
+                    extras.putString(Extras.KEY_ERR_MSG, invo.errMessage);
+                }
             }
         }
 
@@ -160,68 +168,73 @@ public class RendererService extends Service implements IConnectorClient {
          | IRendererDevice |
          +-----------------*/
 
-        public String getDeviceType(IRendererClient client, String objectPath) {
-            return getStringValuedDeviceProperty(client, objectPath, "DeviceType");
+        public String getDeviceType(IRendererClient client, String objectPath, Bundle extras) {
+            return getStringValuedDeviceProperty(client, objectPath, "DeviceType", extras);
         }
 
-        public String getUniqueDeviceName(IRendererClient client, String objectPath) {
-            return getStringValuedDeviceProperty(client, objectPath, "UDN");
+        public String getUniqueDeviceName(IRendererClient client, String objectPath, Bundle extras) {
+            return getStringValuedDeviceProperty(client, objectPath, "UDN", extras);
         }
 
-        public String getFriendlyName(IRendererClient client, String objectPath) {
-            return getStringValuedDeviceProperty(client, objectPath, "FriendlyName");
+        public String getFriendlyName(IRendererClient client, String objectPath, Bundle extras) {
+            return getStringValuedDeviceProperty(client, objectPath, "FriendlyName", extras);
         }
 
-        public String getIconURL(IRendererClient client, String objectPath) {
-            return getStringValuedDeviceProperty(client, objectPath, "IconURL");
+        public String getIconURL(IRendererClient client, String objectPath, Bundle extras) {
+            return getStringValuedDeviceProperty(client, objectPath, "IconURL", extras);
         }
 
-        public String getManufacturer(IRendererClient client, String objectPath) {
-            return getStringValuedDeviceProperty(client, objectPath, "Manufacturer");
+        public String getManufacturer(IRendererClient client, String objectPath, Bundle extras) {
+            return getStringValuedDeviceProperty(client, objectPath, "Manufacturer", extras);
         }
 
-        public String getManufacturerURL(IRendererClient client, String objectPath) {
-            return getStringValuedDeviceProperty(client, objectPath, "ManufacturerUrl");
+        public String getManufacturerURL(IRendererClient client, String objectPath, Bundle extras) {
+            return getStringValuedDeviceProperty(client, objectPath, "ManufacturerUrl", extras);
         }
 
-        public String getModelDescription(IRendererClient client, String objectPath) {
-            return getStringValuedDeviceProperty(client, objectPath, "ModelDescription");
+        public String getModelDescription(IRendererClient client, String objectPath, Bundle extras) {
+            return getStringValuedDeviceProperty(client, objectPath, "ModelDescription", extras);
         }
 
-        public String getModelName(IRendererClient client, String objectPath) {
-            return getStringValuedDeviceProperty(client, objectPath, "ModelName");
+        public String getModelName(IRendererClient client, String objectPath, Bundle extras) {
+            return getStringValuedDeviceProperty(client, objectPath, "ModelName", extras);
         }
 
-        public String getModelNumber(IRendererClient client, String objectPath) {
-            return getStringValuedDeviceProperty(client, objectPath, "ModelNumber");
+        public String getModelNumber(IRendererClient client, String objectPath, Bundle extras) {
+            return getStringValuedDeviceProperty(client, objectPath, "ModelNumber", extras);
         }
 
-        public String getSerialNumber(IRendererClient client, String objectPath) {
-            return getStringValuedDeviceProperty(client, objectPath, "SerialNumber");
+        public String getSerialNumber(IRendererClient client, String objectPath, Bundle extras) {
+            return getStringValuedDeviceProperty(client, objectPath, "SerialNumber", extras);
         }
 
-        public String getPresentationURL(IRendererClient client, String objectPath) {
-            return getStringValuedDeviceProperty(client, objectPath, "PresentationURL");
+        public String getPresentationURL(IRendererClient client, String objectPath, Bundle extras) {
+            return getStringValuedDeviceProperty(client, objectPath, "PresentationURL", extras);
         }
 
-        public String getProtocolInfo(IRendererClient client, String objectPath) {
-            return getStringValuedDeviceProperty(client, objectPath, "ProtocolInfo");
+        public String getProtocolInfo(IRendererClient client, String objectPath, Bundle extras) {
+            return getStringValuedDeviceProperty(client, objectPath, "ProtocolInfo", extras);
         }
 
-        public Icon getIcon(IRendererClient client, String objectPath) {
+        public Icon getIcon(IRendererClient client, String objectPath, Bundle extras) {
             // TODO
             return null;
         }
 
-        public void cancel(IRendererClient client, String objectPath) {
+        public void cancel(IRendererClient client, String objectPath, Bundle extras) {
             RemoteObject ro = connector.getRemoteObject(objectPath, IFACE_DEVICE);
             if (ro != null) {
                 if (LOG) Log.w(TAG, "*** CANCEL ***");
-                connector.dispatch(client, ro, IFACE_DEVICE, "Cancel", null);
+                Invocation invo = connector.dispatch(client, ro, IFACE_DEVICE, "Cancel", null);
+                if (!invo.success) {
+                    extras.putInt(Extras.KEY_ERR_CODE, invo.errCode);
+                    extras.putString(Extras.KEY_ERR_MSG, invo.errMessage);
+                }
             }
         }
 
-        private String getStringValuedDeviceProperty(IRendererClient client, String objectPath, String propName) {
+        private String getStringValuedDeviceProperty(IRendererClient client, String objectPath,
+                String propName, Bundle extras) {
             if (LOG) Log.i(TAG, "getStringDeviceProp: obj=" + objectPath + " prop=" + propName);
             String result = null;
             RemoteObject ro = connector.getRemoteObject(objectPath, IFACE_DBUS_PROP);
@@ -233,7 +246,8 @@ public class RendererService extends Service implements IConnectorClient {
                     result = invo.result.getChildAtIndex(0).getString();
                     invo.result.free();
                 } else {
-                    if (LOG) Log.w(TAG, "getStringDeviceProp: invocation FAIL");
+                    extras.putInt(Extras.KEY_ERR_CODE, invo.errCode);
+                    extras.putString(Extras.KEY_ERR_MSG, invo.errMessage);
                 }
             }
             if (LOG) Log.i(TAG, "getStringDeviceProp: result=" + result);
@@ -244,125 +258,125 @@ public class RendererService extends Service implements IConnectorClient {
         | IRendererController |
         +---------------------*/
 
-        public void next(IRendererClient client, String objectPath) {
+        public void next(IRendererClient client, String objectPath, Bundle extras) {
         }
 
-        public void previous(IRendererClient client, String objectPath) {
+        public void previous(IRendererClient client, String objectPath, Bundle extras) {
         }
 
-        public void pause(IRendererClient client, String objectPath) {
+        public void pause(IRendererClient client, String objectPath, Bundle extras) {
         }
 
-        public void playPause(IRendererClient client, String objectPath) {
+        public void playPause(IRendererClient client, String objectPath, Bundle extras) {
         }
 
-        public void stop(IRendererClient client, String objectPath) {
+        public void stop(IRendererClient client, String objectPath, Bundle extras) {
         }
 
-        public void play(IRendererClient client, String objectPath) {
+        public void play(IRendererClient client, String objectPath, Bundle extras) {
         }
 
-        public void seek(IRendererClient client, String objectPath, long offset) {
+        public void seek(IRendererClient client, String objectPath, long offset, Bundle extras) {
         }
 
-        public void setPosition(IRendererClient client, String objectPath, long position) {
+        public void setPosition(IRendererClient client, String objectPath, long position, Bundle extras) {
         }
 
-        public void openUri(IRendererClient client, String objectPath, String uri) {
+        public void openUri(IRendererClient client, String objectPath, String uri, Bundle extras) {
         }
 
-        public String getPlaybackStatus(IRendererClient client, String objectPath) {
+        public String getPlaybackStatus(IRendererClient client, String objectPath, Bundle extras) {
             return null;
         }
 
-        public double getRate(IRendererClient client, String objectPath) {
+        public double getRate(IRendererClient client, String objectPath, Bundle extras) {
             return 0;
         }
 
-        public void setRate(IRendererClient client, String objectPath, double rate) {
+        public void setRate(IRendererClient client, String objectPath, double rate, Bundle extras) {
         }
 
-        public Bundle getMetadata(IRendererClient client, String objectPath) {
+        public Bundle getMetadata(IRendererClient client, String objectPath, Bundle extras) {
             return null;
         }
 
-        public double getVolume(IRendererClient client, String objectPath) {
+        public double getVolume(IRendererClient client, String objectPath, Bundle extras) {
             return 0;
         }
 
-        public void setVolume(IRendererClient client, String objectPath, double volume) {
+        public void setVolume(IRendererClient client, String objectPath, double volume, Bundle extras) {
         }
 
-        public long getPosition(IRendererClient client, String objectPath) {
+        public long getPosition(IRendererClient client, String objectPath, Bundle extras) {
             return 0;
         }
 
-        public long getMinimumRate(IRendererClient client, String objectPath) {
+        public long getMinimumRate(IRendererClient client, String objectPath, Bundle extras) {
             return 0;
         }
 
-        public long getMaximumRate(IRendererClient client, String objectPath) {
+        public long getMaximumRate(IRendererClient client, String objectPath, Bundle extras) {
             return 0;
         }
 
-        public boolean getCanGoNext(IRendererClient client, String objectPath) {
+        public boolean getCanGoNext(IRendererClient client, String objectPath, Bundle extras) {
             return false;
         }
 
-        public boolean getCanGoPrevious(IRendererClient client, String objectPath) {
+        public boolean getCanGoPrevious(IRendererClient client, String objectPath, Bundle extras) {
             return false;
         }
 
-        public boolean getCanPlay(IRendererClient client, String objectPath) {
+        public boolean getCanPlay(IRendererClient client, String objectPath, Bundle extras) {
             return false;
         }
 
-        public boolean getCanPause(IRendererClient client, String objectPath) {
+        public boolean getCanPause(IRendererClient client, String objectPath, Bundle extras) {
             return false;
         }
 
-        public boolean getCanSeek(IRendererClient client, String objectPath) {
+        public boolean getCanSeek(IRendererClient client, String objectPath, Bundle extras) {
             return false;
         }
 
-        public boolean getCanControl(IRendererClient client, String objectPath) {
+        public boolean getCanControl(IRendererClient client, String objectPath, Bundle extras) {
             return false;
         }
 
-        public int getNumberOfTracks(IRendererClient client, String objectPath) {
+        public int getNumberOfTracks(IRendererClient client, String objectPath, Bundle extras) {
             return 0;
         }
 
-        public void goToTrack(IRendererClient client, String objectPath, int track) {
+        public void goToTrack(IRendererClient client, String objectPath, int track, Bundle extras) {
         }
 
-        public int getCurrentTrack(IRendererClient client, String objectPath) {
+        public int getCurrentTrack(IRendererClient client, String objectPath, Bundle extras) {
             return 0;
         }
 
-        public void openUriEx(IRendererClient client, String objectPath, String uri, String metadata) {
+        public void openUriEx(IRendererClient client, String objectPath, String uri, String metadata, Bundle extras) {
         }
 
-        public double[] getTransportPlaySpeeds(IRendererClient client, String objectPath) {
+        public double[] getTransportPlaySpeeds(IRendererClient client, String objectPath, Bundle extras) {
             return null;
         }
 
-        public boolean getMute(IRendererClient client, String objectPath) {
+        public boolean getMute(IRendererClient client, String objectPath, Bundle extras) {
             return false;
         }
 
-        public void setMute(IRendererClient client, String objectPath, boolean value) {
+        public void setMute(IRendererClient client, String objectPath, boolean value, Bundle extras) {
         }
 
         /*-------------------+
          | IRendererPushHost |
          +-------------------*/
 
-        public String hostFile(IRendererClient client, String objectPath, String path) {
+        public String hostFile(IRendererClient client, String objectPath, String path, Bundle extras) {
             return null;
         }
 
-        public void removeFile(IRendererClient client, String objectPath, String path) {
+        public void removeFile(IRendererClient client, String objectPath, String path, Bundle extras) {
         }
     };
 

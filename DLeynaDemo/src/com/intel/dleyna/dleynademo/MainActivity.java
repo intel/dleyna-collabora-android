@@ -35,9 +35,12 @@ import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.TextView;
 
+import com.intel.dleyna.lib.DLeynaException;
 import com.intel.dleyna.lib.IRendererController;
 import com.intel.dleyna.lib.Renderer;
+import com.intel.dleyna.lib.RendererControllerListener;
 import com.intel.dleyna.lib.RendererManager;
+import com.intel.dleyna.lib.RendererManagerListener;
 
 /**
  * This is the main Activity of the dLeyna demo app.
@@ -166,6 +169,8 @@ public class MainActivity extends Activity {
                 renderers = rendererMgr.getRenderers();
             } catch (RemoteException e) {
                 e.printStackTrace();
+            } catch (DLeynaException e) {
+                e.printStackTrace();
             }
             if (renderers == null || renderers.length == 0) {
                 writeTty("No renderers.\n");
@@ -194,6 +199,8 @@ public class MainActivity extends Activity {
                                 publishProgress("\t" + r.getPresentationURL());
                                 publishProgress("\t" + r.getProtocolInfo());
                             } catch (RemoteException e) {
+                                e.printStackTrace();
+                            } catch (DLeynaException e) {
                                 e.printStackTrace();
                             }
                         }
@@ -226,6 +233,8 @@ public class MainActivity extends Activity {
                 listTask.cancel(true);
             } catch (RemoteException e) {
                 e.printStackTrace();
+            } catch (DLeynaException e) {
+                e.printStackTrace();
             }
         }
     };
@@ -237,11 +246,13 @@ public class MainActivity extends Activity {
                 writeTty("OK rescan sent.\n");
             } catch (RemoteException e) {
                 e.printStackTrace();
+            } catch (DLeynaException e) {
+                e.printStackTrace();
             }
         }
     };
 
-    private RendererManager rendererMgr = new RendererManager(new RendererManager.Listener() {
+    private RendererManager rendererMgr = new RendererManager(new RendererManagerListener() {
 
         public void onConnected() {
             if (App.LOG) Log.i(TAG, "MainActivity: onConnected");
@@ -259,7 +270,7 @@ public class MainActivity extends Activity {
 
         public void onRendererFound(final Renderer r) {
             writeTty("Found Renderer: " + r.getObjectPath() + '\n');
-            r.addControllerListener(new Renderer.ControllerListener() {
+            r.addControllerListener(new RendererControllerListener() {
                 String objPath = r.getObjectPath();
                 public void onPlaybackStatusChanged(IRendererController c, String status) {
                     writeTty("(!) " + objPath + " PlaybackStatus: " + status + "\n");

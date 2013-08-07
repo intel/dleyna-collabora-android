@@ -1,0 +1,29 @@
+/* Page background color */
+body { background-color: #FFFFEA; color:#000000; font-family: Arial, sans-serif; font-size: 100% }
+
+/* Headings */
+h1 { font-size: 120% }
+
+/* Table colors */
+.TableHeadingColor     { background: #D0F0D0; color:#002000 }
+.TableSubHeadingColor  { background: #E8FFE8; color:#000000 }
+.TableRowColor         { background: #FFFFEA; color:#000000 }
+
+/* Font used in left-hand frame lists */
+.FrameTitleFont   { font-size: 100%; font-family Arial, sans-serif; color:#000000 }
+.FrameHeadingFont { font-size:  90%; font-family Arial, sans-serif; color:#000000 }
+.FrameItemFont    { font-size:  90%; font-family Arial, sans-serif; color:#000000 }
+
+/* Navigation bar fonts and colors */
+.NavBarCell1    { background-color:#FFFFEA; color:#000000}
+.NavBarCell1Rev { background-color:#008B00; color:#FFFFFF}
+.NavBarFont1    { font-family Arial, sans-serif; color:#000000; color:#000000;}
+.NavBarFont1Rev { font-family Arial, sans-serif; color:#FFFFFF; color:#FFFFFF;}
+
+.NavBarCell2    { font-family Arial, sans-serif; background-color:#FFFFEA; color:#000000}
+.NavBarCell3    { font-family Arial, sans-serif; background-color:#FFFFEA; color:#000000}
+
+a:visited {color:#0050A0;}  /* visited link */
+a:link    {color:#0050A0;}  /* unvisited link */
+a:hover   {color:#0080FF;}  /* mouse over link */
+a:active  {color:#0080FF;}  /* selected link */

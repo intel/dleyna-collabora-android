@@ -25,7 +25,7 @@ import android.os.Parcel;
 import android.os.Parcelable;
 
 /**
- * An icon: a MIME type and some bytes.
+ * An icon: a MIME type and some bytes, with a {@link Parcelable} interface.
  */
 public class Icon implements Parcelable {
 

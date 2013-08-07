@@ -25,10 +25,10 @@ JNIEXPORT jlong JNICALL Java_com_intel_dleyna_GMainLoop_freeNative
 
 /*
  * Class:     com_intel_dleyna_GMainLoop
- * Method:    idleAdd
+ * Method:    idleAddNative
  * Signature: (JLjava/lang/Runnable;)V
  */
-JNIEXPORT void JNICALL Java_com_intel_dleyna_GMainLoop_idleAdd
+JNIEXPORT void JNICALL Java_com_intel_dleyna_GMainLoop_idleAddNative
   (JNIEnv *, jobject, jlong, jobject);
 
 #ifdef __cplusplus

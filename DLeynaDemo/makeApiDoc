@@ -13,9 +13,19 @@ javadoc \
     -d $OUT_DIR/$DOC_NAME \
     -sourcepath src:gen \
     -classpath $SDK_DIR/platforms/android-$API_LEVEL/android.jar \
-    -noqualifier java.lang:java.util:android.os:android.app \
+    -stylesheetfile apidoc.css \
+    -noqualifier java.lang:java.util:android.os:android.app:android.content \
     -linkoffline http://developer.android.com/reference $SDK_DIR/docs/reference \
-    com.intel.dleyna.lib
+    src/com/intel/dleyna/lib/DLeynaException.java \
+    src/com/intel/dleyna/lib/Icon.java \
+    src/com/intel/dleyna/lib/IRendererController.java \
+    src/com/intel/dleyna/lib/IRendererControllerListener.java \
+    src/com/intel/dleyna/lib/IRendererDevice.java \
+    src/com/intel/dleyna/lib/IRendererPushHost.java \
+    src/com/intel/dleyna/lib/Renderer.java \
+    src/com/intel/dleyna/lib/RendererControllerListener.java \
+    src/com/intel/dleyna/lib/RendererManager.java \
+    src/com/intel/dleyna/lib/RendererManagerListener.java
 
 cd $OUT_DIR
 tar czf $DOC_NAME.tgz $DOC_NAME

@@ -17,24 +17,25 @@
  * 51 Franklin St - Fifth Floor, Boston, MA 02110-1301 USA.
  *
  * Tom Keel <thomas.keel@intel.com>
- *
  */
 
-package com.intel.dleyna.lib;
+#include <glib.h>
+#include <jni.h>
 
-interface IRendererClient {
+#include "com_intel_dleyna_GError.h"
+#include "util.h"
 
-    /*--------------------------+
-     | IRendererManagerListener |
-     +--------------------------*/
 
-    void onRendererFound(String objectPath);
-    void onRendererLost(String objectPath);
+JNIEXPORT jint JNICALL Java_com_intel_dleyna_GError_getCodeNative(
+    JNIEnv* env, jclass clazz, jlong _gerr)
+{
+    GError* gerr = JLONG_TO_PTR(_gerr);
+    return gerr->code;
+}
 
-    /*-----------------------------+
-     | IRendererControllerListener |
-     +-----------------------------*/
-
-    void onControllerPropertiesChanged(String objectPath, in Bundle props);
-
+JNIEXPORT jstring JNICALL Java_com_intel_dleyna_GError_getMessageNative(
+    JNIEnv* env, jclass clazz, jlong _gerr)
+{
+    GError* gerr = JLONG_TO_PTR(_gerr);
+    return gerr->message ? (*env)->NewStringUTF(env, gerr->message) : NULL;
 }

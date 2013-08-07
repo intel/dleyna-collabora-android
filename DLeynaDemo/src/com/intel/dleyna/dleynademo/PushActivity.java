@@ -27,6 +27,7 @@ import android.util.Log;
 
 import com.intel.dleyna.lib.Renderer;
 import com.intel.dleyna.lib.RendererManager;
+import com.intel.dleyna.lib.RendererManagerListener;
 
 /**
  * This Activity takes media content as input from an Intent,
@@ -74,7 +75,7 @@ public class PushActivity extends Activity {
         rendererMgr.disconnect();
     }
 
-    private RendererManager rendererMgr = new RendererManager(new RendererManager.Listener() {
+    private RendererManager rendererMgr = new RendererManager(new RendererManagerListener() {
 
         public void onConnected() {
         }

@@ -40,6 +40,11 @@ import android.os.RemoteException;
  * The connection to the background renderer service that you initiate with
  * {@link RendererManager#connect(android.content.Context)} must be established for the methods of this
  * class to succeed. Otherwise, they will throw a {@link RemoteException}.
+ * <p>
+ * Since Renderers are usually on remote devices, and thus prone to arbitrary delays,
+ * you should never invoke methods that interact with Renderers from the UI thread.
+ * Perhaps the simplest way to manage the required multi-threading is to use an
+ * {@link android.os.AsyncTask}.
  */
 public class Renderer implements IRendererDevice, IRendererController, IRendererPushHost {
 
@@ -69,88 +74,157 @@ public class Renderer implements IRendererDevice, IRendererController, IRenderer
      | IRendererDevice |
      +-----------------*/
 
-    public String getDeviceType() throws RemoteException {
+    public String getDeviceType() throws RemoteException, DLeynaException {
         IRendererService service = manager.getRendererService();
         IRendererClient client = manager.getRendererClient();
-        return service.getDeviceType(client, objectPath);
+        Bundle extras = new Bundle();
+        String result = service.getDeviceType(client, objectPath, extras);
+        if (extras.containsKey(Extras.KEY_ERR_MSG)) {
+            throw new DLeynaException(extras.getString(Extras.KEY_ERR_MSG));
+        }
+        return result;
     }
 
-    public String getUniqueDeviceName() throws RemoteException {
+    public String getUniqueDeviceName() throws RemoteException, DLeynaException {
         IRendererService service = manager.getRendererService();
         IRendererClient client = manager.getRendererClient();
-        return service.getUniqueDeviceName(client, objectPath);
+        Bundle extras = new Bundle();
+        String result = service.getUniqueDeviceName(client, objectPath, extras);
+        if (extras.containsKey(Extras.KEY_ERR_MSG)) {
+            throw new DLeynaException(extras.getString(Extras.KEY_ERR_MSG));
+        }
+        return result;
     }
 
-    public String getFriendlyName() throws RemoteException {
+    public String getFriendlyName() throws RemoteException, DLeynaException {
         IRendererService service = manager.getRendererService();
         IRendererClient client = manager.getRendererClient();
-        return service.getFriendlyName(client, objectPath);
+        Bundle extras = new Bundle();
+        String result = service.getFriendlyName(client, objectPath, extras);
+        if (extras.containsKey(Extras.KEY_ERR_MSG)) {
+            throw new DLeynaException(extras.getString(Extras.KEY_ERR_MSG));
+        }
+        return result;
     }
 
-    public String getIconURL() throws RemoteException {
+    public String getIconURL() throws RemoteException, DLeynaException {
         IRendererService service = manager.getRendererService();
         IRendererClient client = manager.getRendererClient();
-        return service.getIconURL(client, objectPath);
+        Bundle extras = new Bundle();
+        String result = service.getIconURL(client, objectPath, extras);
+        if (extras.containsKey(Extras.KEY_ERR_MSG)) {
+            throw new DLeynaException(extras.getString(Extras.KEY_ERR_MSG));
+        }
+        return result;
     }
 
-    public String getManufacturer() throws RemoteException {
+    public String getManufacturer() throws RemoteException, DLeynaException {
         IRendererService service = manager.getRendererService();
         IRendererClient client = manager.getRendererClient();
-        return service.getManufacturer(client, objectPath);
+        Bundle extras = new Bundle();
+        String result = service.getManufacturer(client, objectPath, extras);
+        if (extras.containsKey(Extras.KEY_ERR_MSG)) {
+            throw new DLeynaException(extras.getString(Extras.KEY_ERR_MSG));
+        }
+        return result;
     }
 
-    public String getManufacturerURL() throws RemoteException {
+    public String getManufacturerURL() throws RemoteException, DLeynaException {
         IRendererService service = manager.getRendererService();
         IRendererClient client = manager.getRendererClient();
-        return service.getManufacturerURL(client, objectPath);
+        Bundle extras = new Bundle();
+        String result = service.getManufacturerURL(client, objectPath, extras);
+        if (extras.containsKey(Extras.KEY_ERR_MSG)) {
+            throw new DLeynaException(extras.getString(Extras.KEY_ERR_MSG));
+        }
+        return result;
     }
 
-    public String getModelDescription() throws RemoteException {
+    public String getModelDescription() throws RemoteException, DLeynaException {
         IRendererService service = manager.getRendererService();
         IRendererClient client = manager.getRendererClient();
-        return service.getModelDescription(client, objectPath);
+        Bundle extras = new Bundle();
+        String result = service.getModelDescription(client, objectPath, extras);
+        if (extras.containsKey(Extras.KEY_ERR_MSG)) {
+            throw new DLeynaException(extras.getString(Extras.KEY_ERR_MSG));
+        }
+        return result;
     }
 
-    public String getModelName() throws RemoteException {
+    public String getModelName() throws RemoteException, DLeynaException {
         IRendererService service = manager.getRendererService();
         IRendererClient client = manager.getRendererClient();
-        return service.getModelName(client, objectPath);
+        Bundle extras = new Bundle();
+        String result = service.getModelName(client, objectPath, extras);
+        if (extras.containsKey(Extras.KEY_ERR_MSG)) {
+            throw new DLeynaException(extras.getString(Extras.KEY_ERR_MSG));
+        }
+        return result;
     }
 
-    public String getModelNumber() throws RemoteException {
+    public String getModelNumber() throws RemoteException, DLeynaException {
         IRendererService service = manager.getRendererService();
         IRendererClient client = manager.getRendererClient();
-        return service.getModelNumber(client, objectPath);
+        Bundle extras = new Bundle();
+        String result = service.getModelNumber(client, objectPath, extras);
+        if (extras.containsKey(Extras.KEY_ERR_MSG)) {
+            throw new DLeynaException(extras.getString(Extras.KEY_ERR_MSG));
+        }
+        return result;
     }
 
-    public String getSerialNumber() throws RemoteException {
+    public String getSerialNumber() throws RemoteException, DLeynaException {
         IRendererService service = manager.getRendererService();
         IRendererClient client = manager.getRendererClient();
-        return service.getSerialNumber(client, objectPath);
+        Bundle extras = new Bundle();
+        String result = service.getSerialNumber(client, objectPath, extras);
+        if (extras.containsKey(Extras.KEY_ERR_MSG)) {
+            throw new DLeynaException(extras.getString(Extras.KEY_ERR_MSG));
+        }
+        return result;
     }
 
-    public String getPresentationURL() throws RemoteException {
+    public String getPresentationURL() throws RemoteException, DLeynaException {
         IRendererService service = manager.getRendererService();
         IRendererClient client = manager.getRendererClient();
-        return service.getPresentationURL(client, objectPath);
+        Bundle extras = new Bundle();
+        String result = service.getPresentationURL(client, objectPath, extras);
+        if (extras.containsKey(Extras.KEY_ERR_MSG)) {
+            throw new DLeynaException(extras.getString(Extras.KEY_ERR_MSG));
+        }
+        return result;
     }
 
-    public String getProtocolInfo() throws RemoteException {
+    public String getProtocolInfo() throws RemoteException, DLeynaException {
         IRendererService service = manager.getRendererService();
         IRendererClient client = manager.getRendererClient();
-        return service.getProtocolInfo(client, objectPath);
+        Bundle extras = new Bundle();
+        String result = service.getProtocolInfo(client, objectPath, extras);
+        if (extras.containsKey(Extras.KEY_ERR_MSG)) {
+            throw new DLeynaException(extras.getString(Extras.KEY_ERR_MSG));
+        }
+        return result;
     }
 
-    public void cancel() throws RemoteException {
+    public void cancel() throws RemoteException, DLeynaException {
         IRendererService service = manager.getRendererService();
         IRendererClient client = manager.getRendererClient();
-        service.cancel(client, objectPath);
+        Bundle extras = new Bundle();
+        service.cancel(client, objectPath, extras);
+        if (extras.containsKey(Extras.KEY_ERR_MSG)) {
+            throw new DLeynaException(extras.getString(Extras.KEY_ERR_MSG));
+        }
     }
 
-    public Icon getIcon() throws RemoteException {
+    public Icon getIcon() throws RemoteException, DLeynaException {
         IRendererService service = manager.getRendererService();
         IRendererClient client = manager.getRendererClient();
-        return service.getIcon(client, objectPath);
+        Bundle extras = new Bundle();
+        Icon result = service.getIcon(client, objectPath, extras);
+        if (extras.containsKey(Extras.KEY_ERR_MSG)) {
+            throw new DLeynaException(extras.getString(Extras.KEY_ERR_MSG));
+        }
+        return result;
     }
 
     /*---------------------+
@@ -161,193 +235,125 @@ public class Renderer implements IRendererDevice, IRendererController, IRenderer
         controllerListeners.add(listener);
     }
 
-    public void next() throws RemoteException {
+    public void next() throws RemoteException, DLeynaException {
     }
 
-    public void previous() throws RemoteException {
+    public void previous() throws RemoteException, DLeynaException {
     }
 
-    public void pause() throws RemoteException {
+    public void pause() throws RemoteException, DLeynaException {
     }
 
-    public void playPause() throws RemoteException {
+    public void playPause() throws RemoteException, DLeynaException {
     }
 
-    public void stop() throws RemoteException {
+    public void stop() throws RemoteException, DLeynaException {
     }
 
-    public void play() throws RemoteException {
+    public void play() throws RemoteException, DLeynaException {
     }
 
-    public void seek(long offset) throws RemoteException {
+    public void seek(long offset) throws RemoteException, DLeynaException {
     }
 
-    public void setPosition(long position) throws RemoteException {
+    public void setPosition(long position) throws RemoteException, DLeynaException {
     }
 
-    public void openUri(String uri) throws RemoteException {
+    public void openUri(String uri) throws RemoteException, DLeynaException {
     }
 
-    public String getPlaybackStatus() throws RemoteException {
+    public String getPlaybackStatus() throws RemoteException, DLeynaException {
         return null;
     }
 
-    public double getRate() throws RemoteException {
+    public double getRate() throws RemoteException, DLeynaException {
         return 0;
     }
 
-    public void setRate(double rate) throws RemoteException {
+    public void setRate(double rate) throws RemoteException, DLeynaException {
     }
 
-    public Bundle getMetadata() throws RemoteException {
+    public Bundle getMetadata() throws RemoteException, DLeynaException {
         return null;
     }
 
-    public double getVolume() throws RemoteException {
+    public double getVolume() throws RemoteException, DLeynaException {
         return 0;
     }
 
-    public void setVolume(double volume) throws RemoteException {
+    public void setVolume(double volume) throws RemoteException, DLeynaException {
     }
 
-    public long getPosition() throws RemoteException {
+    public long getPosition() throws RemoteException, DLeynaException {
         return 0;
     }
 
-    public long getMinimumRate() throws RemoteException {
+    public long getMinimumRate() throws RemoteException, DLeynaException {
         return 0;
     }
 
-    public long getMaximumRate() throws RemoteException {
+    public long getMaximumRate() throws RemoteException, DLeynaException {
         return 0;
     }
 
-    public boolean getCanGoNext() throws RemoteException {
+    public boolean getCanGoNext() throws RemoteException, DLeynaException {
         return false;
     }
 
-    public boolean getCanGoPrevious() throws RemoteException {
+    public boolean getCanGoPrevious() throws RemoteException, DLeynaException {
         return false;
     }
 
-    public boolean getCanPlay() throws RemoteException {
+    public boolean getCanPlay() throws RemoteException, DLeynaException {
         return false;
     }
 
-    public boolean getCanPause() throws RemoteException {
+    public boolean getCanPause() throws RemoteException, DLeynaException {
         return false;
     }
 
-    public boolean getCanSeek() throws RemoteException {
+    public boolean getCanSeek() throws RemoteException, DLeynaException {
         return false;
     }
 
-    public boolean getCanControl() throws RemoteException {
+    public boolean getCanControl() throws RemoteException, DLeynaException {
         return false;
     }
 
-    public int getNumberOfTracks() throws RemoteException {
+    public int getNumberOfTracks() throws RemoteException, DLeynaException {
         return 0;
     }
 
-    public void goToTrack(int track) throws RemoteException {
+    public void goToTrack(int track) throws RemoteException, DLeynaException {
     }
 
-    public int getCurrentTrack() throws RemoteException {
+    public int getCurrentTrack() throws RemoteException, DLeynaException {
         return 0;
     }
 
-    public void openUriEx(String uri, String metadata) throws RemoteException {
+    public void openUriEx(String uri, String metadata) throws RemoteException, DLeynaException {
     }
 
-    public double[] getTransportPlaySpeeds() throws RemoteException {
+    public double[] getTransportPlaySpeeds() throws RemoteException, DLeynaException {
         return null;
     }
 
-    public boolean getMute() throws RemoteException {
+    public boolean getMute() throws RemoteException, DLeynaException {
         return false;
     }
 
-    public void setMute(boolean value) throws RemoteException {
+    public void setMute(boolean value) throws RemoteException, DLeynaException {
     }
 
     /*-------------------+
      | IRendererPushHost |
      +-------------------*/
 
-    public String hostFile(String path) throws RemoteException {
+    public String hostFile(String path) throws RemoteException, DLeynaException {
         return null;
     }
 
-    public void removeFile(String path) throws RemoteException {
-    }
-
-    /*-----------+
-     | Callbacks |
-     +-----------*/
-
-    /**
-     * A default implementation of {@link IRendererControllerListener} whose
-     * methods do nothing.
-     * <p>
-     * If you are only interested in a subset of the events of the interface,
-     * you may find it easier to extend this class than to implement the entire interface.
-     */
-    public static class ControllerListener implements IRendererControllerListener {
-
-        public void onPlaybackStatusChanged(IRendererController c, String status) {
-        }
-
-        public void onRateChanged(IRendererController c, double rate) {
-        }
-
-        public void onMetadataChanged(IRendererController c, Bundle metadata) {
-        }
-
-        public void onVolumeChanged(IRendererController c, double volume) {
-        }
-
-        public void onMinimumRateChanged(IRendererController c, double rate) {
-        }
-
-        public void onMaximumRateChanged(IRendererController c, double rate) {
-        }
-
-        public void onCanGoNextChanged(IRendererController c, boolean value) {
-        }
-
-        public void onCanGoPreviousChanged(IRendererController c, boolean value) {
-        }
-
-        public void onTrackChanged(IRendererController c, int track) {
-        }
-
-        public void onPositionChanged(IRendererController c, long position) {
-        }
-
-        public void onCanPlayChanged(IRendererController c, boolean value) {
-        }
-
-        public void onCanPauseChanged(IRendererController c, boolean value) {
-        }
-
-        public void onCanSeekChanged(IRendererController c, boolean value) {
-        }
-
-        public void onCanControlChanged(IRendererController c, boolean value) {
-        }
-
-        public void onTransportPlaySpeedsChanged(IRendererController c, double[] speeds) {
-        }
-
-        public void onCurrentTrackChanged(IRendererController c, int track) {
-        }
-
-        public void onNumberOfTracksChanged(IRendererController c, int n) {
-        }
-
-        public void onMuteChanged(IRendererController c, boolean value) {
-        }
+    public void removeFile(String path) throws RemoteException, DLeynaException {
     }
 
     /*---------------------+

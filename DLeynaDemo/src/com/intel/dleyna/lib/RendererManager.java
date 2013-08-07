@@ -43,7 +43,7 @@ import android.util.Log;
  * on local networks attached to this device (or on the device itself).
  * Each such DMR is represented by an instance of {@link Renderer}.
  * <p>
- * Use {@link #RendererManager(Listener)} to to obtain an instance of this class
+ * Use {@link #RendererManager(RendererManagerListener)} to to obtain an instance of this class
  * and register for notification of events.
  * <p>
  * Use {@link #connect(Context)} to initiate the connection to the background renderer service.
@@ -53,7 +53,8 @@ import android.util.Log;
  * While connected to the background renderer service,
  * you can use {@link #getRenderers()} to obtain a list of all currently available renderers,
  * and you will be notified of the appearance and disappearance of renderers in callbacks to
- * the {@link Listener} object that you passed to {@link #RendererManager(Listener)}.
+ * the {@link RendererManagerListener} object that you passed to
+ * {@link #RendererManager(RendererManagerListener)}.
  * Those notifications will run on the application's main thread.
  */
 public class RendererManager {
@@ -80,7 +81,7 @@ public class RendererManager {
     private boolean serviceConnected;
 
     /** The event listener. */
-    private Listener listener;
+    private RendererManagerListener listener;
 
     /** Maps "object path" strings to renderers. */
     private HashMap<String,Renderer> renderers = new HashMap<String,Renderer>();
@@ -90,10 +91,10 @@ public class RendererManager {
 
     /**
      * You would typically invoke this constructor from {@link Activity#onStart()}.
-     * @param listener an instance of your extension of {@link Listener},
+     * @param listener an instance of your extension of {@link RendererManagerListener},
      * for receiving notification of events.
      */
-    public RendererManager(Listener listener) {
+    public RendererManager(RendererManagerListener listener) {
         handler = new Handler(Looper.getMainLooper());
         this.listener = listener;
     }
@@ -102,9 +103,10 @@ public class RendererManager {
      * Initiate a connection to the background renderer service.
      * <p>
      * Connection establishment is asynchronous --
-     * if this method succeeds, you will later receive a callback to
-     * the {@link Listener#onConnected()} method of the Listener object you passed to
-     * {@link #RendererManager(Listener)}, or to {@link Listener#onDisconnected()}
+     * if this method succeeds, you will later receive a callback to the
+     * {@link RendererManagerListener#onConnected()} method of the {@link RendererManagerListener}
+     * object you passed to{@link #RendererManager(RendererManagerListener)}, or to
+     * {@link RendererManagerListener#onDisconnected()}
      * if something went wrong in the meantime.
      * <p>
      * This method could fail if, for example, the application package containing
@@ -202,8 +204,9 @@ public class RendererManager {
      * Get all known renderers.
      * @return all currently known renderers
      * @throws RemoteException no connection to the background renderer service
+     * @throws DLeynaException failure reported by the background renderer service
      */
-    public Renderer[] getRenderers() throws RemoteException {
+    public Renderer[] getRenderers() throws RemoteException, DLeynaException {
         if (!serviceConnected) {
             throw new RemoteException();
         }
@@ -212,7 +215,11 @@ public class RendererManager {
         // of renderers, reusing the Renderer objects of any renderers that were already
         // in the previous map. Then we substitute the new map for the previous one.
 
-        String[] newObjectIds = rendererService.getRenderers(rendererClient);
+        Bundle extras = new Bundle();
+        String[] newObjectIds = rendererService.getRenderers(rendererClient, extras);
+        if (extras.containsKey(Extras.KEY_ERR_MSG)) {
+            throw new DLeynaException(extras.getString(Extras.KEY_ERR_MSG));
+        }
         // newObjectIds is the new complete set of object ids according to the service
         if (LOG) Log.i(TAG, "getRenderers: " + newObjectIds);
 
@@ -253,23 +260,29 @@ public class RendererManager {
      * <p>
      * Renderers that haven't responded after a few seconds will be considered unavailable.
      * <p>
-     * This may result in callbacks to {@link Listener#onRendererFound(Renderer)} and/or
-     * {@link Listener#onRendererLost(Renderer)} on registered observers.
+     * This may result in callbacks to {@link RendererManagerListener#onRendererFound(Renderer)}
+     * and/or {@link RendererManagerListener#onRendererLost(Renderer)} on registered observers.
      * @throws RemoteException no connection to the background renderer service
+     * @throws DLeynaException failure reported by the background renderer service
      */
-    public void rescan() throws RemoteException {
+    public void rescan() throws RemoteException, DLeynaException {
         if (!serviceConnected) {
             throw new RemoteException();
         }
-        rendererService.rescan(rendererClient);
+        Bundle extras = new Bundle();
+        rendererService.rescan(rendererClient, extras);
+        if (extras.containsKey(Extras.KEY_ERR_MSG)) {
+            throw new DLeynaException(extras.getString(Extras.KEY_ERR_MSG));
+        }
     }
 
     /**
      * Get the version number of this implementation of dLeyna-renderer.
      * @return version number
      * @throws RemoteException no connection to the background renderer service
+     * @throws DLeynaException failure reported by the background renderer service
      */
-    public String getVersion() throws RemoteException {
+    public String getVersion() throws RemoteException, DLeynaException {
         // TODO
         return null;
     }
@@ -283,9 +296,9 @@ public class RendererManager {
      */
     private final IRendererClient rendererClient = new IRendererClient.Stub() {
 
-        /*------------------------+
-         | RendererManager.Listener |
-         +------------------------*/
+        /*-------------------------+
+         | RendererManagerListener |
+         +-------------------------*/
 
         public void onRendererFound(final String objectPath) {
             if (LOG) Log.i(TAG, "onRendererFound: " + objectPath);
@@ -317,12 +330,11 @@ public class RendererManager {
             });
         }
 
-        /*---------------------------+
+        /*-----------------------------+
          | IRendererControllerListener |
-         +---------------------------*/
+         +-----------------------------*/
 
-        public void onControllerPropertiesChanged(String objectPath, final Bundle props)
-                throws RemoteException {
+        public void onControllerPropertiesChanged(String objectPath, final Bundle props) {
             if (LOG) logControllerPropertiesChanged(objectPath, props);
             final Renderer r = renderers.get(objectPath);
             if (r == null) {
@@ -463,45 +475,4 @@ public class RendererManager {
      IRendererClient getRendererClient() {
          return rendererClient;
      }
-
-    /**
-     * Notification of Renderer Manager events.
-     */
-    public static class Listener {
-        /**
-         * Override this to be notified when the connection to the background renderer service
-         * has been established.
-         * <p>
-         * This will run on the application's main thread.
-         */
-        public void onConnected() {
-        }
-
-        /**
-         * Override this to be notified when the connection to the background renderer service
-         * has been broken.
-         * <p>
-         * This will run on the application's main thread.
-         */
-        public void onDisconnected() {
-        }
-
-        /**
-         * Override this to be notified whenever a renderer appears on the network.
-         * @param r the renderer that has appeared
-         * <p>
-         * This will run on the application's main thread.
-         */
-        public void onRendererFound(Renderer r) {
-        }
-
-        /**
-         * Override this to be notified whenever a renderer disappears from the network.
-         * @param r the renderer that has disappeared
-         * <p>
-         * This will run on the application's main thread.
-         */
-        public void onRendererLost(Renderer r) {
-        }
-    }
 }

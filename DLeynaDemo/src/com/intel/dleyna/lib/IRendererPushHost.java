@@ -24,7 +24,8 @@ package com.intel.dleyna.lib;
 import android.os.RemoteException;
 
 /**
- * The PushHost portion of the Renderer API.
+ * The PushHost portion of the Renderer API:
+ * methods for creating/removing files hosted by web server(s) on the local device.
  */
 public interface IRendererPushHost {
 
@@ -39,13 +40,15 @@ public interface IRendererPushHost {
      * @param path the full pathname of the file to be hosted
      * @return the URL of the newly hosted file
      * @throws RemoteException no connection to the background renderer service
+     * @throws DLeynaException failure reported by the background renderer service
      */
-    public String hostFile(String path) throws RemoteException;
+    public String hostFile(String path) throws RemoteException, DLeynaException;
 
     /**
      * Stop hosting the specified file.
      * @param path the full pathname of the file to be hosted
      * @throws RemoteException no connection to the background renderer service
+     * @throws DLeynaException failure reported by the background renderer service
      */
-    public void removeFile(String path) throws RemoteException;
+    public void removeFile(String path) throws RemoteException, DLeynaException;
 }

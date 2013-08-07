@@ -144,6 +144,7 @@ LOCAL_C_INCLUDES := \
     ../../NativeLibs/install-$(TARGET_ARCH_ABI)-$(TARGET_PLATFORM)/include/dleyna-1.0 \
 
 LOCAL_SRC_FILES := \
+    gerror.c \
     gmainloop.c \
     gvariant.c \
     gvarianttype.c \
