@@ -44,7 +44,7 @@ public class GVariant {
      * @param peer the native instance
      */
     public GVariant(long peer) {
-        this(peer, false);
+        this(peer, true);
     }
 
     /**
@@ -52,7 +52,7 @@ public class GVariant {
      * @param peer the native instance
      * @param addReference whether to add a reference to the native instance
      */
-    public GVariant(long peer, boolean addReference) {
+    private GVariant(long peer, boolean addReference) {
         if (peer == 0) {
             throw new IllegalArgumentException("null peer");
         }
