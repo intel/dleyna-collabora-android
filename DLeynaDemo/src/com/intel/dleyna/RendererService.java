@@ -169,51 +169,51 @@ public class RendererService extends Service implements IConnectorClient {
          +-----------------*/
 
         public String getDeviceType(IRendererClient client, String objectPath, Bundle extras) {
-            return getStringValuedDeviceProperty(client, objectPath, "DeviceType", extras);
+            return getStringDBusProperty(client, objectPath, IFACE_DEVICE, "DeviceType", extras);
         }
 
         public String getUniqueDeviceName(IRendererClient client, String objectPath, Bundle extras) {
-            return getStringValuedDeviceProperty(client, objectPath, "UDN", extras);
+            return getStringDBusProperty(client, objectPath, IFACE_DEVICE, "UDN", extras);
         }
 
         public String getFriendlyName(IRendererClient client, String objectPath, Bundle extras) {
-            return getStringValuedDeviceProperty(client, objectPath, "FriendlyName", extras);
+            return getStringDBusProperty(client, objectPath, IFACE_DEVICE, "FriendlyName", extras);
         }
 
         public String getIconURL(IRendererClient client, String objectPath, Bundle extras) {
-            return getStringValuedDeviceProperty(client, objectPath, "IconURL", extras);
+            return getStringDBusProperty(client, objectPath, IFACE_DEVICE, "IconURL", extras);
         }
 
         public String getManufacturer(IRendererClient client, String objectPath, Bundle extras) {
-            return getStringValuedDeviceProperty(client, objectPath, "Manufacturer", extras);
+            return getStringDBusProperty(client, objectPath, IFACE_DEVICE, "Manufacturer", extras);
         }
 
         public String getManufacturerURL(IRendererClient client, String objectPath, Bundle extras) {
-            return getStringValuedDeviceProperty(client, objectPath, "ManufacturerUrl", extras);
+            return getStringDBusProperty(client, objectPath, IFACE_DEVICE, "ManufacturerUrl", extras);
         }
 
         public String getModelDescription(IRendererClient client, String objectPath, Bundle extras) {
-            return getStringValuedDeviceProperty(client, objectPath, "ModelDescription", extras);
+            return getStringDBusProperty(client, objectPath, IFACE_DEVICE, "ModelDescription", extras);
         }
 
         public String getModelName(IRendererClient client, String objectPath, Bundle extras) {
-            return getStringValuedDeviceProperty(client, objectPath, "ModelName", extras);
+            return getStringDBusProperty(client, objectPath, IFACE_DEVICE, "ModelName", extras);
         }
 
         public String getModelNumber(IRendererClient client, String objectPath, Bundle extras) {
-            return getStringValuedDeviceProperty(client, objectPath, "ModelNumber", extras);
+            return getStringDBusProperty(client, objectPath, IFACE_DEVICE, "ModelNumber", extras);
         }
 
         public String getSerialNumber(IRendererClient client, String objectPath, Bundle extras) {
-            return getStringValuedDeviceProperty(client, objectPath, "SerialNumber", extras);
+            return getStringDBusProperty(client, objectPath, IFACE_DEVICE, "SerialNumber", extras);
         }
 
         public String getPresentationURL(IRendererClient client, String objectPath, Bundle extras) {
-            return getStringValuedDeviceProperty(client, objectPath, "PresentationURL", extras);
+            return getStringDBusProperty(client, objectPath, IFACE_DEVICE, "PresentationURL", extras);
         }
 
         public String getProtocolInfo(IRendererClient client, String objectPath, Bundle extras) {
-            return getStringValuedDeviceProperty(client, objectPath, "ProtocolInfo", extras);
+            return getStringDBusProperty(client, objectPath, IFACE_DEVICE, "ProtocolInfo", extras);
         }
 
         public Icon getIcon(IRendererClient client, String objectPath, Bundle extras) {
@@ -233,13 +233,155 @@ public class RendererService extends Service implements IConnectorClient {
             }
         }
 
-        private String getStringValuedDeviceProperty(IRendererClient client, String objectPath,
+        /*---------------------+
+         | IRendererController |
+         +---------------------*/
+
+        public void next(IRendererClient client, String objectPath, Bundle extras) {
+            doVoidMethodVoid(client, objectPath, IFACE_CONTROLLER, "Next", extras);
+       }
+
+        public void previous(IRendererClient client, String objectPath, Bundle extras) {
+            doVoidMethodVoid(client, objectPath, IFACE_CONTROLLER, "Previous", extras);
+        }
+
+        public void pause(IRendererClient client, String objectPath, Bundle extras) {
+            doVoidMethodVoid(client, objectPath, IFACE_CONTROLLER, "Pause", extras);
+        }
+
+        public void playPause(IRendererClient client, String objectPath, Bundle extras) {
+            doVoidMethodVoid(client, objectPath, IFACE_CONTROLLER, "PlayPause", extras);
+        }
+
+        public void stop(IRendererClient client, String objectPath, Bundle extras) {
+            doVoidMethodVoid(client, objectPath, IFACE_CONTROLLER, "Stop", extras);
+        }
+
+        public void play(IRendererClient client, String objectPath, Bundle extras) {
+            doVoidMethodVoid(client, objectPath, IFACE_CONTROLLER, "Play", extras);
+        }
+
+        public void seek(IRendererClient client, String objectPath, long offset, Bundle extras) {
+            doVoidMethodLong(client, objectPath, IFACE_CONTROLLER, "Seek", offset, extras);
+        }
+
+        public void setPosition(IRendererClient client, String objectPath, long position, Bundle extras) {
+            doVoidMethodLong(client, objectPath, IFACE_CONTROLLER, "SetPosition", position, extras);
+        }
+
+        public void openUri(IRendererClient client, String objectPath, String uri, Bundle extras) {
+            doVoidMethodString(client, objectPath, IFACE_CONTROLLER, "OpenUri", uri, extras);
+        }
+
+        public String getPlaybackStatus(IRendererClient client, String objectPath, Bundle extras) {
+            return getStringDBusProperty(client, objectPath, IFACE_CONTROLLER, "PlaybackStatus", extras);
+        }
+
+        public double getRate(IRendererClient client, String objectPath, Bundle extras) {
+            return getDoubleDBusProperty(client, objectPath, IFACE_CONTROLLER, "Rate", extras);
+        }
+
+        public void setRate(IRendererClient client, String objectPath, double rate, Bundle extras) {
+            // TODO
+        }
+
+        public Bundle getMetadata(IRendererClient client, String objectPath, Bundle extras) {
+            return null; // TODO
+        }
+
+        public double getVolume(IRendererClient client, String objectPath, Bundle extras) {
+            return getDoubleDBusProperty(client, objectPath, IFACE_CONTROLLER, "Volume", extras);
+        }
+
+        public void setVolume(IRendererClient client, String objectPath, double volume, Bundle extras) {
+            // TODO
+        }
+
+        public long getPosition(IRendererClient client, String objectPath, Bundle extras) {
+            return getLongDBusProperty(client, objectPath, IFACE_CONTROLLER, "Position", extras);
+        }
+
+        public double getMinimumRate(IRendererClient client, String objectPath, Bundle extras) {
+            return getDoubleDBusProperty(client, objectPath, IFACE_CONTROLLER, "MinimumRate", extras);
+        }
+
+        public double getMaximumRate(IRendererClient client, String objectPath, Bundle extras) {
+            return getDoubleDBusProperty(client, objectPath, IFACE_CONTROLLER, "MaximumRate", extras);
+        }
+
+        public boolean getCanGoNext(IRendererClient client, String objectPath, Bundle extras) {
+            return getBooleanDBusProperty(client, objectPath, IFACE_CONTROLLER, "CanGoNext", extras);
+        }
+
+        public boolean getCanGoPrevious(IRendererClient client, String objectPath, Bundle extras) {
+            return getBooleanDBusProperty(client, objectPath, IFACE_CONTROLLER, "CanGoPrevious", extras);
+        }
+
+        public boolean getCanPlay(IRendererClient client, String objectPath, Bundle extras) {
+            return getBooleanDBusProperty(client, objectPath, IFACE_CONTROLLER, "CanPlay", extras);
+        }
+
+        public boolean getCanPause(IRendererClient client, String objectPath, Bundle extras) {
+            return getBooleanDBusProperty(client, objectPath, IFACE_CONTROLLER, "CanPause", extras);
+        }
+
+        public boolean getCanSeek(IRendererClient client, String objectPath, Bundle extras) {
+            return getBooleanDBusProperty(client, objectPath, IFACE_CONTROLLER, "CanSeek", extras);
+        }
+
+        public boolean getCanControl(IRendererClient client, String objectPath, Bundle extras) {
+            return getBooleanDBusProperty(client, objectPath, IFACE_CONTROLLER, "CanControl", extras);
+        }
+
+        public int getNumberOfTracks(IRendererClient client, String objectPath, Bundle extras) {
+            return getUInt32DBusProperty(client, objectPath, IFACE_CONTROLLER, "NumberOfTracks", extras);
+        }
+
+        public void goToTrack(IRendererClient client, String objectPath, int track, Bundle extras) {
+            // TODO
+        }
+
+        public int getCurrentTrack(IRendererClient client, String objectPath, Bundle extras) {
+            return getUInt32DBusProperty(client, objectPath, IFACE_CONTROLLER, "CurrentTrack", extras);
+        }
+
+        public void openUriEx(IRendererClient client, String objectPath, String uri, String metadata, Bundle extras) {
+            doVoidMethodStringString(client, objectPath, IFACE_CONTROLLER, "UriEx", uri, metadata, extras);
+        }
+
+        public double[] getTransportPlaySpeeds(IRendererClient client, String objectPath, Bundle extras) {
+            return null; // TODO
+        }
+
+        public boolean getMute(IRendererClient client, String objectPath, Bundle extras) {
+            return getBooleanDBusProperty(client, objectPath, IFACE_CONTROLLER, "Mute", extras);
+        }
+
+        public void setMute(IRendererClient client, String objectPath, boolean value, Bundle extras) {
+            // TODO
+        }
+
+        /*-------------------+
+         | IRendererPushHost |
+         +-------------------*/
+
+        public String hostFile(IRendererClient client, String objectPath, String path, Bundle extras) {
+            return null; // TODO
+        }
+
+        public void removeFile(IRendererClient client, String objectPath, String path, Bundle extras) {
+            // TODO
+        }
+
+        /*--------------------*/
+
+        private String getStringDBusProperty(IRendererClient client, String objectPath, String iface,
                 String propName, Bundle extras) {
-            if (LOG) Log.i(TAG, "getStringDeviceProp: obj=" + objectPath + " prop=" + propName);
+            if (LOG) Log.i(TAG, "getStringDBusProp: obj=" + objectPath + " prop=" + propName);
             String result = null;
             RemoteObject ro = connector.getRemoteObject(objectPath, IFACE_DBUS_PROP);
             if (ro != null) {
-                GVariant args = GVariant.newStringPair(IFACE_DEVICE, propName);
+                GVariant args = GVariant.newTupleStringString(iface, propName);
                 Invocation invo = connector.dispatch(client, ro, IFACE_DBUS_PROP, "Get", args);
                 args.free();
                 if (invo.success) {
@@ -250,135 +392,152 @@ public class RendererService extends Service implements IConnectorClient {
                     extras.putString(Extras.KEY_ERR_MSG, invo.errMessage);
                 }
             }
-            if (LOG) Log.i(TAG, "getStringDeviceProp: result=" + result);
+            if (LOG) Log.i(TAG, "getStringDBusProp: result=" + result);
             return result;
         }
 
-        /*--------------------+
-        | IRendererController |
-        +---------------------*/
-
-        public void next(IRendererClient client, String objectPath, Bundle extras) {
-        }
-
-        public void previous(IRendererClient client, String objectPath, Bundle extras) {
-        }
-
-        public void pause(IRendererClient client, String objectPath, Bundle extras) {
-        }
-
-        public void playPause(IRendererClient client, String objectPath, Bundle extras) {
-        }
-
-        public void stop(IRendererClient client, String objectPath, Bundle extras) {
-        }
-
-        public void play(IRendererClient client, String objectPath, Bundle extras) {
-        }
-
-        public void seek(IRendererClient client, String objectPath, long offset, Bundle extras) {
-        }
-
-        public void setPosition(IRendererClient client, String objectPath, long position, Bundle extras) {
-        }
-
-        public void openUri(IRendererClient client, String objectPath, String uri, Bundle extras) {
-        }
-
-        public String getPlaybackStatus(IRendererClient client, String objectPath, Bundle extras) {
-            return null;
-        }
-
-        public double getRate(IRendererClient client, String objectPath, Bundle extras) {
-            return 0;
-        }
-
-        public void setRate(IRendererClient client, String objectPath, double rate, Bundle extras) {
-        }
-
-        public Bundle getMetadata(IRendererClient client, String objectPath, Bundle extras) {
-            return null;
-        }
-
-        public double getVolume(IRendererClient client, String objectPath, Bundle extras) {
-            return 0;
-        }
-
-        public void setVolume(IRendererClient client, String objectPath, double volume, Bundle extras) {
-        }
-
-        public long getPosition(IRendererClient client, String objectPath, Bundle extras) {
-            return 0;
-        }
-
-        public long getMinimumRate(IRendererClient client, String objectPath, Bundle extras) {
-            return 0;
-        }
-
-        public long getMaximumRate(IRendererClient client, String objectPath, Bundle extras) {
-            return 0;
-        }
-
-        public boolean getCanGoNext(IRendererClient client, String objectPath, Bundle extras) {
-            return false;
-        }
-
-        public boolean getCanGoPrevious(IRendererClient client, String objectPath, Bundle extras) {
-            return false;
-        }
-
-        public boolean getCanPlay(IRendererClient client, String objectPath, Bundle extras) {
-            return false;
-        }
-
-        public boolean getCanPause(IRendererClient client, String objectPath, Bundle extras) {
-            return false;
-        }
-
-        public boolean getCanSeek(IRendererClient client, String objectPath, Bundle extras) {
-            return false;
-        }
-
-        public boolean getCanControl(IRendererClient client, String objectPath, Bundle extras) {
-            return false;
-        }
-
-        public int getNumberOfTracks(IRendererClient client, String objectPath, Bundle extras) {
-            return 0;
-        }
-
-        public void goToTrack(IRendererClient client, String objectPath, int track, Bundle extras) {
-        }
-
-        public int getCurrentTrack(IRendererClient client, String objectPath, Bundle extras) {
-            return 0;
-        }
-
-        public void openUriEx(IRendererClient client, String objectPath, String uri, String metadata, Bundle extras) {
-        }
-
-        public double[] getTransportPlaySpeeds(IRendererClient client, String objectPath, Bundle extras) {
-            return null;
-        }
-
-        public boolean getMute(IRendererClient client, String objectPath, Bundle extras) {
-            return false;
-        }
-
-        public void setMute(IRendererClient client, String objectPath, boolean value, Bundle extras) {
-        }
-
-        /*-------------------+
-         | IRendererPushHost |
-         +-------------------*/
-
-        public String hostFile(IRendererClient client, String objectPath, String path, Bundle extras) {
-            return null;
-        }
-
-        public void removeFile(IRendererClient client, String objectPath, String path, Bundle extras) {
+        private boolean getBooleanDBusProperty(IRendererClient client, String objectPath, String iface,
+                String propName, Bundle extras) {
+            if (LOG) Log.i(TAG, "getBooleanDBusProp: obj=" + objectPath + " prop=" + propName);
+            boolean result = false;
+            RemoteObject ro = connector.getRemoteObject(objectPath, IFACE_DBUS_PROP);
+            if (ro != null) {
+                GVariant args = GVariant.newTupleStringString(iface, propName);
+                Invocation invo = connector.dispatch(client, ro, IFACE_DBUS_PROP, "Get", args);
+                args.free();
+                if (invo.success) {
+                    result = invo.result.getChildAtIndex(0).getBoolean();
+                    invo.result.free();
+                } else {
+                    extras.putInt(Extras.KEY_ERR_CODE, invo.errCode);
+                    extras.putString(Extras.KEY_ERR_MSG, invo.errMessage);
+                }
+            }
+            if (LOG) Log.i(TAG, "getBooleanDBusProp: result=" + result);
+            return result;
         }
     };
+
+    private double getDoubleDBusProperty(IRendererClient client, String objectPath, String iface,
+            String propName, Bundle extras) {
+        if (LOG) Log.i(TAG, "getDoubleDBusProp: obj=" + objectPath + " prop=" + propName);
+        double result = 0;
+        RemoteObject ro = connector.getRemoteObject(objectPath, IFACE_DBUS_PROP);
+        if (ro != null) {
+            GVariant args = GVariant.newTupleStringString(iface, propName);
+            Invocation invo = connector.dispatch(client, ro, IFACE_DBUS_PROP, "Get", args);
+            args.free();
+            if (invo.success) {
+                result = invo.result.getChildAtIndex(0).getDouble();
+                invo.result.free();
+            } else {
+                extras.putInt(Extras.KEY_ERR_CODE, invo.errCode);
+                extras.putString(Extras.KEY_ERR_MSG, invo.errMessage);
+            }
+        }
+        if (LOG) Log.i(TAG, "getDoubleDBusProp: result=" + result);
+        return result;
+    }
+
+    private long getLongDBusProperty(IRendererClient client, String objectPath, String iface,
+            String propName, Bundle extras) {
+        if (LOG) Log.i(TAG, "getLongDBusProp: obj=" + objectPath + " prop=" + propName);
+        long result = 0;
+        RemoteObject ro = connector.getRemoteObject(objectPath, IFACE_DBUS_PROP);
+        if (ro != null) {
+            GVariant args = GVariant.newTupleStringString(iface, propName);
+            Invocation invo = connector.dispatch(client, ro, IFACE_DBUS_PROP, "Get", args);
+            args.free();
+            if (invo.success) {
+                result = invo.result.getChildAtIndex(0).getInt64();
+                invo.result.free();
+            } else {
+                extras.putInt(Extras.KEY_ERR_CODE, invo.errCode);
+                extras.putString(Extras.KEY_ERR_MSG, invo.errMessage);
+            }
+        }
+        if (LOG) Log.i(TAG, "getLongDBusProp: result=" + result);
+        return result;
+    }
+
+    private int getUInt32DBusProperty(IRendererClient client, String objectPath, String iface,
+            String propName, Bundle extras) {
+        if (LOG) Log.i(TAG, "getUInt32DBusProp: obj=" + objectPath + " prop=" + propName);
+        int result = 0;
+        RemoteObject ro = connector.getRemoteObject(objectPath, IFACE_DBUS_PROP);
+        if (ro != null) {
+            GVariant args = GVariant.newTupleStringString(iface, propName);
+            Invocation invo = connector.dispatch(client, ro, IFACE_DBUS_PROP, "Get", args);
+            args.free();
+            if (invo.success) {
+                result = invo.result.getChildAtIndex(0).getUInt32();
+                invo.result.free();
+            } else {
+                extras.putInt(Extras.KEY_ERR_CODE, invo.errCode);
+                extras.putString(Extras.KEY_ERR_MSG, invo.errMessage);
+            }
+        }
+        if (LOG) Log.i(TAG, "getUInt32DBusProp: result=" + result);
+        return result;
+    }
+
+    private void doVoidMethodVoid(IRendererClient client, String objectPath, String iface,
+            String method, Bundle extras) {
+        RemoteObject ro = connector.getRemoteObject(objectPath, iface);
+        if (ro != null) {
+            if (LOG) Log.i(TAG, method + ": obj=" + objectPath);
+            Invocation invo = connector.dispatch(client, ro, iface, method, null);
+            if (!invo.success) {
+                extras.putInt(Extras.KEY_ERR_CODE, invo.errCode);
+                extras.putString(Extras.KEY_ERR_MSG, invo.errMessage);
+            }
+        }
+    }
+
+    private void doVoidMethodString(IRendererClient client, String objectPath, String iface,
+            String method, String arg, Bundle extras) {
+        RemoteObject ro = connector.getRemoteObject(objectPath, iface);
+        if (ro != null) {
+            if (LOG) Log.i(TAG, method + ": obj=" + objectPath);
+            GVariant gvArgs = GVariant.newString(arg); // TODO: this must be in a tuple!
+            Invocation invo = connector.dispatch(client, ro, iface, method, gvArgs);
+            gvArgs.free();
+            if (!invo.success) {
+                extras.putInt(Extras.KEY_ERR_CODE, invo.errCode);
+                extras.putString(Extras.KEY_ERR_MSG, invo.errMessage);
+            }
+        }
+    }
+
+    private void doVoidMethodLong(IRendererClient client, String objectPath, String iface,
+            String method, long arg, Bundle extras) {
+        RemoteObject ro = connector.getRemoteObject(objectPath, iface);
+        if (ro != null) {
+            if (LOG) Log.i(TAG, method + ": obj=" + objectPath);
+            GVariant gvArgs = GVariant.newLong(arg); // TODO: this must be in a tuple!
+            Invocation invo = connector.dispatch(client, ro, iface, method, gvArgs);
+            gvArgs.free();
+            if (!invo.success) {
+                extras.putInt(Extras.KEY_ERR_CODE, invo.errCode);
+                extras.putString(Extras.KEY_ERR_MSG, invo.errMessage);
+            }
+        }
+    }
+
+    private void doVoidMethodStringString(IRendererClient client, String objectPath, String iface,
+            String method, String arg1, String arg2, Bundle extras) {
+        RemoteObject ro = connector.getRemoteObject(objectPath, iface);
+        if (ro != null) {
+            if (LOG) Log.i(TAG, method + ": obj=" + objectPath);
+            GVariant gvArgs = GVariant.newTupleStringString(arg1, arg2);
+            Invocation invo = connector.dispatch(client, ro, iface, method, gvArgs);
+            gvArgs.free();
+            if (!invo.success) {
+                extras.putInt(Extras.KEY_ERR_CODE, invo.errCode);
+                extras.putString(Extras.KEY_ERR_MSG, invo.errMessage);
+            }
+        }
+    }
 
     /*------------------+
      | IConnectorClient |

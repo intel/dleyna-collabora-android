@@ -41,6 +41,14 @@ JNIEXPORT jlong JNICALL Java_com_intel_dleyna_GVariant_newUInt32Native
 
 /*
  * Class:     com_intel_dleyna_GVariant
+ * Method:    newLongNative
+ * Signature: (J)J
+ */
+JNIEXPORT jlong JNICALL Java_com_intel_dleyna_GVariant_newLongNative
+  (JNIEnv *, jclass, jlong);
+
+/*
+ * Class:     com_intel_dleyna_GVariant
  * Method:    newDoubleNative
  * Signature: (D)J
  */
@@ -73,10 +81,18 @@ JNIEXPORT jlong JNICALL Java_com_intel_dleyna_GVariant_newArrayNative
 
 /*
  * Class:     com_intel_dleyna_GVariant
- * Method:    newStringPairNative
+ * Method:    newTupleStringNative
+ * Signature: (Ljava/lang/String;)J
+ */
+JNIEXPORT jlong JNICALL Java_com_intel_dleyna_GVariant_newTupleStringNative
+  (JNIEnv *, jclass, jstring);
+
+/*
+ * Class:     com_intel_dleyna_GVariant
+ * Method:    newTupleStringStringNative
  * Signature: (Ljava/lang/String;Ljava/lang/String;)J
  */
-JNIEXPORT jlong JNICALL Java_com_intel_dleyna_GVariant_newStringPairNative
+JNIEXPORT jlong JNICALL Java_com_intel_dleyna_GVariant_newTupleStringStringNative
   (JNIEnv *, jclass, jstring, jstring);
 
 /*

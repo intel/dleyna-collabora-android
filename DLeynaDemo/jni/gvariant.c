@@ -52,6 +52,12 @@ JNIEXPORT jlong JNICALL Java_com_intel_dleyna_GVariant_newUInt32Native(
     return PTR_TO_JLONG(g_variant_new_uint32(value));
 }
 
+JNIEXPORT jlong JNICALL Java_com_intel_dleyna_GVariant_newLongNative(
+    JNIEnv* env, jclass clazz, jlong value)
+{
+    return PTR_TO_JLONG(g_variant_new_int64(value));
+}
+
 JNIEXPORT jlong JNICALL Java_com_intel_dleyna_GVariant_newDoubleNative(
     JNIEnv* env, jclass clazz, jdouble value)
 {
@@ -89,7 +95,19 @@ JNIEXPORT jlong JNICALL Java_com_intel_dleyna_GVariant_newArrayNative(
     return 0;
 }
 
-JNIEXPORT jlong JNICALL Java_com_intel_dleyna_GVariant_newStringPairNative(
+JNIEXPORT jlong JNICALL Java_com_intel_dleyna_GVariant_newTupleStringNative(
+    JNIEnv* env, jclass clazz, jstring str)
+{
+    const jbyte* strC = (*env)->GetStringUTFChars(env, str, NULL);
+    if (strC == NULL) {
+        return 0;
+    }
+    GVariant* gv = g_variant_new("(s)", strC);
+    (*env)->ReleaseStringUTFChars(env, str, strC);
+    return PTR_TO_JLONG(gv);
+}
+
+JNIEXPORT jlong JNICALL Java_com_intel_dleyna_GVariant_newTupleStringStringNative(
     JNIEnv* env, jclass clazz, jstring str1, jstring str2)
 {
     const jbyte* str1C = (*env)->GetStringUTFChars(env, str1, NULL);
