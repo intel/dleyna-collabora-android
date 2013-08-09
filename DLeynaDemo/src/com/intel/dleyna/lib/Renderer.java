@@ -79,9 +79,7 @@ public class Renderer implements IRendererDevice, IRendererController, IRenderer
         IRendererClient client = manager.getRendererClient();
         Bundle extras = new Bundle();
         String result = service.getDeviceType(client, objectPath, extras);
-        if (extras.containsKey(Extras.KEY_ERR_MSG)) {
-            throw new DLeynaException(extras.getString(Extras.KEY_ERR_MSG));
-        }
+        Extras.throwExceptionIfError(extras);
         return result;
     }
 
@@ -90,9 +88,7 @@ public class Renderer implements IRendererDevice, IRendererController, IRenderer
         IRendererClient client = manager.getRendererClient();
         Bundle extras = new Bundle();
         String result = service.getUniqueDeviceName(client, objectPath, extras);
-        if (extras.containsKey(Extras.KEY_ERR_MSG)) {
-            throw new DLeynaException(extras.getString(Extras.KEY_ERR_MSG));
-        }
+        Extras.throwExceptionIfError(extras);
         return result;
     }
 
@@ -101,9 +97,7 @@ public class Renderer implements IRendererDevice, IRendererController, IRenderer
         IRendererClient client = manager.getRendererClient();
         Bundle extras = new Bundle();
         String result = service.getFriendlyName(client, objectPath, extras);
-        if (extras.containsKey(Extras.KEY_ERR_MSG)) {
-            throw new DLeynaException(extras.getString(Extras.KEY_ERR_MSG));
-        }
+        Extras.throwExceptionIfError(extras);
         return result;
     }
 
@@ -112,9 +106,7 @@ public class Renderer implements IRendererDevice, IRendererController, IRenderer
         IRendererClient client = manager.getRendererClient();
         Bundle extras = new Bundle();
         String result = service.getIconURL(client, objectPath, extras);
-        if (extras.containsKey(Extras.KEY_ERR_MSG)) {
-            throw new DLeynaException(extras.getString(Extras.KEY_ERR_MSG));
-        }
+        Extras.throwExceptionIfError(extras);
         return result;
     }
 
@@ -123,9 +115,7 @@ public class Renderer implements IRendererDevice, IRendererController, IRenderer
         IRendererClient client = manager.getRendererClient();
         Bundle extras = new Bundle();
         String result = service.getManufacturer(client, objectPath, extras);
-        if (extras.containsKey(Extras.KEY_ERR_MSG)) {
-            throw new DLeynaException(extras.getString(Extras.KEY_ERR_MSG));
-        }
+        Extras.throwExceptionIfError(extras);
         return result;
     }
 
@@ -134,9 +124,7 @@ public class Renderer implements IRendererDevice, IRendererController, IRenderer
         IRendererClient client = manager.getRendererClient();
         Bundle extras = new Bundle();
         String result = service.getManufacturerURL(client, objectPath, extras);
-        if (extras.containsKey(Extras.KEY_ERR_MSG)) {
-            throw new DLeynaException(extras.getString(Extras.KEY_ERR_MSG));
-        }
+        Extras.throwExceptionIfError(extras);
         return result;
     }
 
@@ -145,9 +133,7 @@ public class Renderer implements IRendererDevice, IRendererController, IRenderer
         IRendererClient client = manager.getRendererClient();
         Bundle extras = new Bundle();
         String result = service.getModelDescription(client, objectPath, extras);
-        if (extras.containsKey(Extras.KEY_ERR_MSG)) {
-            throw new DLeynaException(extras.getString(Extras.KEY_ERR_MSG));
-        }
+        Extras.throwExceptionIfError(extras);
         return result;
     }
 
@@ -156,9 +142,7 @@ public class Renderer implements IRendererDevice, IRendererController, IRenderer
         IRendererClient client = manager.getRendererClient();
         Bundle extras = new Bundle();
         String result = service.getModelName(client, objectPath, extras);
-        if (extras.containsKey(Extras.KEY_ERR_MSG)) {
-            throw new DLeynaException(extras.getString(Extras.KEY_ERR_MSG));
-        }
+        Extras.throwExceptionIfError(extras);
         return result;
     }
 
@@ -167,9 +151,7 @@ public class Renderer implements IRendererDevice, IRendererController, IRenderer
         IRendererClient client = manager.getRendererClient();
         Bundle extras = new Bundle();
         String result = service.getModelNumber(client, objectPath, extras);
-        if (extras.containsKey(Extras.KEY_ERR_MSG)) {
-            throw new DLeynaException(extras.getString(Extras.KEY_ERR_MSG));
-        }
+        Extras.throwExceptionIfError(extras);
         return result;
     }
 
@@ -178,9 +160,7 @@ public class Renderer implements IRendererDevice, IRendererController, IRenderer
         IRendererClient client = manager.getRendererClient();
         Bundle extras = new Bundle();
         String result = service.getSerialNumber(client, objectPath, extras);
-        if (extras.containsKey(Extras.KEY_ERR_MSG)) {
-            throw new DLeynaException(extras.getString(Extras.KEY_ERR_MSG));
-        }
+        Extras.throwExceptionIfError(extras);
         return result;
     }
 
@@ -189,9 +169,7 @@ public class Renderer implements IRendererDevice, IRendererController, IRenderer
         IRendererClient client = manager.getRendererClient();
         Bundle extras = new Bundle();
         String result = service.getPresentationURL(client, objectPath, extras);
-        if (extras.containsKey(Extras.KEY_ERR_MSG)) {
-            throw new DLeynaException(extras.getString(Extras.KEY_ERR_MSG));
-        }
+        Extras.throwExceptionIfError(extras);
         return result;
     }
 
@@ -200,9 +178,7 @@ public class Renderer implements IRendererDevice, IRendererController, IRenderer
         IRendererClient client = manager.getRendererClient();
         Bundle extras = new Bundle();
         String result = service.getProtocolInfo(client, objectPath, extras);
-        if (extras.containsKey(Extras.KEY_ERR_MSG)) {
-            throw new DLeynaException(extras.getString(Extras.KEY_ERR_MSG));
-        }
+        Extras.throwExceptionIfError(extras);
         return result;
     }
 
@@ -211,9 +187,7 @@ public class Renderer implements IRendererDevice, IRendererController, IRenderer
         IRendererClient client = manager.getRendererClient();
         Bundle extras = new Bundle();
         service.cancel(client, objectPath, extras);
-        if (extras.containsKey(Extras.KEY_ERR_MSG)) {
-            throw new DLeynaException(extras.getString(Extras.KEY_ERR_MSG));
-        }
+        Extras.throwExceptionIfError(extras);
     }
 
     public Icon getIcon() throws RemoteException, DLeynaException {
@@ -221,9 +195,7 @@ public class Renderer implements IRendererDevice, IRendererController, IRenderer
         IRendererClient client = manager.getRendererClient();
         Bundle extras = new Bundle();
         Icon result = service.getIcon(client, objectPath, extras);
-        if (extras.containsKey(Extras.KEY_ERR_MSG)) {
-            throw new DLeynaException(extras.getString(Extras.KEY_ERR_MSG));
-        }
+        Extras.throwExceptionIfError(extras);
         return result;
     }
 
@@ -236,34 +208,84 @@ public class Renderer implements IRendererDevice, IRendererController, IRenderer
     }
 
     public void next() throws RemoteException, DLeynaException {
+        IRendererService service = manager.getRendererService();
+        IRendererClient client = manager.getRendererClient();
+        Bundle extras = new Bundle();
+        service.next(client, objectPath, extras);
+        Extras.throwExceptionIfError(extras);
     }
 
     public void previous() throws RemoteException, DLeynaException {
+        IRendererService service = manager.getRendererService();
+        IRendererClient client = manager.getRendererClient();
+        Bundle extras = new Bundle();
+        service.previous(client, objectPath, extras);
+        Extras.throwExceptionIfError(extras);
     }
 
     public void pause() throws RemoteException, DLeynaException {
+        IRendererService service = manager.getRendererService();
+        IRendererClient client = manager.getRendererClient();
+        Bundle extras = new Bundle();
+        service.pause(client, objectPath, extras);
+        Extras.throwExceptionIfError(extras);
     }
 
     public void playPause() throws RemoteException, DLeynaException {
+        IRendererService service = manager.getRendererService();
+        IRendererClient client = manager.getRendererClient();
+        Bundle extras = new Bundle();
+        service.playPause(client, objectPath, extras);
+        Extras.throwExceptionIfError(extras);
     }
 
     public void stop() throws RemoteException, DLeynaException {
+        IRendererService service = manager.getRendererService();
+        IRendererClient client = manager.getRendererClient();
+        Bundle extras = new Bundle();
+        service.stop(client, objectPath, extras);
+        Extras.throwExceptionIfError(extras);
     }
 
     public void play() throws RemoteException, DLeynaException {
+        IRendererService service = manager.getRendererService();
+        IRendererClient client = manager.getRendererClient();
+        Bundle extras = new Bundle();
+        service.play(client, objectPath, extras);
+        Extras.throwExceptionIfError(extras);
     }
 
     public void seek(long offset) throws RemoteException, DLeynaException {
+        IRendererService service = manager.getRendererService();
+        IRendererClient client = manager.getRendererClient();
+        Bundle extras = new Bundle();
+        service.seek(client, objectPath, offset, extras);
+        Extras.throwExceptionIfError(extras);
     }
 
     public void setPosition(long position) throws RemoteException, DLeynaException {
+        IRendererService service = manager.getRendererService();
+        IRendererClient client = manager.getRendererClient();
+        Bundle extras = new Bundle();
+        service.setPosition(client, objectPath, position, extras);
+        Extras.throwExceptionIfError(extras);
     }
 
     public void openUri(String uri) throws RemoteException, DLeynaException {
+        IRendererService service = manager.getRendererService();
+        IRendererClient client = manager.getRendererClient();
+        Bundle extras = new Bundle();
+        service.openUri(client, objectPath, uri, extras);
+        Extras.throwExceptionIfError(extras);
     }
 
     public String getPlaybackStatus() throws RemoteException, DLeynaException {
-        return null;
+        IRendererService service = manager.getRendererService();
+        IRendererClient client = manager.getRendererClient();
+        Bundle extras = new Bundle();
+        String result = service.getPlaybackStatus(client, objectPath, extras);
+        Extras.throwExceptionIfError(extras);
+        return result;
     }
 
     public double getRate() throws RemoteException, DLeynaException {
@@ -271,78 +293,178 @@ public class Renderer implements IRendererDevice, IRendererController, IRenderer
     }
 
     public void setRate(double rate) throws RemoteException, DLeynaException {
+        IRendererService service = manager.getRendererService();
+        IRendererClient client = manager.getRendererClient();
+        Bundle extras = new Bundle();
+        service.setRate(client, objectPath, rate, extras);
+        Extras.throwExceptionIfError(extras);
     }
 
     public Bundle getMetadata() throws RemoteException, DLeynaException {
-        return null;
+        IRendererService service = manager.getRendererService();
+        IRendererClient client = manager.getRendererClient();
+        Bundle extras = new Bundle();
+        Bundle result = service.getMetadata(client, objectPath, extras);
+        Extras.throwExceptionIfError(extras);
+        return result;
     }
 
     public double getVolume() throws RemoteException, DLeynaException {
-        return 0;
+        IRendererService service = manager.getRendererService();
+        IRendererClient client = manager.getRendererClient();
+        Bundle extras = new Bundle();
+        double result = service.getVolume(client, objectPath, extras);
+        Extras.throwExceptionIfError(extras);
+        return result;
     }
 
     public void setVolume(double volume) throws RemoteException, DLeynaException {
+        IRendererService service = manager.getRendererService();
+        IRendererClient client = manager.getRendererClient();
+        Bundle extras = new Bundle();
+        service.setVolume(client, objectPath, volume, extras);
+        Extras.throwExceptionIfError(extras);
     }
 
     public long getPosition() throws RemoteException, DLeynaException {
-        return 0;
+        IRendererService service = manager.getRendererService();
+        IRendererClient client = manager.getRendererClient();
+        Bundle extras = new Bundle();
+        long result = service.getPosition(client, objectPath, extras);
+        Extras.throwExceptionIfError(extras);
+        return result;
     }
 
-    public long getMinimumRate() throws RemoteException, DLeynaException {
-        return 0;
+    public double getMinimumRate() throws RemoteException, DLeynaException {
+        IRendererService service = manager.getRendererService();
+        IRendererClient client = manager.getRendererClient();
+        Bundle extras = new Bundle();
+        double result = service.getMinimumRate(client, objectPath, extras);
+        Extras.throwExceptionIfError(extras);
+        return result;
     }
 
-    public long getMaximumRate() throws RemoteException, DLeynaException {
-        return 0;
+    public double getMaximumRate() throws RemoteException, DLeynaException {
+        IRendererService service = manager.getRendererService();
+        IRendererClient client = manager.getRendererClient();
+        Bundle extras = new Bundle();
+        double result = service.getMaximumRate(client, objectPath, extras);
+        Extras.throwExceptionIfError(extras);
+        return result;
     }
 
     public boolean getCanGoNext() throws RemoteException, DLeynaException {
-        return false;
+        IRendererService service = manager.getRendererService();
+        IRendererClient client = manager.getRendererClient();
+        Bundle extras = new Bundle();
+        boolean result = service.getCanGoNext(client, objectPath, extras);
+        Extras.throwExceptionIfError(extras);
+        return result;
     }
 
     public boolean getCanGoPrevious() throws RemoteException, DLeynaException {
-        return false;
+        IRendererService service = manager.getRendererService();
+        IRendererClient client = manager.getRendererClient();
+        Bundle extras = new Bundle();
+        boolean result = service.getCanGoPrevious(client, objectPath, extras);
+        Extras.throwExceptionIfError(extras);
+        return result;
     }
 
     public boolean getCanPlay() throws RemoteException, DLeynaException {
-        return false;
+        IRendererService service = manager.getRendererService();
+        IRendererClient client = manager.getRendererClient();
+        Bundle extras = new Bundle();
+        boolean result = service.getCanPlay(client, objectPath, extras);
+        Extras.throwExceptionIfError(extras);
+        return result;
     }
 
     public boolean getCanPause() throws RemoteException, DLeynaException {
-        return false;
+        IRendererService service = manager.getRendererService();
+        IRendererClient client = manager.getRendererClient();
+        Bundle extras = new Bundle();
+        boolean result = service.getCanPause(client, objectPath, extras);
+        Extras.throwExceptionIfError(extras);
+        return result;
     }
 
     public boolean getCanSeek() throws RemoteException, DLeynaException {
-        return false;
+        IRendererService service = manager.getRendererService();
+        IRendererClient client = manager.getRendererClient();
+        Bundle extras = new Bundle();
+        boolean result = service.getCanSeek(client, objectPath, extras);
+        Extras.throwExceptionIfError(extras);
+        return result;
     }
 
     public boolean getCanControl() throws RemoteException, DLeynaException {
-        return false;
+        IRendererService service = manager.getRendererService();
+        IRendererClient client = manager.getRendererClient();
+        Bundle extras = new Bundle();
+        boolean result = service.getCanControl(client, objectPath, extras);
+        Extras.throwExceptionIfError(extras);
+        return result;
     }
 
     public int getNumberOfTracks() throws RemoteException, DLeynaException {
-        return 0;
+        IRendererService service = manager.getRendererService();
+        IRendererClient client = manager.getRendererClient();
+        Bundle extras = new Bundle();
+        int result = service.getNumberOfTracks(client, objectPath, extras);
+        Extras.throwExceptionIfError(extras);
+        return result;
     }
 
     public void goToTrack(int track) throws RemoteException, DLeynaException {
+        IRendererService service = manager.getRendererService();
+        IRendererClient client = manager.getRendererClient();
+        Bundle extras = new Bundle();
+        service.goToTrack(client, objectPath, track, extras);
+        Extras.throwExceptionIfError(extras);
     }
 
     public int getCurrentTrack() throws RemoteException, DLeynaException {
-        return 0;
+        IRendererService service = manager.getRendererService();
+        IRendererClient client = manager.getRendererClient();
+        Bundle extras = new Bundle();
+        int result = service.getCurrentTrack(client, objectPath, extras);
+        Extras.throwExceptionIfError(extras);
+        return result;
     }
 
     public void openUriEx(String uri, String metadata) throws RemoteException, DLeynaException {
+        IRendererService service = manager.getRendererService();
+        IRendererClient client = manager.getRendererClient();
+        Bundle extras = new Bundle();
+        service.openUriEx(client, objectPath, uri, metadata, extras);
+        Extras.throwExceptionIfError(extras);
     }
 
     public double[] getTransportPlaySpeeds() throws RemoteException, DLeynaException {
-        return null;
+        IRendererService service = manager.getRendererService();
+        IRendererClient client = manager.getRendererClient();
+        Bundle extras = new Bundle();
+        double[] result = service.getTransportPlaySpeeds(client, objectPath, extras);
+        Extras.throwExceptionIfError(extras);
+        return result;
     }
 
     public boolean getMute() throws RemoteException, DLeynaException {
-        return false;
+        IRendererService service = manager.getRendererService();
+        IRendererClient client = manager.getRendererClient();
+        Bundle extras = new Bundle();
+        boolean result = service.getMute(client, objectPath, extras);
+        Extras.throwExceptionIfError(extras);
+        return result;
     }
 
     public void setMute(boolean value) throws RemoteException, DLeynaException {
+        IRendererService service = manager.getRendererService();
+        IRendererClient client = manager.getRendererClient();
+        Bundle extras = new Bundle();
+        service.setMute(client, objectPath, value, extras);
+        Extras.throwExceptionIfError(extras);
     }
 
     /*-------------------+
@@ -350,10 +472,20 @@ public class Renderer implements IRendererDevice, IRendererController, IRenderer
      +-------------------*/
 
     public String hostFile(String path) throws RemoteException, DLeynaException {
-        return null;
+        IRendererService service = manager.getRendererService();
+        IRendererClient client = manager.getRendererClient();
+        Bundle extras = new Bundle();
+        String result = service.hostFile(client, objectPath, path, extras);
+        Extras.throwExceptionIfError(extras);
+        return result;
     }
 
     public void removeFile(String path) throws RemoteException, DLeynaException {
+        IRendererService service = manager.getRendererService();
+        IRendererClient client = manager.getRendererClient();
+        Bundle extras = new Bundle();
+        service.removeFile(client, objectPath, path, extras);
+        Extras.throwExceptionIfError(extras);
     }
 
     /*---------------------+

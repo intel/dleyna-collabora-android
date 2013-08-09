@@ -235,7 +235,7 @@ public interface IRendererController {
      * @throws RemoteException no connection to the background renderer service
      * @throws DLeynaException failure reported by the background renderer service
      */
-    public long getMinimumRate() throws RemoteException, DLeynaException;
+    public double getMinimumRate() throws RemoteException, DLeynaException;
 
     /**
      * Get the maximum playback rate.
@@ -247,7 +247,7 @@ public interface IRendererController {
      * @throws RemoteException no connection to the background renderer service
      * @throws DLeynaException failure reported by the background renderer service
      */
-    public long getMaximumRate() throws RemoteException, DLeynaException;
+    public double getMaximumRate() throws RemoteException, DLeynaException;
 
     /**
      * Query whether this Renderer can currently do {@link #next()}.

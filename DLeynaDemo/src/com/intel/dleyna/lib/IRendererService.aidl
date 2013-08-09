@@ -79,8 +79,8 @@ interface IRendererService {
     double getVolume(IRendererClient client, String objectPath, out Bundle extras);
     void setVolume(IRendererClient client, String objectPath, double volume, out Bundle extras);
     long getPosition(IRendererClient client, String objectPath, out Bundle extras);
-    long getMinimumRate(IRendererClient client, String objectPath, out Bundle extras);
-    long getMaximumRate(IRendererClient client, String objectPath, out Bundle extras);
+    double getMinimumRate(IRendererClient client, String objectPath, out Bundle extras);
+    double getMaximumRate(IRendererClient client, String objectPath, out Bundle extras);
     boolean getCanGoNext(IRendererClient client, String objectPath, out Bundle extras);
     boolean getCanGoPrevious(IRendererClient client, String objectPath, out Bundle extras);
     boolean getCanPlay(IRendererClient client, String objectPath, out Bundle extras);

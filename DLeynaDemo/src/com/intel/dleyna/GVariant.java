@@ -44,7 +44,7 @@ public class GVariant {
      * @param peer the native instance
      */
     public GVariant(long peer) {
-        this(peer, false);
+        this(peer, true);
     }
 
     /**
@@ -52,7 +52,7 @@ public class GVariant {
      * @param peer the native instance
      * @param addReference whether to add a reference to the native instance
      */
-    public GVariant(long peer, boolean addReference) {
+    private GVariant(long peer, boolean addReference) {
         if (peer == 0) {
             throw new IllegalArgumentException("null peer");
         }
@@ -112,6 +112,18 @@ public class GVariant {
     }
 
     private static native long newUInt32Native(int value);
+
+
+    /**
+     * Construct a new instance of type long.
+     * @param value the long value
+     * @return the new instance
+     */
+    public static GVariant newLong(long value) {
+        return new GVariant(newLongNative(value));
+    }
+
+    private static native long newLongNative(long value);
 
     /**
      * Construct a new instance of type double.
@@ -198,16 +210,26 @@ public class GVariant {
     private static native long newArrayNative(GVariant[] gva, long elemType);
 
     /**
+     * Construct a new instance of type tuple of one string.
+     * @param s the string
+     */
+    public static GVariant newTupleString(String s) {
+        return new GVariant(newTupleStringNative(s));
+    }
+
+    private static native long newTupleStringNative(String s);
+
+    /**
      * Construct a new instance of type tuple of two strings.
      * @param s1 fist string
      * @param s2 second string
      * @return the new instance
      */
-    public static GVariant newStringPair(String s1, String s2) {
-        return new GVariant(newStringPairNative(s1, s2));
+    public static GVariant newTupleStringString(String s1, String s2) {
+        return new GVariant(newTupleStringStringNative(s1, s2));
     }
 
-    private static native long newStringPairNative(String s1, String s2);
+    private static native long newTupleStringStringNative(String s1, String s2);
 
     /**
      * @return the value of this object, which must be of type boolean.
