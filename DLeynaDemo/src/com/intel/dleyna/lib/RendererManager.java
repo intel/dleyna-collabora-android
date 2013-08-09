@@ -217,9 +217,7 @@ public class RendererManager {
 
         Bundle extras = new Bundle();
         String[] newObjectIds = rendererService.getRenderers(rendererClient, extras);
-        if (extras.containsKey(Extras.KEY_ERR_MSG)) {
-            throw new DLeynaException(extras.getString(Extras.KEY_ERR_MSG));
-        }
+        Extras.throwExceptionIfError(extras);
         // newObjectIds is the new complete set of object ids according to the service
         if (LOG) Log.i(TAG, "getRenderers: " + newObjectIds);
 
@@ -271,9 +269,7 @@ public class RendererManager {
         }
         Bundle extras = new Bundle();
         rendererService.rescan(rendererClient, extras);
-        if (extras.containsKey(Extras.KEY_ERR_MSG)) {
-            throw new DLeynaException(extras.getString(Extras.KEY_ERR_MSG));
-        }
+        Extras.throwExceptionIfError(extras);
     }
 
     /**
