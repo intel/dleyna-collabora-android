@@ -147,4 +147,15 @@
         </dependencies>
     </autotools>
 
+    <!-- libgee -->
+
+    <autotools id="libgee" autogen-sh="autoreconf">
+        <branch repo="gnome.org" module="libgee/0.11/libgee-0.11.4.tar.xz" version="0.11.4">
+        </branch>
+        <dependencies>
+            <dep package="glib"/>
+        </dependencies>
+    </autotools>
+
+
 </moduleset>
