@@ -67,8 +67,10 @@ public interface IRendererDevice {
      * @return the icon URL, or null if this property is not implemented.
      * @throws RemoteException no connection to the background renderer service
      * @throws DLeynaException failure reported by the background renderer service
+     * @throws DLeynaUnknownPropertyException this Renderer does not support this optional property
      */
-    public String getIconURL() throws RemoteException, DLeynaException;
+    public String getIconURL() throws RemoteException, DLeynaException,
+            DLeynaUnknownPropertyException;
 
     /**
      * Get the name of this Renderer's manufacturer.
@@ -83,16 +85,20 @@ public interface IRendererDevice {
      * @return the manufacturer's URL, or null if this property is not implemented.
      * @throws RemoteException no connection to the background renderer service
      * @throws DLeynaException failure reported by the background renderer service
+     * @throws DLeynaUnknownPropertyException this Renderer does not support this optional property
      */
-    public String getManufacturerURL() throws RemoteException, DLeynaException;
+    public String getManufacturerURL() throws RemoteException, DLeynaException,
+            DLeynaUnknownPropertyException;
 
     /**
      * Get a description of this Renderer.
      * @return the description, or null if this property is not implemented.
      * @throws RemoteException no connection to the background renderer service
      * @throws DLeynaException failure reported by the background renderer service
+     * @throws DLeynaUnknownPropertyException this Renderer does not support this optional property
      */
-    public String getModelDescription() throws RemoteException, DLeynaException;
+    public String getModelDescription() throws RemoteException, DLeynaException,
+            DLeynaUnknownPropertyException;
 
     /**
      * Get this Renderer's model name.
@@ -107,24 +113,30 @@ public interface IRendererDevice {
      * @return the model number, or null if this property is not implemented.
      * @throws RemoteException no connection to the background renderer service
      * @throws DLeynaException failure reported by the background renderer service
+     * @throws DLeynaUnknownPropertyException this Renderer does not support this optional property
      */
-    public String getModelNumber() throws RemoteException, DLeynaException;
+    public String getModelNumber() throws RemoteException, DLeynaException,
+            DLeynaUnknownPropertyException;
 
     /**
      * Get this Renderer's serial number.
      * @return the serial number, or null if this property is not implemented.
      * @throws RemoteException no connection to the background renderer service
      * @throws DLeynaException failure reported by the background renderer service
+     * @throws DLeynaUnknownPropertyException this Renderer does not support this optional property
      */
-    public String getSerialNumber() throws RemoteException, DLeynaException;
+    public String getSerialNumber() throws RemoteException, DLeynaException,
+            DLeynaUnknownPropertyException;
 
     /**
      * Get this Renderer's presentation URL: a link to its HTML management interface.
      * @return the presentation URL, or null if this property is not implemented.
      * @throws RemoteException no connection to the background renderer service
      * @throws DLeynaException failure reported by the background renderer service
+     * @throws DLeynaUnknownPropertyException this Renderer does not support this optional property
      */
-    public String getPresentationURL() throws RemoteException, DLeynaException;
+    public String getPresentationURL() throws RemoteException, DLeynaException,
+            DLeynaUnknownPropertyException;
 
     /**
      * Get a string that identifies all of the file formats and network protocol combinations

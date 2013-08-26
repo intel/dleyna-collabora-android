@@ -2,9 +2,12 @@ package com.intel.dleyna.lib;
 
 /**
  * Exceptions thrown by the DLeyna library.
+ * <p>
+ * You can use {@link #getErrorCode()} to retrieve the integer error code.
  */
-@SuppressWarnings("serial")
 public class DLeynaException extends Exception {
+
+    private static final long serialVersionUID = 470272548682702033L;
 
     public static final int ERR_BAD_PATH = 0;
     public static final int ERR_OBJECT_NOT_FOUND = 1;
@@ -24,11 +27,15 @@ public class DLeynaException extends Exception {
 
     private int errorCode;
 
-    public DLeynaException(int errorCode, String detailMessage) {
+    DLeynaException(int errorCode, String detailMessage) {
         super(detailMessage);
         this.errorCode = errorCode;
     }
 
+    /**
+     * Get the integer error code for this DLeyna exception.
+     * @return one of the {@link DLeynaException}{@code .ERR_XXX} constants
+     */
     public int getErrorCode() {
         return errorCode;
     }
