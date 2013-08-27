@@ -358,14 +358,18 @@ public interface IRendererController {
      * @return the current mute statue
      * @throws RemoteException no connection to the background renderer service
      * @throws DLeynaException failure reported by the background renderer service
+     * @throws DLeynaUnknownPropertyException this Renderer does not support this optional property
      */
-    public boolean getMute() throws RemoteException, DLeynaException;
+    public boolean getMute() throws RemoteException, DLeynaException,
+            DLeynaUnknownPropertyException;
 
     /**
      * Set this Renderer's mute state.
      * @param value the new mute state
      * @throws RemoteException no connection to the background renderer service
      * @throws DLeynaException failure reported by the background renderer service
+     * @throws DLeynaUnknownPropertyException this Renderer does not support this optional property
      */
-    public void setMute(boolean value) throws RemoteException, DLeynaException;
+    public void setMute(boolean value) throws RemoteException, DLeynaException,
+            DLeynaUnknownPropertyException;
 }

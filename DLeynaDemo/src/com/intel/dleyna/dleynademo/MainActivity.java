@@ -36,6 +36,7 @@ import android.widget.Button;
 import android.widget.TextView;
 
 import com.intel.dleyna.lib.DLeynaException;
+import com.intel.dleyna.lib.DLeynaUnknownPropertyException;
 import com.intel.dleyna.lib.IRendererController;
 import com.intel.dleyna.lib.Renderer;
 import com.intel.dleyna.lib.RendererControllerListener;
@@ -186,21 +187,47 @@ public class MainActivity extends Activity {
                             r = renderers[i];
                             publishProgress((i+1) + "/" + renderers.length + " " + r.getObjectPath());
                             try {
-                                publishProgress("\t" + r.getDeviceType());
-                                publishProgress("\t" + r.getUniqueDeviceName());
-                                publishProgress("\t" + r.getFriendlyName());
-                                publishProgress("\t" + r.getIconURL());
-                                publishProgress("\t" + r.getManufacturer());
-                                publishProgress("\t" + r.getManufacturerURL());
-                                publishProgress("\t" + r.getModelDescription());
-                                publishProgress("\t" + r.getModelName());
-                                publishProgress("\t" + r.getModelNumber());
-                                publishProgress("\t" + r.getSerialNumber());
-                                publishProgress("\t" + r.getPresentationURL());
-                                publishProgress("\t" + r.getProtocolInfo());
+                                publishProgress("\tDeviceType: " + r.getDeviceType());
+                                publishProgress("\tUniqueDeviceName: " + r.getUniqueDeviceName());
+                                publishProgress("\tFriendlyName: " + r.getFriendlyName());
+                                try {
+                                    publishProgress("\tIconURL: " + r.getIconURL());
+                                } catch (DLeynaUnknownPropertyException e) {
+                                    publishProgress("\tIconURL: <NONE>");
+                                }
+                                publishProgress("\tManufacturer: " + r.getManufacturer());
+                                try {
+                                    publishProgress("\tManufacturerURL: " + r.getManufacturerURL());
+                                } catch (DLeynaUnknownPropertyException e) {
+                                    publishProgress("\tManufacturerURL: <NONE>");
+                                }
+                                try {
+                                    publishProgress("\tModelDescription: " + r.getModelDescription());
+                                } catch (DLeynaUnknownPropertyException e) {
+                                    publishProgress("\tModelDescription: <NONE>");
+                                }
+                                publishProgress("\tModelName: " + r.getModelName());
+                                try {
+                                    publishProgress("\tModelNumber: " + r.getModelNumber());
+                                } catch (DLeynaUnknownPropertyException e) {
+                                    publishProgress("\tModelNumber: <NONE>");
+                                }
+                                try {
+                                    publishProgress("\tSerialNumber: " + r.getSerialNumber());
+                                } catch (DLeynaUnknownPropertyException e) {
+                                    publishProgress("\tSerialNumber: <NONE>");
+                                }
+                                try {
+                                    publishProgress("\tPresentationURL: " + r.getPresentationURL());
+                                } catch (DLeynaUnknownPropertyException e) {
+                                    publishProgress("\tPresentationURL: <NONE>");
+                                }
+                                publishProgress("\tProtocolInfo: " + r.getProtocolInfo());
                             } catch (RemoteException e) {
+                                publishProgress("\t" + "ERROR: no service");
                                 e.printStackTrace();
                             } catch (DLeynaException e) {
+                                publishProgress("\t" + "ERROR: " + e.getMessage());
                                 e.printStackTrace();
                             }
                         }

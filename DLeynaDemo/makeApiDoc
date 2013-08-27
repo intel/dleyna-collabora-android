@@ -17,6 +17,7 @@ javadoc \
     -noqualifier java.lang:java.util:android.os:android.app:android.content \
     -linkoffline http://developer.android.com/reference $SDK_DIR/docs/reference \
     src/com/intel/dleyna/lib/DLeynaException.java \
+    src/com/intel/dleyna/lib/DLeynaUnknownPropertyException.java \
     src/com/intel/dleyna/lib/Icon.java \
     src/com/intel/dleyna/lib/IRendererController.java \
     src/com/intel/dleyna/lib/IRendererControllerListener.java \
