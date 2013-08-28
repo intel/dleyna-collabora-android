@@ -32,5 +32,6 @@
     <string name="none">No Tests</string>
     <string name="pref_activity_name">DLeyna Demo\nSettings</string>
     <string name="rescan">Scan</string>
+    <string name="scanning">Scanning...</string>
     <string name="settings">Settings</string>
 </resources>
