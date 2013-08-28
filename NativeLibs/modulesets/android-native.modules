@@ -166,5 +166,20 @@
         </dependencies>
     </autotools>
 
+    <!-- rygel -->
+
+    <autotools id="rygel" autogen-sh="autoreconf" autogenargs=" --with-media-engine=simple --without-ui --disable-tracker-plugin --disable-silent-rules --disable-external-plugin --disable-mpris-plugin">
+        <branch repo="gnome.org" module="rygel/0.19/rygel-0.19.5.tar.xz" version="0.19.5">
+        <patch file="rygel/0001-Drop-wrong-harcoded-flags-from-LINKER_FLAGS.patch" strip="1" />
+        </branch>
+        <dependencies>
+            <dep package="glib"/>
+            <dep package="libsoup"/>
+            <dep package="libgee"/>
+            <dep package="gupnp"/>
+            <dep package="gupnp-av"/>
+            <dep package="libuuid"/>
+        </dependencies>
+    </autotools>
 
 </moduleset>

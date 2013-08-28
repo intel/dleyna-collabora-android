@@ -135,4 +135,4 @@ export PKG_CONFIG="pkg-config \
 "
 
 # Do it.
-$JHB_PREFIX/bin/jhbuild -f jhbuildrc-android -m modulesets/android-native.modules ${*:-build gupnp-av gupnp-dlna libgee}
+$JHB_PREFIX/bin/jhbuild -f jhbuildrc-android -m modulesets/android-native.modules ${*:-build gupnp-av gupnp-dlna rygel}
