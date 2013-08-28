@@ -6,6 +6,7 @@
     <repository name="gnu.org" type="tarball" href="http://ftp.gnu.org/pub/gnu/"/>
     <repository name="xmlsoft.org" type="tarball" href="ftp://xmlsoft.org/"/>
     <repository name="01org" type="git" href="git://github.com/01org/"/>
+    <repository name="kernel.org" type="git" href="git://git.kernel.org/"/>
 
     <!-- GLib and it's dependencies -->
 
@@ -154,6 +155,14 @@
         </branch>
         <dependencies>
             <dep package="glib"/>
+        </dependencies>
+    </autotools>
+
+    <!-- libuuid (from fsprogs) -->
+    <autotools id="libuuid" autogen-sh="configure" makeargs="libs" makeinstallargs="install-libs" autogenargs="--disable-testio-debug --disable-debugfs --disable-imager --disable-resizer --disable-defrag --disable-uuidd --disable-mmp --disable-bmap-stats --enable-verbose-makecmds --disable-htree --disable-profile --disable-jbd-debug --disable-blkid-debug --disable-backtrace --disable-fsck --disable-e2initrd-helper --disable-rpath">
+        <branch repo="kernel.org" module="pub/scm/fs/ext2/e2fsprogs.git">
+        </branch>
+        <dependencies>
         </dependencies>
     </autotools>
 
