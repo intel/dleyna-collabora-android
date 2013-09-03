@@ -88,7 +88,7 @@
     <!-- gupnp -->
 
     <autotools id="gupnp" autogen-sh="autoreconf" autogenargs="--with-context-manager=linux">
-        <branch repo="gnome.org" module="gupnp/0.20/gupnp-0.20.3.tar.xz" version="0.20.3">
+        <branch repo="gnome.org" module="gupnp/0.20/gupnp-0.20.5.tar.xz" version="0.20.5">
         <patch file="gupnp/0001-Preliminary-make-it-build-Android-port.patch" strip="1" />
         <patch file="gupnp/0002-Add-fallback-uuid-implementation-for-Android.patch" strip="1" />
         <patch file="gupnp/0003-Drop-default-ctx-manager-behavior.patch" strip="1" />
