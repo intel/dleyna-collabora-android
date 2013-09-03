@@ -76,6 +76,10 @@
 
     <!-- gssdp -->
 
+    <!-- Patch here has already been upstreamed. Drop it for the next release
+         bump, 0.14.5. More details on this thread:
+         https://bugzilla.gnome.org/show_bug.cgi?id=707161
+    -->
     <autotools id="gssdp" autogen-sh="configure">
         <branch repo="gnome.org" module="gssdp/0.14/gssdp-0.14.4.tar.xz" version="0.14.4">
         <patch file="gssdp/0001-Port-get_host_ip-to-Android-Bionic.patch" strip="1" />
@@ -158,7 +162,7 @@
         </dependencies>
     </autotools>
 
-    <!-- libuuid (from fsprogs) -->
+    <!-- libuuid (from e2fsprogs) -->
     <autotools id="libuuid" autogen-sh="configure" makeargs="libs" makeinstallargs="install-libs" autogenargs="--disable-testio-debug --disable-debugfs --disable-imager --disable-resizer --disable-defrag --disable-uuidd --disable-mmp --disable-bmap-stats --enable-verbose-makecmds --disable-htree --disable-profile --disable-jbd-debug --disable-blkid-debug --disable-backtrace --disable-fsck --disable-e2initrd-helper --disable-rpath">
         <branch repo="kernel.org" module="pub/scm/fs/ext2/e2fsprogs.git">
         </branch>
@@ -168,6 +172,10 @@
 
     <!-- rygel -->
 
+    <!-- Patch here has already been upstreamed. Drop it for the next release
+         bump, 0.19.6. More details on this thread:
+         https://bugzilla.gnome.org/show_bug.cgi?id=707146
+    -->
     <autotools id="rygel" autogen-sh="autoreconf" autogenargs=" --with-media-engine=simple --without-ui --disable-tracker-plugin --disable-silent-rules --disable-external-plugin --disable-mpris-plugin">
         <branch repo="gnome.org" module="rygel/0.19/rygel-0.19.5.tar.xz" version="0.19.5">
         <patch file="rygel/0001-Drop-wrong-harcoded-flags-from-LINKER_FLAGS.patch" strip="1" />
