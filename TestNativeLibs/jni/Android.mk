@@ -104,7 +104,7 @@ include $(CLEAR_VARS)
 MY_GLIB := glib-2.34.3
 MY_LIBSOUP := libsoup-2.40.3
 MY_GSSDP := gssdp-0.14.4
-MY_GUPNP := gupnp-0.20.3
+MY_GUPNP := gupnp-0.20.5
 MY_GUPNPAV := gupnp-av-0.12.1
 
 LOCAL_MODULE := dleyna-jni
