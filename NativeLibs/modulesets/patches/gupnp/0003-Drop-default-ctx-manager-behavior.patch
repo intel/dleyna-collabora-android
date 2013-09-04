@@ -1,4 +1,4 @@
-From a18e288a0070d5c7644e7a7ed420358565a59267 Mon Sep 17 00:00:00 2001
+From 8bdd943167ca89163a9df2af48fe514a2e7e3d53 Mon Sep 17 00:00:00 2001
 From: "Reynaldo H. Verdejo Pinochet" <reynaldo@collabora.com>
 Date: Wed, 26 Jun 2013 18:58:51 -0400
 Subject: [PATCH 3/3] Drop default ctx-manager behavior
@@ -9,7 +9,7 @@ Subject: [PATCH 3/3] Drop default ctx-manager behavior
  2 files changed, 23 insertions(+), 29 deletions(-)
 
 diff --git a/libgupnp/Makefile.am b/libgupnp/Makefile.am
-index 2843d68..5242766 100644
+index 6d30acb..4e89a19 100644
 --- a/libgupnp/Makefile.am
 +++ b/libgupnp/Makefile.am
 @@ -1,5 +1,7 @@
@@ -63,10 +63,10 @@ index 2843d68..5242766 100644
  
  AM_CFLAGS = $(LIBGUPNP_CFLAGS) \
 diff --git a/libgupnp/gupnp-context-manager.c b/libgupnp/gupnp-context-manager.c
-index 4bf3cee..fd089b4 100644
+index 21ce53b..28940d2 100644
 --- a/libgupnp/gupnp-context-manager.c
 +++ b/libgupnp/gupnp-context-manager.c
-@@ -43,7 +43,7 @@
+@@ -45,7 +45,7 @@
  #include "gupnp.h"
  #include "gupnp-marshal.h"
  
@@ -75,7 +75,7 @@ index 4bf3cee..fd089b4 100644
  
  G_DEFINE_ABSTRACT_TYPE (GUPnPContextManager,
                          gupnp_context_manager,
-@@ -354,22 +354,19 @@ gupnp_context_manager_create (guint port)
+@@ -546,22 +546,19 @@ gupnp_context_manager_create (guint port)
  
         if (gupnp_connman_manager_is_available ())
                  impl_type = GUPNP_TYPE_CONNMAN_MANAGER;

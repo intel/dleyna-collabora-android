@@ -1,4 +1,4 @@
-From 2126ccaa409b9d5569261881ed433694192a78ef Mon Sep 17 00:00:00 2001
+From 5354bc42c241359cfc7285dd163efff457a15923 Mon Sep 17 00:00:00 2001
 From: "Reynaldo H. Verdejo Pinochet" <reynaldo@collabora.com>
 Date: Tue, 16 Apr 2013 11:48:02 -0400
 Subject: [PATCH] Port get_host_ip() to Android/Bionic
@@ -12,10 +12,10 @@ discovery.
  3 files changed, 219 insertions(+)
 
 diff --git a/configure.ac b/configure.ac
-index 3019c0a..0ca1cb3 100644
+index 224840c..5eb79ed 100644
 --- a/configure.ac
 +++ b/configure.ac
-@@ -15,6 +15,9 @@ AM_MAINTAINER_MODE([enable])
+@@ -17,6 +17,9 @@ GNOME_COMPILE_WARNINGS
  
  AM_SILENT_RULES([yes])
  
@@ -25,7 +25,7 @@ index 3019c0a..0ca1cb3 100644
  AC_SEARCH_LIBS([strerror],[cposix])
  AC_PROG_CC
  AC_HEADER_STDC
-@@ -102,6 +105,20 @@ esac
+@@ -114,6 +117,20 @@ esac
  AC_MSG_RESULT([$os_win32])
  AM_CONDITIONAL(OS_WIN32, [test $os_win32 = yes])
  
@@ -62,7 +62,7 @@ index f8d4dc2..c250f64 100644
  
  CLEANFILES = $(BUILT_SOURCES)
 diff --git a/libgssdp/gssdp-client.c b/libgssdp/gssdp-client.c
-index 9770035..fed6920 100644
+index 876246c..ab28d9f 100644
 --- a/libgssdp/gssdp-client.c
 +++ b/libgssdp/gssdp-client.c
 @@ -54,7 +54,14 @@ typedef unsigned long in_addr_t;

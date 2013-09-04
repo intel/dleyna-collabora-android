@@ -1,4 +1,4 @@
-From f11df06303cb0a09d9fc6ffbf30e445b84a3a789 Mon Sep 17 00:00:00 2001
+From a8c23b82171f5d26076b287c7487eea334738230 Mon Sep 17 00:00:00 2001
 From: "Reynaldo H. Verdejo Pinochet" <reynaldo@collabora.com>
 Date: Wed, 22 May 2013 22:13:40 -0400
 Subject: [PATCH 2/3] Add fallback uuid implementation for Android
@@ -11,10 +11,10 @@ by http://www.ietf.org/rfc/rfc4122.txt
  1 file changed, 20 insertions(+), 3 deletions(-)
 
 diff --git a/libgupnp/gupnp-service.c b/libgupnp/gupnp-service.c
-index 9ea78e9..f27f84b 100644
+index dc823c3..c6e2b67 100644
 --- a/libgupnp/gupnp-service.c
 +++ b/libgupnp/gupnp-service.c
-@@ -1099,10 +1099,27 @@ generate_sid (void)
+@@ -1107,10 +1107,27 @@ generate_sid (void)
  
          return ret;
  #elif __BIONIC__

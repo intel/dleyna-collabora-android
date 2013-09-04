@@ -1,0 +1,27 @@
+From 2a48415e2d0b11ab00141b05bc7a0dc9bc3f5836 Mon Sep 17 00:00:00 2001
+From: "Reynaldo H. Verdejo Pinochet" <reynaldo@collabora.com>
+Date: Fri, 30 Aug 2013 12:13:37 -0400
+Subject: [PATCH] Drop wrong harcoded flags from LINKER_FLAGS
+
+These should be correctly conditioned and taken care
+of by libtool/automake/autoconf
+---
+ configure.ac |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/configure.ac b/configure.ac
+index 3e67688..e0ca7a3 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -378,7 +378,7 @@ AS_IF([test "x$enable_valadoc" != "xno"], [
+ AM_CONDITIONAL(ENABLE_VALADOC, test x$found_valadoc = xyes)
+ 
+ AC_SUBST([RYGEL_PLUGIN_LINKER_FLAGS],
+-         ["-shared -fPIC -module -avoid-version -Wl,-z,defs"])
++         ["-module -avoid-version -Wl,-z,defs"])
+ AC_SUBST([RYGEL_PLUGIN_DIR],
+          [${libdir}/rygel-2.0/plugins])
+ AC_SUBST([RYGEL_MEDIA_ENGINE_DIR],
+-- 
+1.7.10.4
+

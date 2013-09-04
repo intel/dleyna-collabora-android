@@ -61,10 +61,42 @@ Before building the test app, you have to make a copy of the configured library
 source code into a directory with a name that contains the target architecture
 and api level (because some of the unit tests include internal header files
 that aren't built out to the install directory). So for example if you're
-building for arm and api level 14, you must do
+building for arm and api level 14, you must do the following:
 
     cd NativeLibs
     cp -r sources sources-armeabi-android-14
+
+After doing so, you need to check the correct architecture is selected
+in TestNativeLibs/jni/Application.mk You should be able to switch freely
+between armeabi and x86 (tested).
+
+Now, the building process is a several steps one (we might automate some of
+this in the future). First, you need to make sure the test app is correctly
+configured for your target Android's API version. Ideally you'd run this on
+TestNativeLibs/ each time you change API versions while building the NativeLibs
+(And for that, the first time you build). Although this is not always required,
+it certainly doesn't hurt:
+
+android update project --name testnativeapps --path . -s --target "android-14"
+
+Example above is for API level 14 as you might have guessed.
+
+The final step is building the application .apk install package. You do this
+from the TestNativeLibs/jni directory, issuing the following command:
+
+NDK_DEBUG=1 ndk-build
+
+The example above would generate debugable native code. You can (and maybe
+should) skip the NDK_DEBUG=1 for production builds.
+
+Last step is generating the Application's .apk package from the TestNativeLibs
+directory:
+
+ant debug
+
+(Again, this generates a debug apk)
+
+The resulting apk file can be found in TestNativeLibs/bin/
 
 Some of the unit tests expect various resource files to be on the target device.
 So before running the test app for the first time on a given device, you must do
@@ -74,6 +106,14 @@ So before running the test app for the first time on a given device, you must do
 
 where <device> is the name of the device as reported by "adb devices" (only
 required if more than one device is visible to adb).
+
+As a final step and for installing the application to a device, connect it and
+issue the following command:
+
+adb install TestNativeLibs/bin/<your application name>-debug.apk
+
+Notes on adding tests to the TestNativeLibs application
+-------------------------------------------------------
 
 Here is an outline of what you would need to do to add a new unit test:
 
