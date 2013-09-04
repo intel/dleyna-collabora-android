@@ -80,7 +80,7 @@
          bump, 0.14.5. More details on this thread:
          https://bugzilla.gnome.org/show_bug.cgi?id=707161
     -->
-    <autotools id="gssdp" autogen-sh="configure">
+    <autotools id="gssdp" autogen-sh="autoreconf">
         <branch repo="gnome.org" module="gssdp/0.14/gssdp-0.14.4.tar.xz" version="0.14.4">
         <patch file="gssdp/0001-Port-get_host_ip-to-Android-Bionic.patch" strip="1" />
         </branch>
