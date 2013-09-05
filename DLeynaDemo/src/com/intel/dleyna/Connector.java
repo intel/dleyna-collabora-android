@@ -211,7 +211,7 @@ public class Connector {
         remoteObjects.add(ro);
 
         // If it's the manager object, note its id and unblock waitForManagerObject().
-        if (isRoot) {
+        if (isRoot && managerObject == null) {
             synchronized (this) {
                 managerObject = ro;
                 this.notify();

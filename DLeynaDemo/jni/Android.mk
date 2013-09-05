@@ -114,7 +114,7 @@ include $(PREBUILT_STATIC_LIBRARY)
 # dleyna-renderer
 include $(CLEAR_VARS)
 LOCAL_MODULE := dleyna-renderer
-LOCAL_SRC_FILES := ../../NativeLibs/install-$(TARGET_ARCH_ABI)-$(TARGET_PLATFORM)/lib/libdleyna-renderer-1.0.a
+LOCAL_SRC_FILES := ../../NativeLibs/install-$(TARGET_ARCH_ABI)-$(TARGET_PLATFORM)/lib/dleyna-renderer/libdleyna-renderer-1.0.a
 include $(PREBUILT_STATIC_LIBRARY)
 
 # dleyna-connector-android
