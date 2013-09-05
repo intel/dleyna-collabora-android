@@ -90,7 +90,8 @@ public class RendererManager {
     private Handler handler;
 
     /**
-     * You would typically invoke this constructor from {@link Activity#onStart()}.
+     * Construct a manager instance, and register for notification of events.
+     * Note that you will only receive events after invoking {@link #connect(Context)}.
      * @param listener an instance of your extension of {@link RendererManagerListener},
      * for receiving notification of events.
      */
@@ -112,7 +113,7 @@ public class RendererManager {
      * This method could fail if, for example, the application package containing
      * the renderer service hasn't been installed on the device.
      * <p>
-     * You would typically call this method from {@link Activity#onStart()}.
+     * You would typically call this method from {@link Activity#onResume()}.
      * @param context the context in which this is being called, typically an {@link Activity}.
      * @return true on success, false on failure
      */
@@ -144,7 +145,7 @@ public class RendererManager {
     /**
      * Disconnect from the background renderer service.
      * <p>
-     * You would typically call this method from {@link Activity#onDestroy()}.
+     * You would typically call this method from {@link Activity#onPause()}.
      */
     public void disconnect() {
         if (LOG) Log.i(TAG, "disconnect: bound=" + serviceBound + " connected=" + serviceConnected);
