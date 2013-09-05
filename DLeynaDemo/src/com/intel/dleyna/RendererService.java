@@ -71,7 +71,7 @@ public class RendererService extends Service implements IConnectorClient {
     public IBinder onBind(Intent intent) {
         if (LOG) Log.i(TAG, "onBind");
 
-        connector = new Connector(this);
+        connector = new Connector(this, MANAGER_OBJECT_PATH, IFACE_MANAGER);
 
         // Create and start the daemon thread.
         daemonThread = new Thread(daemonRunnable, DAEMON_THREAD_NAME);
@@ -139,7 +139,7 @@ public class RendererService extends Service implements IConnectorClient {
 
         public String[] getRenderers(IRendererClient client, Bundle extras) {
             String[] result = null;
-            RemoteObject mo = connector.getManagerObject();
+            RemoteObject mo = connector.getRemoteObject(MANAGER_OBJECT_PATH, IFACE_MANAGER);
             if (mo != null) {
                 Invocation invo = connector.dispatch(client, mo, IFACE_MANAGER, "GetRenderers", null);
                 if (invo.success) {
@@ -154,7 +154,7 @@ public class RendererService extends Service implements IConnectorClient {
         }
 
         public void rescan(IRendererClient client, Bundle extras) {
-            RemoteObject mo = connector.getManagerObject();
+            RemoteObject mo = connector.getRemoteObject(MANAGER_OBJECT_PATH, IFACE_MANAGER);
             if (mo != null) {
                 Invocation invo = connector.dispatch(client, mo, IFACE_MANAGER, "Rescan", null);
                 if (!invo.success) {

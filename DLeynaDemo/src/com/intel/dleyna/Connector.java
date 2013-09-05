@@ -77,22 +77,23 @@ public class Connector {
     /** We attribute ids to outstanding method invocations starting with 1. */
     private int lastAssignedInvocationId;
 
-    private RemoteObject managerObject;
-
     private GMainLoop gMainLoop;
 
     private IConnectorClient client;
 
+    private String mgrObjPath;
+    private String mgrIfaceName;
+
     /**
      * Construct a connector instance.
      * @param client who will get callbacks
+     * @param mgrObjPath the manager object's pathname
+     * @param mgrIfaceName the manager objects' manager interface name
      */
-    public Connector(IConnectorClient client) {
+    public Connector(IConnectorClient client, String mgrObjPath, String mgrIfaceName) {
         this.client = client;
-    }
-
-    public RemoteObject getManagerObject() {
-        return managerObject;
+        this.mgrObjPath = mgrObjPath;
+        this.mgrIfaceName = mgrIfaceName;
     }
 
     public RemoteObject getRemoteObject(String objectPath, String ifaceName) {
@@ -101,7 +102,7 @@ public class Connector {
 
     public void waitForManagerObject() {
         synchronized(this) {
-            while (managerObject == null) {
+            while (getRemoteObject(mgrObjPath, mgrIfaceName) == null) {
                 try {
                     this.wait();
                 } catch (InterruptedException e) {
@@ -210,10 +211,9 @@ public class Connector {
                 dispatchCb);
         remoteObjects.add(ro);
 
-        // If it's the manager object, note its id and unblock waitForManagerObject().
-        if (isRoot) {
+        // If it's the manager object, unblock waitForManagerObject().
+        if (objectPath.equals(mgrObjPath) && ifaceName.equals(mgrIfaceName)) {
             synchronized (this) {
-                managerObject = ro;
                 this.notify();
             }
         }
