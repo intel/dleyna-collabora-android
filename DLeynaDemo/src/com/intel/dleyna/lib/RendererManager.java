@@ -203,6 +203,8 @@ public class RendererManager {
 
     /**
      * Get all known renderers.
+     * <p>
+     * Note: if there are no known renderers, this returns an array of length 0.
      * @return all currently known renderers
      * @throws RemoteException no connection to the background renderer service
      * @throws DLeynaException failure reported by the background renderer service

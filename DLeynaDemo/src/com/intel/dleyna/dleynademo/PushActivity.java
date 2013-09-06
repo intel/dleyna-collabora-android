@@ -21,16 +21,19 @@
 
 package com.intel.dleyna.dleynademo;
 
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
 import android.app.ListActivity;
-import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.os.RemoteException;
 import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ArrayAdapter;
-import android.widget.ListView;
 
 import com.intel.dleyna.lib.DLeynaException;
 import com.intel.dleyna.lib.Renderer;
@@ -45,13 +48,17 @@ public class PushActivity extends ListActivity {
 
     private static final String TAG = App.TAG;
 
-    private MyAsyncTask asyncTask;
+    private Handler mainHandler;
+    private ExecutorService workerPool;
+    private RendererManager rendererMgr;
 
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         if (App.LOG) Log.i(TAG, "PushActivity: onCreate");
         setContentView(R.layout.push);
         getListView().setOnItemClickListener(itemClickListener);
+        mainHandler = new Handler(Looper.getMainLooper());
+        workerPool = Executors.newSingleThreadExecutor();
     }
 
     protected void onStart() {
@@ -62,15 +69,62 @@ public class PushActivity extends ListActivity {
     protected void onResume() {
         super.onResume();
         if (App.LOG) Log.i(TAG, "PushActivity: onResume");
-        asyncTask = new MyAsyncTask();
-        asyncTask.execute();
+        rendererMgr = new RendererManager(new RendererManagerListener() {
+            public void onConnected() {
+                updateList();
+            }
+            public void onDisconnected() {
+            }
+            public void onRendererFound(Renderer r) {
+                updateList();
+            }
+            public void onRendererLost(Renderer r) {
+                updateList();
+            }
+        });
+        rendererMgr.connect(this);
+    }
+
+    private void updateList() {
+        // We're on the UI thread.
+        workerPool.execute(new Runnable() {
+            public void run() {
+                // We're on a worker thread.
+                try {
+                    Renderer[] rv = rendererMgr.getRenderers();
+                    RendererDope[] rdv = new RendererDope[rv.length];
+                    for (int i=0; i < rv.length; i++) {
+                        rdv[i] = new RendererDope();
+                        rdv[i].renderer = rv[i];
+                        rdv[i].friendlyName = rv[i].getFriendlyName();
+                    }
+                    final RendererDope[] rdvFinal = rdv;
+                    mainHandler.post(new Runnable() {
+                        public void run() {
+                            // We're on the main thread.
+                            ArrayAdapter<String> adapter = new ArrayAdapter<String>(
+                                    PushActivity.this,
+                                    android.R.layout.simple_list_item_1);
+                            for (int i=0; i < rdvFinal.length; i++) {
+                                adapter.add(rdvFinal[i].friendlyName);
+                            }
+                            PushActivity.this.setListAdapter(adapter);
+                        }
+                    });
+                } catch (RemoteException e) {
+                    e.printStackTrace();
+                } catch (DLeynaException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
     }
 
     protected void onPause() {
         super.onPause();
         if (App.LOG) Log.i(TAG, "PushActivity: onPause");
-        asyncTask.cancel(true);
-        asyncTask = null;
+        rendererMgr.disconnect();
+        rendererMgr = null;
     }
 
     protected void onStop() {
@@ -89,94 +143,6 @@ public class PushActivity extends ListActivity {
             // TODO: Do something in response to the click
         }
     };
-
-    private class MyAsyncTask extends AsyncTask<Void, RendererDope, Void> {
-
-        private static final int SCAN_PERIOD = 30000; // time between rescans, msec
-        private static final int SLEEP_PERIOD = 3000; // time per nap, msec
-        private static final int NAPS_PER_SCAN = SCAN_PERIOD / SLEEP_PERIOD;
-
-        private boolean connected = false;
-
-        private RendererManager rendererMgr = new RendererManager(new RendererManagerListener() {
-            public void onConnected() {
-                MyAsyncTask.this.connected = true;
-            }
-            public void onDisconnected() {
-                MyAsyncTask.this.connected = false;
-                MyAsyncTask.this.cancel(true);
-            }
-        });
-
-        protected void onPreExecute() {
-            rendererMgr.connect(PushActivity.this);
-        }
-
-        protected Void doInBackground(Void... v) {
-            while (!connected && !isCancelled()) {
-                sleep(100);
-            }
-            try {
-                int k = 0;
-                while (!isCancelled()) {
-                    publishProgress(getRenderersDope());
-                    if (k == 0) {
-                        rendererMgr.rescan();
-                    }
-                    sleep(SLEEP_PERIOD);
-                    k = (k + 1) % NAPS_PER_SCAN;
-                }
-            } catch (RemoteException e) {
-                e.printStackTrace();
-            } catch (DLeynaException e) {
-                e.printStackTrace();
-            }
-            return null;
-        }
-
-        private RendererDope[] getRenderersDope() throws RemoteException, DLeynaException {
-            RendererDope[] rdv = null;
-            Renderer[] rv = rendererMgr.getRenderers();
-            if (rv != null && rv.length > 0) {
-                rdv = new RendererDope[rv.length];
-                for (int i=0; i < rv.length; i++) {
-                    rdv[i] = new RendererDope();
-                    rdv[i].renderer = rv[i];
-                    rdv[i].friendlyName = rv[i].getFriendlyName();
-                }
-            }
-            return rdv;
-        }
-
-        private void sleep(int msec) {
-            try { Thread.sleep(msec); } catch (InterruptedException e) {}
-        }
-
-        protected void onProgressUpdate(RendererDope... renderersDope) {
-            if (renderersDope != null ) {
-                ArrayAdapter<String> adapter = new ArrayAdapter<String>(PushActivity.this,
-                        android.R.layout.simple_list_item_1);
-                for (int i=0; i < renderersDope.length; i++) {
-                    adapter.add(renderersDope[i].friendlyName);
-                }
-                PushActivity.this.setListAdapter(adapter);
-            }
-        }
-
-        protected void onPostExecute(Void v) {
-            cleanUp();
-        }
-
-        protected void onCancelled() {
-            cleanUp();
-        }
-
-        private void cleanUp() {
-            if (connected) {
-                rendererMgr.disconnect();
-            }
-        }
-    }
 
     private static class RendererDope {
         public Renderer renderer;
