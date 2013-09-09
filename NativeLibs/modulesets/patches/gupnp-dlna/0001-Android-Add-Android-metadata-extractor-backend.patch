@@ -1,0 +1,3540 @@
+From b032265ebb5d358202255e9914baf1ebefcc2888 Mon Sep 17 00:00:00 2001
+From: "Reynaldo H. Verdejo Pinochet" <reynaldo@collabora.com>
+Date: Tue, 10 Sep 2013 01:28:12 -0300
+Subject: [PATCH] Android: Add Android metadata extractor backend
+
+---
+ configure.ac                                       |   15 +
+ libgupnp-dlna/Makefile.am                          |    4 +
+ libgupnp-dlna/metadata-backends/android/android.am |   48 +
+ .../android/gupnp-dlna-android-audio-information.c |  301 +++++
+ .../android/gupnp-dlna-android-audio-information.h |   76 ++
+ .../gupnp-dlna-android-container-information.c     |  234 ++++
+ .../gupnp-dlna-android-container-information.h     |   78 ++
+ .../android/gupnp-dlna-android-image-information.c |  205 ++++
+ .../android/gupnp-dlna-android-image-information.h |   77 ++
+ .../android/gupnp-dlna-android-information.c       |  227 ++++
+ .../android/gupnp-dlna-android-information.h       |   82 ++
+ .../android/gupnp-dlna-android-metadata-backend.c  |   37 +
+ .../gupnp-dlna-android-metadata-extractor.c        | 1174 ++++++++++++++++++++
+ .../gupnp-dlna-android-metadata-extractor.h        |   79 ++
+ .../android/gupnp-dlna-android-metadata.c          |  271 +++++
+ .../android/gupnp-dlna-android-metadata.h          |  115 ++
+ .../android/gupnp-dlna-android-video-information.c |  282 +++++
+ .../android/gupnp-dlna-android-video-information.h |   72 ++
+ 18 files changed, 3377 insertions(+)
+ create mode 100644 libgupnp-dlna/metadata-backends/android/android.am
+ create mode 100644 libgupnp-dlna/metadata-backends/android/gupnp-dlna-android-audio-information.c
+ create mode 100644 libgupnp-dlna/metadata-backends/android/gupnp-dlna-android-audio-information.h
+ create mode 100644 libgupnp-dlna/metadata-backends/android/gupnp-dlna-android-container-information.c
+ create mode 100644 libgupnp-dlna/metadata-backends/android/gupnp-dlna-android-container-information.h
+ create mode 100644 libgupnp-dlna/metadata-backends/android/gupnp-dlna-android-image-information.c
+ create mode 100644 libgupnp-dlna/metadata-backends/android/gupnp-dlna-android-image-information.h
+ create mode 100644 libgupnp-dlna/metadata-backends/android/gupnp-dlna-android-information.c
+ create mode 100644 libgupnp-dlna/metadata-backends/android/gupnp-dlna-android-information.h
+ create mode 100644 libgupnp-dlna/metadata-backends/android/gupnp-dlna-android-metadata-backend.c
+ create mode 100644 libgupnp-dlna/metadata-backends/android/gupnp-dlna-android-metadata-extractor.c
+ create mode 100644 libgupnp-dlna/metadata-backends/android/gupnp-dlna-android-metadata-extractor.h
+ create mode 100644 libgupnp-dlna/metadata-backends/android/gupnp-dlna-android-metadata.c
+ create mode 100644 libgupnp-dlna/metadata-backends/android/gupnp-dlna-android-metadata.h
+ create mode 100644 libgupnp-dlna/metadata-backends/android/gupnp-dlna-android-video-information.c
+ create mode 100644 libgupnp-dlna/metadata-backends/android/gupnp-dlna-android-video-information.h
+
+diff --git a/configure.ac b/configure.ac
+index c90b0fb..d316989 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -58,6 +58,21 @@ fi
+ 
+ GUPNP_DLNA_METADATA_BACKEND_CFLAGS="$GUPNP_DLNA_METADATA_BACKEND_CFLAGS -DGUPNP_DLNA_DEFAULT_METADATA_BACKEND=\\\"$with_default_metadata_backend\\\""
+ 
++# Begin Android metadata backend
++AC_ARG_ENABLE([android-metadata-backend],
++              [AS_HELP_STRING([--enable-android-metadata-backend],
++                              [Enable Android metadata backend @<:@check@:>@])],
++              [:],
++              [enable_android_metadata_backend=check])
++
++if test "x$enable_android_metadata_backend" = 'xyes'
++then
++        AM_CONDITIONAL(ANDROID_METADATA_BACKEND_ENABLED, true)
++else
++        AM_CONDITIONAL(ANDROID_METADATA_BACKEND_ENABLED, false)
++fi
++# End Android metadata backend
++
+ AC_ARG_ENABLE([gstreamer-metadata-backend],
+               [AS_HELP_STRING([--enable-gstreamer-metadata-backend],
+                               [build a GStreamer metadata backend @<:@default=auto@:>@])],
+diff --git a/libgupnp-dlna/Makefile.am b/libgupnp-dlna/Makefile.am
+index 7b34825..1cae157 100644
+--- a/libgupnp-dlna/Makefile.am
++++ b/libgupnp-dlna/Makefile.am
+@@ -70,6 +70,10 @@ if GSTREAMER_LEGACY_METADATA_BACKEND_ENABLED
+ include $(top_srcdir)/libgupnp-dlna/metadata-backends/gstreamer-legacy/gstreamer.am
+ endif
+ 
++if ANDROID_METADATA_BACKEND_ENABLED
++include $(top_srcdir)/libgupnp-dlna/metadata-backends/android/android.am
++endif
++
+ noinst_LTLIBRARIES += \
+ 	libloader.la \
+ 	libguesser.la \
+diff --git a/libgupnp-dlna/metadata-backends/android/android.am b/libgupnp-dlna/metadata-backends/android/android.am
+new file mode 100644
+index 0000000..b7f1557
+--- /dev/null
++++ b/libgupnp-dlna/metadata-backends/android/android.am
+@@ -0,0 +1,48 @@
++android_metadata_backend_libadd = \
++	$(common_libadd) \
++	libgupnp-dlna-2.0.la
++android_metadata_backend_cflags = \
++	$(common_cflags) \
++	$(metadata_log_cflags) \
++	$(metadata_cflags)
++
++android_metadata_backend = \
++	metadata-backends/android/libandroid.la
++metadata_LTLIBRARIES += \
++	$(android_metadata_backend)
++
++metadata_backends_android_libandroid_la_LDFLAGS = \
++	-no-undefined \
++	-module -llog -avoid-version -Wl,-z,defs
++metadata_backends_android_libandroid_la_SOURCES = \
++	metadata-backends/android/gupnp-dlna-android-metadata.c \
++	metadata-backends/android/gupnp-dlna-android-metadata-backend.c \
++	metadata-backends/android/gupnp-dlna-android-metadata-extractor.c
++metadata_backends_android_libandroid_la_LIBADD = \
++	$(android_metadata_backend_libadd)
++metadata_backends_android_libandroid_la_CFLAGS = \
++	$(android_metadata_backend_cflags)
++
++metadata_backends_android_libgupnp_dlna_android_2_0_la_LDFLAGS = \
++	$(gupnp_ldflags)
++
++metadata_backends_android_libgupnp_dlna_android_2_0_la_SOURCES = \
++    metadata-backends/android/gupnp-dlna-android-audio-information.c \
++    metadata-backends/android/gupnp-dlna-android-container-information.c \
++    metadata-backends/android/gupnp-dlna-android-image-information.c \
++    metadata-backends/android/gupnp-dlna-android-information.c \
++    metadata-backends/android/gupnp-dlna-android-metadata.c \
++    metadata-backends/android/gupnp-dlna-android-video-information.c
++metadata_backends_android_libgupnp_dlna_android_2_0_la_LIBADD = \
++	$(android_metadata_backend_libadd)
++metadata_backends_android_libgupnp_dlna_android_2_0_la_CFLAGS = \
++	$(android_metadata_backend_cflags)
++
++dist_noinst_HEADERS += \
++	metadata-backends/android/gupnp-dlna-android-audio-information.h \
++	metadata-backends/android/gupnp-dlna-android-container-information.h \
++	metadata-backends/android/gupnp-dlna-android-image-information.h \
++	metadata-backends/android/gupnp-dlna-android-information.h \
++	metadata-backends/android/gupnp-dlna-android-metadata.h \
++	metadata-backends/android/gupnp-dlna-android-metadata-extractor.h \
++	metadata-backends/android/gupnp-dlna-android-video-information.h
+diff --git a/libgupnp-dlna/metadata-backends/android/gupnp-dlna-android-audio-information.c b/libgupnp-dlna/metadata-backends/android/gupnp-dlna-android-audio-information.c
+new file mode 100644
+index 0000000..5422d11
+--- /dev/null
++++ b/libgupnp-dlna/metadata-backends/android/gupnp-dlna-android-audio-information.c
+@@ -0,0 +1,301 @@
++/*
++ * Copyright (C) 2013 Intel Corporation.
++ *
++ * Author: Reynaldo H. Verdejo Pinochet <reynaldo@collabora.com>
++ *
++ * This library is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU Lesser General Public
++ * License as published by the Free Software Foundation; either
++ * version 2 of the License, or (at your option) any later version.
++ *
++ * This library is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++ * Lesser General Public License for more details.
++ *
++ * You should have received a copy of the GNU Lesser General Public
++ * License along with this library; if not, write to the
++ * Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
++ * Boston, MA 02110-1301, USA.
++ */
++
++#ifdef HAVE_CONFIG_H
++#include "config.h"
++#endif /* HAVE_CONFIG_H_ */
++#include "gupnp-dlna-android-audio-information.h"
++
++G_DEFINE_TYPE (GUPnPDLNAAndroidAudioInf,
++               gupnp_dlna_android_audio_inf,
++               GUPNP_TYPE_DLNA_AUDIO_INFORMATION)
++
++struct _GUPnPDLNAAndroidAudioInfPrivate {
++        AndroidAudioMetadata *info;
++};
++
++enum
++{
++        PROP_0,
++        PROP_INFO
++};
++
++/**
++ * Getters
++ */
++
++static GUPnPDLNAIntValue
++backend_get_bitrate (GUPnPDLNAAudioInformation *self)
++{
++        GUPnPDLNAAndroidAudioInf *info =
++                GUPNP_DLNA_DROID_AUDIO_INF (self);
++
++        AndroidAudioMetadata *android_info = info->priv->info;
++
++        return android_info->bitrate;
++}
++
++static GUPnPDLNAIntValue
++backend_get_channels (GUPnPDLNAAudioInformation *self)
++{
++        GUPnPDLNAAndroidAudioInf *info =
++                GUPNP_DLNA_DROID_AUDIO_INF (self);
++
++        AndroidAudioMetadata *android_info = info->priv->info;
++
++        return android_info->channels;
++}
++
++static GUPnPDLNAIntValue
++backend_get_depth (GUPnPDLNAAudioInformation *self)
++{
++        GUPnPDLNAAndroidAudioInf *info =
++                GUPNP_DLNA_DROID_AUDIO_INF (self);
++
++        AndroidAudioMetadata *android_info = info->priv->info;
++
++        return android_info->depth;
++}
++
++static GUPnPDLNAIntValue
++backend_get_layer (GUPnPDLNAAudioInformation *self)
++{
++        GUPnPDLNAAndroidAudioInf *info =
++                GUPNP_DLNA_DROID_AUDIO_INF (self);
++
++        AndroidAudioMetadata *android_info = info->priv->info;
++
++        return android_info->layer;
++}
++
++static GUPnPDLNAStringValue
++backend_get_level (GUPnPDLNAAudioInformation *self)
++{
++        GUPnPDLNAAndroidAudioInf *info =
++                GUPNP_DLNA_DROID_AUDIO_INF (self);
++
++        AndroidAudioMetadata *android_info = info->priv->info;
++
++        return android_info->level;
++}
++
++static GUPnPDLNAIntValue
++backend_get_mpeg_audio_version (GUPnPDLNAAudioInformation *self)
++{
++        GUPnPDLNAAndroidAudioInf *info =
++                GUPNP_DLNA_DROID_AUDIO_INF (self);
++
++        AndroidAudioMetadata *android_info = info->priv->info;
++
++        return android_info->mpeg_audio_version;
++}
++
++static GUPnPDLNAIntValue
++backend_get_mpeg_version (GUPnPDLNAAudioInformation *self)
++{
++        GUPnPDLNAAndroidAudioInf *info =
++                GUPNP_DLNA_DROID_AUDIO_INF (self);
++
++        AndroidAudioMetadata *android_info = info->priv->info;
++
++        return android_info->mpeg_version;
++}
++
++static GUPnPDLNAStringValue
++backend_get_profile (GUPnPDLNAAudioInformation *self)
++{
++        GUPnPDLNAAndroidAudioInf *info =
++                GUPNP_DLNA_DROID_AUDIO_INF (self);
++
++        AndroidAudioMetadata *android_info = info->priv->info;
++
++        return android_info->profile;
++}
++
++static GUPnPDLNAIntValue
++backend_get_rate (GUPnPDLNAAudioInformation *self)
++{
++        GUPnPDLNAAndroidAudioInf *info =
++                GUPNP_DLNA_DROID_AUDIO_INF (self);
++
++        AndroidAudioMetadata *android_info = info->priv->info;
++
++        return android_info->rate;
++}
++
++static GUPnPDLNAStringValue
++backend_get_stream_format (GUPnPDLNAAudioInformation *self)
++{
++        GUPnPDLNAAndroidAudioInf *info =
++                GUPNP_DLNA_DROID_AUDIO_INF (self);
++
++        AndroidAudioMetadata *android_info = info->priv->info;
++
++        return android_info->stream_format;
++}
++
++static GUPnPDLNAIntValue
++backend_get_wma_version (GUPnPDLNAAudioInformation *self)
++{
++        GUPnPDLNAAndroidAudioInf *info =
++                GUPNP_DLNA_DROID_AUDIO_INF (self);
++
++        AndroidAudioMetadata *android_info = info->priv->info;
++
++        return android_info->wma_version;
++}
++
++static GUPnPDLNAStringValue
++backend_get_mime (GUPnPDLNAAudioInformation *self)
++{
++        GUPnPDLNAAndroidAudioInf *info =
++                GUPNP_DLNA_DROID_AUDIO_INF (self);
++
++        AndroidAudioMetadata *android_info = info->priv->info;
++
++        return android_info->mime;
++}
++
++/**
++ * GObject cruft
++ */
++
++static void
++gupnp_dlna_android_audio_inf_dispose (GObject *object)
++{
++        GUPnPDLNAAndroidAudioInf *info = GUPNP_DLNA_DROID_AUDIO_INF (object);
++        GObjectClass *parent_class = G_OBJECT_CLASS
++                (gupnp_dlna_android_audio_inf_parent_class);
++
++        gupnp_android_metadata_atom_dispose (&info->priv->info,
++                                             ANDROID_METADATA_ATOM_AUDIO);
++        parent_class->dispose (object);
++}
++
++static void
++gupnp_dlna_android_audio_inf_set_property (GObject *object,
++        guint property_id, const GValue *value, GParamSpec *pspec)
++{
++        GUPnPDLNAAndroidAudioInf *info = GUPNP_DLNA_DROID_AUDIO_INF (object);
++        GUPnPDLNAAndroidAudioInfPrivate *priv = info->priv;
++
++        switch (property_id) {
++        case PROP_INFO:
++                gupnp_android_metadata_atom_dispose
++                        (&priv->info, ANDROID_METADATA_ATOM_AUDIO);
++                priv->info = (AndroidAudioMetadata *)
++                        g_slice_dup (AndroidAudioMetadata, value);
++                break;
++
++        default:
++                G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
++                break;
++        }
++}
++
++static void
++gupnp_dlna_android_audio_inf_get_property (GObject *object,
++                                           guint property_id,
++                                           GValue *value,
++                                           GParamSpec *pspec)
++{
++        GUPnPDLNAAndroidAudioInf *info = GUPNP_DLNA_DROID_AUDIO_INF (object);
++        GUPnPDLNAAndroidAudioInfPrivate *priv = info->priv;
++
++        switch (property_id) {
++        case PROP_INFO:
++                g_value_set_pointer (value, priv->info);
++                break;
++
++        default:
++                G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
++                break;
++        }
++}
++
++static void
++gupnp_dlna_android_audio_inf_class_init
++        (GUPnPDLNAAndroidAudioInfClass *android_info_class)
++{
++        GUPnPDLNAAudioInformationClass *info_class =
++                GUPNP_DLNA_AUDIO_INFORMATION_CLASS (android_info_class);
++        GObjectClass *object_class = G_OBJECT_CLASS (android_info_class);
++        GParamSpec *pspec;
++
++        object_class->get_property = gupnp_dlna_android_audio_inf_get_property;
++        object_class->set_property = gupnp_dlna_android_audio_inf_set_property;
++        object_class->dispose = gupnp_dlna_android_audio_inf_dispose;
++
++        info_class->get_bitrate = backend_get_bitrate;
++        info_class->get_channels = backend_get_channels;
++        info_class->get_depth = backend_get_depth;
++        info_class->get_layer = backend_get_layer;
++        info_class->get_level = backend_get_level;
++        info_class->get_mpeg_audio_version = backend_get_mpeg_audio_version;
++        info_class->get_mpeg_version = backend_get_mpeg_version;
++        info_class->get_profile = backend_get_profile;
++        info_class->get_rate = backend_get_rate;
++        info_class->get_stream_format = backend_get_stream_format;
++        info_class->get_wma_version = backend_get_wma_version;
++        info_class->get_mime = backend_get_mime;
++
++        pspec = g_param_spec_pointer ("info",
++                                      "info",
++                                      "android metadata",
++                                      G_PARAM_READWRITE |
++                                      G_PARAM_CONSTRUCT);
++
++        g_object_class_install_property (object_class,
++                                         PROP_INFO,
++                                         pspec);
++
++        g_type_class_add_private (android_info_class,
++                                  sizeof (GUPnPDLNAAndroidAudioInfPrivate));
++}
++
++static void
++gupnp_dlna_android_audio_inf_init (GUPnPDLNAAndroidAudioInf *self)
++{
++        GUPnPDLNAAndroidAudioInfPrivate *priv =
++                G_TYPE_INSTANCE_GET_PRIVATE (self,
++                        GUPNP_TYPE_DLNA_ANDROID_AUDIO_INFORMATION,
++                        GUPnPDLNAAndroidAudioInfPrivate);
++
++        priv->info = NULL;
++        self->priv = priv;
++}
++
++GUPnPDLNAAndroidAudioInf *
++gupnp_dlna_android_audio_information_new (AndroidMetadata *info)
++{
++        GUPnPDLNAAndroidAudioInf *audio_info;
++
++        if (!info->audio) {
++                return NULL;
++        }
++
++        audio_info = GUPNP_DLNA_DROID_AUDIO_INF
++                (g_object_new (GUPNP_TYPE_DLNA_ANDROID_AUDIO_INFORMATION,
++                               "info",
++                               info->audio,
++                               NULL));
++        return audio_info;
++}
+diff --git a/libgupnp-dlna/metadata-backends/android/gupnp-dlna-android-audio-information.h b/libgupnp-dlna/metadata-backends/android/gupnp-dlna-android-audio-information.h
+new file mode 100644
+index 0000000..734c859
+--- /dev/null
++++ b/libgupnp-dlna/metadata-backends/android/gupnp-dlna-android-audio-information.h
+@@ -0,0 +1,76 @@
++/*
++ * Copyright (C) 2013 Intel Corporation.
++ *
++ * Author: Reynaldo H. Verdejo Pinochet <reynaldo@collabora.com>
++ *
++ * This library is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU Lesser General Public
++ * License as published by the Free Software Foundation; either
++ * version 2 of the License, or (at your option) any later version.
++ *
++ * This library is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++ * Lesser General Public License for more details.
++ *
++ * You should have received a copy of the GNU Lesser General Public
++ * License along with this library; if not, write to the
++ * Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
++ * Boston, MA 02110-1301, USA.
++ */
++
++#ifndef __GUPNP_DLNA_DROID_AUDIO_INF_H__
++#define __GUPNP_DLNA_DROID_AUDIO_INF_H__
++
++#include <glib-object.h>
++#include "gupnp-dlna-audio-information.h"
++
++G_BEGIN_DECLS
++
++#define GUPNP_TYPE_DLNA_ANDROID_AUDIO_INFORMATION \
++        (gupnp_dlna_android_audio_inf_get_type())
++
++#define GUPNP_DLNA_DROID_AUDIO_INF(obj) \
++        (G_TYPE_CHECK_INSTANCE_CAST ((obj), \
++                                     GUPNP_TYPE_DLNA_ANDROID_AUDIO_INFORMATION, \
++                                     GUPnPDLNAAndroidAudioInf))
++
++#define GUPNP_DLNA_DROID_AUDIO_INF_CLASS(klass) \
++        (G_TYPE_CHECK_CLASS_CAST ((klass), \
++                                  GUPNP_TYPE_DLNA_ANDROID_AUDIO_INFORMATION, \
++                                  GUPnPDLNAAndroidAudioInfClass))
++
++#define GUPNP_IS_DLNA_ANDROID_AUDIO_INFORMATION(obj) \
++        (G_TYPE_CHECK_INSTANCE_TYPE ((obj), \
++                                     GUPNP_TYPE_DLNA_ANDROID_AUDIO_INFORMATION))
++
++#define GUPNP_IS_DLNA_ANDROID_AUDIO_INFORMATION_CLASS(klass) \
++        (G_TYPE_CHECK_CLASS_TYPE ((klass), \
++                                  GUPNP_TYPE_DLNA_ANDROID_AUDIO_INFORMATION))
++
++#define GUPNP_DLNA_DROID_AUDIO_INF_GET_CLASS(obj) \
++        (G_TYPE_INSTANCE_GET_CLASS ((obj), \
++                                    GUPNP_TYPE_DLNA_ANDROID_AUDIO_INFORMATION, \
++                                    GUPnPDLNAAndroidAudioInfClass))
++
++typedef struct _GUPnPDLNAAndroidAudioInfPrivate
++                GUPnPDLNAAndroidAudioInfPrivate;
++
++typedef struct {
++        GUPnPDLNAAudioInformation parent;
++        GUPnPDLNAAndroidAudioInfPrivate *priv;
++} GUPnPDLNAAndroidAudioInf;
++
++typedef struct {
++        GUPnPDLNAAudioInformationClass parent_class;
++} GUPnPDLNAAndroidAudioInfClass;
++
++GType
++gupnp_dlna_android_audio_inf_get_type (void);
++
++GUPnPDLNAAndroidAudioInf *
++gupnp_dlna_android_audio_information_new (AndroidMetadata *info);
++
++G_END_DECLS
++
++#endif /* __GUPNP_DLNA_DROID_AUDIO_INF_H__ */
+diff --git a/libgupnp-dlna/metadata-backends/android/gupnp-dlna-android-container-information.c b/libgupnp-dlna/metadata-backends/android/gupnp-dlna-android-container-information.c
+new file mode 100644
+index 0000000..a8b50d0
+--- /dev/null
++++ b/libgupnp-dlna/metadata-backends/android/gupnp-dlna-android-container-information.c
+@@ -0,0 +1,234 @@
++/*
++ * Copyright (C) 2013 Intel Corporation.
++ *
++ * Author: Reynaldo H. Verdejo Pinochet <reynaldo@collabora.com>
++ *
++ * This library is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU Lesser General Public
++ * License as published by the Free Software Foundation; either
++ * version 2 of the License, or (at your option) any later version.
++ *
++ * This library is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++ * Lesser General Public License for more details.
++ *
++ * You should have received a copy of the GNU Lesser General Public
++ * License along with this library; if not, write to the
++ * Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
++ * Boston, MA 02110-1301, USA.
++ */
++
++#ifdef HAVE_CONFIG_H
++#include "config.h"
++#endif /* HAVE_CONFIG_H_ */
++#include "gupnp-dlna-android-container-information.h"
++
++G_DEFINE_TYPE (GUPnPDLNAAndroidContainerInf,
++               gupnp_dlna_android_container_inf,
++               GUPNP_TYPE_DLNA_CONTAINER_INFORMATION)
++
++struct _GUPnPDLNAAndroidContainerInfPrivate {
++        AndroidContainerMetadata *info;
++};
++
++enum
++{
++        PROP_0,
++        PROP_INFO
++};
++
++/**
++ * Getters
++ */
++
++static GUPnPDLNAIntValue
++backend_get_mpeg_version (GUPnPDLNAContainerInformation *self)
++{
++        GUPnPDLNAAndroidContainerInf *info =
++                GUPNP_DLNA_DROID_CONTAINER_INF (self);
++
++        AndroidContainerMetadata *android_info = info->priv->info;
++
++        return  android_info->mpeg_version;
++}
++
++static GUPnPDLNAIntValue
++backend_get_packet_size (GUPnPDLNAContainerInformation *self)
++{
++        GUPnPDLNAAndroidContainerInf *info =
++                GUPNP_DLNA_DROID_CONTAINER_INF (self);
++
++        AndroidContainerMetadata *android_info = info->priv->info;
++        return android_info->packet_size;
++}
++
++static GUPnPDLNAStringValue
++backend_get_profile (GUPnPDLNAContainerInformation *self)
++{
++        GUPnPDLNAAndroidContainerInf *info =
++                GUPNP_DLNA_DROID_CONTAINER_INF (self);
++
++        AndroidContainerMetadata *android_info = info->priv->info;
++        return android_info->profile;
++}
++
++static GUPnPDLNABoolValue
++backend_is_system_stream (GUPnPDLNAContainerInformation *self)
++{
++        GUPnPDLNAAndroidContainerInf *info =
++                GUPNP_DLNA_DROID_CONTAINER_INF (self);
++
++        AndroidContainerMetadata *android_info = info->priv->info;
++        return android_info->is_system_stream;
++}
++
++static GUPnPDLNAStringValue
++backend_get_variant (GUPnPDLNAContainerInformation *self)
++{
++        GUPnPDLNAAndroidContainerInf *info =
++                GUPNP_DLNA_DROID_CONTAINER_INF (self);
++
++        AndroidContainerMetadata *android_info = info->priv->info;
++        return android_info->variant;
++}
++
++static GUPnPDLNAStringValue
++backend_get_mime (GUPnPDLNAContainerInformation *self)
++{
++        GUPnPDLNAAndroidContainerInf *info =
++                GUPNP_DLNA_DROID_CONTAINER_INF (self);
++
++        AndroidContainerMetadata *android_info = info->priv->info;
++        return android_info->mime;
++}
++
++/**
++ * GObject cruft
++ */
++
++static void
++gupnp_dlna_android_container_inf_dispose (GObject *object)
++{
++        GUPnPDLNAAndroidContainerInf *info =
++                GUPNP_DLNA_DROID_MUX_INF (object);
++        AndroidContainerMetadata *android_metadata = info->priv->info;
++        GObjectClass *parent_class = G_OBJECT_CLASS
++                (gupnp_dlna_android_container_inf_parent_class);
++
++        gupnp_android_metadata_atom_dispose (&info->priv->info,
++                                             ANDROID_METADATA_ATOM_CONTAINER);
++        parent_class->dispose (object);
++}
++
++static void
++gupnp_dlna_android_container_inf_set_property (GObject *object,
++                                               guint property_id,
++                                               const GValue *value,
++                                               GParamSpec *pspec)
++{
++        GUPnPDLNAAndroidContainerInf *info = GUPNP_DLNA_DROID_MUX_INF (object);
++        GUPnPDLNAAndroidContainerInfPrivate *priv = info->priv;
++
++        switch (property_id) {
++        case PROP_INFO:
++                gupnp_android_metadata_atom_dispose
++                        (&priv->info, ANDROID_METADATA_ATOM_CONTAINER);
++                priv->info = (AndroidContainerMetadata *)
++                        g_slice_dup (AndroidContainerMetadata, value);
++                break;
++
++        default:
++                G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
++                break;
++        }
++}
++
++static void
++gupnp_dlna_android_container_inf_get_property (GObject *object,
++                                               guint property_id,
++                                               GValue *value,
++                                               GParamSpec *pspec)
++{
++        GUPnPDLNAAndroidContainerInf *info = GUPNP_DLNA_DROID_MUX_INF (object);
++        GUPnPDLNAAndroidContainerInfPrivate *priv = info->priv;
++
++        switch (property_id) {
++        case PROP_INFO:
++                g_value_set_pointer (value, priv->info);
++                break;
++
++        default:
++                G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
++                break;
++        }
++}
++
++static void
++gupnp_dlna_android_container_inf_class_init
++        (GUPnPDLNAAndroidContainerInfClass *android_info_class)
++{
++        GUPnPDLNAContainerInformationClass *info_class =
++                        GUPNP_DLNA_CONTAINER_INFORMATION_CLASS (android_info_class);
++        GObjectClass *object_class = G_OBJECT_CLASS (android_info_class);
++        GParamSpec *pspec;
++
++        object_class->get_property =
++                gupnp_dlna_android_container_inf_get_property;
++        object_class->set_property =
++                gupnp_dlna_android_container_inf_set_property;
++        object_class->dispose = gupnp_dlna_android_container_inf_dispose;
++
++        info_class->get_mpeg_version = backend_get_mpeg_version;
++        info_class->get_packet_size = backend_get_packet_size;
++        info_class->get_profile = backend_get_profile;
++        info_class->is_system_stream = backend_is_system_stream;
++        info_class->get_variant = backend_get_variant;
++        info_class->get_mime = backend_get_mime;
++
++        pspec = g_param_spec_pointer ("info",
++                                      "info",
++                                      "android metadata",
++                                      G_PARAM_READWRITE |
++                                      G_PARAM_CONSTRUCT);
++
++        g_object_class_install_property (object_class,
++                                         PROP_INFO,
++                                         pspec);
++
++        g_type_class_add_private (android_info_class,
++                sizeof (GUPnPDLNAAndroidContainerInfPrivate));
++}
++
++static void
++gupnp_dlna_android_container_inf_init
++        (GUPnPDLNAAndroidContainerInf *self)
++{
++        GUPnPDLNAAndroidContainerInfPrivate *priv =
++                G_TYPE_INSTANCE_GET_PRIVATE (self,
++                        GUPNP_TYPE_DLNA_ANDROID_CONTAINER_INFORMATION,
++                        GUPnPDLNAAndroidContainerInfPrivate);
++
++        priv->info = NULL;
++        priv->container_info = NULL;
++        priv->caps = NULL;
++        self->priv = priv;
++}
++
++GUPnPDLNAAndroidContainerInf *
++gupnp_dlna_android_container_information_new (AndroidMetadata *info)
++{
++        GUPnPDLNAAndroidContainerInf *container_info;
++
++        if (!info->container) {
++                return NULL;
++        }
++
++        container_info = GUPNP_DLNA_DROID_MUX_INF (
++                g_object_new (GUPNP_TYPE_DLNA_ANDROID_CONTAINER_INFORMATION,
++                              "info",
++                              info->container,
++                              NULL));
++
++        return container_info;
++}
+diff --git a/libgupnp-dlna/metadata-backends/android/gupnp-dlna-android-container-information.h b/libgupnp-dlna/metadata-backends/android/gupnp-dlna-android-container-information.h
+new file mode 100644
+index 0000000..f75c1db
+--- /dev/null
++++ b/libgupnp-dlna/metadata-backends/android/gupnp-dlna-android-container-information.h
+@@ -0,0 +1,78 @@
++/*
++ * Copyright (C) 2012 Intel Corporation.
++ *
++ * Authors: Krzesimir Nowak <krnowak@openismus.com>
++ *
++ * This library is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU Lesser General Public
++ * License as published by the Free Software Foundation; either
++ * version 2 of the License, or (at your option) any later version.
++ *
++ * This library is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++ * Lesser General Public License for more details.
++ *
++ * You should have received a copy of the GNU Lesser General Public
++ * License along with this library; if not, write to the
++ * Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
++ * Boston, MA 02110-1301, USA.
++ */
++
++#ifndef __GUPNP_DLNA_DROID_MUX_INF_H__
++#define __GUPNP_DLNA_DROID_MUX_INF_H__
++
++#include <glib-object.h>
++#include "gupnp-dlna-container-information.h"
++#include "gupnp-dlna-android-metadata.h"
++
++G_BEGIN_DECLS
++
++#define GUPNP_TYPE_DLNA_ANDROID_CONTAINER_INFORMATION \
++        (gupnp_dlna_android_container_inf_get_type())
++
++#define GUPNP_DLNA_DROID_MUX_INF(obj) \
++        (G_TYPE_CHECK_INSTANCE_CAST \
++                                   ((obj), \
++                                    GUPNP_TYPE_DLNA_ANDROID_CONTAINER_INFORMATION, \
++                                    GUPnPDLNAAndroidContainerInf))
++
++#define GUPNP_DLNA_DROID_MUX_INF_CLASS(klass) \
++        (G_TYPE_CHECK_CLASS_CAST ((klass), \
++                                  GUPNP_TYPE_DLNA_ANDROID_CONTAINER_INFORMATION, \
++                                  GUPnPDLNAAndroidContainerInfClass))
++
++#define GUPNP_IS_DLNA_ANDROID_CONTAINER_INFORMATION(obj) \
++        (G_TYPE_CHECK_INSTANCE_TYPE ((obj), \
++                                     GUPNP_TYPE_DLNA_ANDROID_CONTAINER_INFORMATION))
++
++#define GUPNP_IS_DLNA_ANDROID_CONTAINER_INFORMATION_CLASS(klass) \
++        (G_TYPE_CHECK_CLASS_TYPE ((klass), \
++                                  GUPNP_TYPE_DLNA_ANDROID_CONTAINER_INFORMATION))
++
++#define GUPNP_DLNA_DROID_MUX_INF_GET_CLASS(obj) \
++        (G_TYPE_INSTANCE_GET_CLASS ((obj), \
++                                    GUPNP_TYPE_DLNA_ANDROID_CONTAINER_INFORMATION, \
++                                    GUPnPDLNAAndroidContainerInfClass))
++
++typedef struct _GUPnPDLNAAndroidContainerInfPrivate
++                GUPnPDLNAAndroidContainerInfPrivate;
++
++typedef struct {
++        GUPnPDLNAContainerInformation parent;
++        GUPnPDLNAAndroidContainerInfPrivate *priv;
++} GUPnPDLNAAndroidContainerInf;
++
++typedef struct {
++        GUPnPDLNAContainerInformationClass parent_class;
++} GUPnPDLNAAndroidContainerInfClass;
++
++GType
++gupnp_dlna_android_container_inf_get_type (void);
++
++GUPnPDLNAAndroidContainerInf *
++gupnp_dlna_android_container_information_new (AndroidMetadata *info);
++
++G_END_DECLS
++
++#endif /* __GUPNP_DLNA_DROID_MUX_INF_H__ */
+diff --git a/libgupnp-dlna/metadata-backends/android/gupnp-dlna-android-image-information.c b/libgupnp-dlna/metadata-backends/android/gupnp-dlna-android-image-information.c
+new file mode 100644
+index 0000000..ec85241
+--- /dev/null
++++ b/libgupnp-dlna/metadata-backends/android/gupnp-dlna-android-image-information.c
+@@ -0,0 +1,205 @@
++/*
++ * Copyright (C) 2013 Intel Corporation.
++ *
++ * Author: Reynaldo H. Verdejo Pinochet <reynaldo@collabora.com>
++ *
++ * This library is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU Lesser General Public
++ * License as published by the Free Software Foundation; either
++ * version 2 of the License, or (at your option) any later version.
++ *
++ * This library is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++ * Lesser General Public License for more details.
++ *
++ * You should have received a copy of the GNU Lesser General Public
++ * License along with this library; if not, write to the
++ * Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
++ * Boston, MA 02110-1301, USA.
++ */
++
++#ifdef HAVE_CONFIG_H
++#include "config.h"
++#endif /* HAVE_CONFIG_H_ */
++#include "gupnp-dlna-android-image-information.h"
++#include "gupnp-dlna-android-metadata.h"
++
++G_DEFINE_TYPE (GUPnPDLNAAndroidImgInf,
++               gupnp_dlna_android_img_inf,
++               GUPNP_TYPE_DLNA_IMAGE_INFORMATION)
++
++struct _GUPnPDLNAAndroidImgInfPrivate {
++        AndroidImageMetadata *info;
++};
++
++enum
++{
++        PROP_0,
++        PROP_INFO
++};
++
++/**
++ * Getters
++ */
++
++static GUPnPDLNAIntValue
++backend_get_depth (GUPnPDLNAImageInformation *self)
++{
++        GUPnPDLNAAndroidImageInf *info =
++                GUPNP_DLNA_DROID_IMAGE_INF (self);
++
++        AndroidImageMetadata *android_info = info->priv->info;
++        return android_info->depth;
++}
++
++static GUPnPDLNAIntValue
++backend_get_height (GUPnPDLNAImageInformation *self)
++{
++        GUPnPDLNAAndroidImageInf *info =
++                GUPNP_DLNA_DROID_IMAGE_INF (self);
++
++        AndroidImageMetadata *android_info = info->priv->info;
++        return android_info->height;
++}
++
++static GUPnPDLNAIntValue
++backend_get_width (GUPnPDLNAImageInformation *self)
++{
++        GUPnPDLNAAndroidImageInf *info =
++                GUPNP_DLNA_DROID_IMAGE_INF (self);
++
++        AndroidImageMetadata *android_info = info->priv->info;
++        return android_info->width;
++}
++
++static GUPnPDLNAStringValue
++backend_get_mime (GUPnPDLNAImageInformation *self)
++{
++        GUPnPDLNAAndroidImageInf *info =
++                GUPNP_DLNA_DROID_IMAGE_INF (self);
++
++        AndroidImageMetadata *android_info = info->priv->info;
++        return android_info->mime;
++}
++
++/**
++ * GObject cruft
++ */
++
++static void
++gupnp_dlna_android_img_inf_dispose (GObject *object)
++{
++        GUPnPDLNAAndroidImgInf *info = GUPNP_DLNA_DROID_IMG_INF (object);
++        GObjectClass *parent_class =
++                 G_OBJECT_CLASS (gupnp_dlna_android_img_inf_parent_class);
++
++        gupnp_android_metadata_atom_dispose (&info->priv->info,
++                                             ANDROID_METADATA_ATOM_IMAGE);
++        parent_class->dispose (object);
++}
++
++static void
++gupnp_dlna_android_img_inf_set_property (GObject      *object,
++                                         guint         property_id,
++                                         const GValue *value,
++                                         GParamSpec   *pspec)
++{
++        GUPnPDLNAAndroidImgInf *info = GUPNP_DLNA_DROID_IMG_INF (object);
++        GUPnPDLNAAndroidImgInfPrivate *priv = info->priv;
++
++        switch (property_id) {
++        case PROP_INFO:
++                gupnp_android_metadata_atom_dispose
++                        (&priv->info, ANDROID_METADATA_ATOM_IMAGE);
++                priv->info = (AndroidImageMetadata *)
++                        g_slice_dup (AndroidImageMetadata, value);
++                break;
++
++        default:
++                G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
++                break;
++        }
++}
++
++static void
++gupnp_dlna_android_img_inf_get_property (GObject *object,
++                                         guint property_id,
++                                         GValue *value,
++                                         GParamSpec *pspec)
++{
++        GUPnPDLNAAndroidImgInf *info = GUPNP_DLNA_DROID_IMG_INF (object);
++        GUPnPDLNAAndroidImgInfPrivate *priv = info->priv;
++
++        switch (property_id) {
++        case PROP_INFO:
++                g_value_set_pointer (value, priv->info);
++                break;
++
++        default:
++                G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
++                break;
++        }
++}
++
++static void
++gupnp_dlna_android_img_inf_class_init
++        (GUPnPDLNAAndroidImgInfClass *droid_info_class)
++{
++        GUPnPDLNAImageInformationClass *info_class =
++                            GUPNP_DLNA_IMAGE_INFORMATION_CLASS (droid_info_class);
++        GObjectClass *object_class = G_OBJECT_CLASS (droid_info_class);
++        GParamSpec *pspec;
++
++        object_class->get_property = gupnp_dlna_android_img_inf_get_property;
++        object_class->set_property = gupnp_dlna_android_img_inf_set_property;
++        object_class->dispose = gupnp_dlna_android_img_inf_dispose;
++
++        info_class->get_depth = backend_get_depth;
++        info_class->get_height = backend_get_height;
++        info_class->get_width = backend_get_width;
++        info_class->get_mime = backend_get_mime;
++
++        pspec = g_param_spec_pointer ("info",
++                                      "info",
++                                      "android metadata",
++                                      G_PARAM_READWRITE |
++                                      G_PARAM_CONSTRUCT);
++
++        g_object_class_install_property (object_class,
++                                         PROP_INFO,
++                                         pspec);
++
++        g_type_class_add_private (droid_info_class,
++                                  sizeof (GUPnPDLNAAndroidImgInfPrivate));
++}
++
++static void
++gupnp_dlna_android_img_inf_init (GUPnPDLNAAndroidImgInf *self)
++{
++        GUPnPDLNAAndroidImgInfPrivate *priv = G_TYPE_INSTANCE_GET_PRIVATE
++                                        (self,
++                                         GUPNP_TYPE_DLNA_ANDROID_IMAGE_INFORMATION,
++                                         GUPnPDLNAAndroidImgInfPrivate);
++
++        priv->info = NULL;
++        self->priv = priv;
++}
++
++GUPnPDLNAAndroidImgInf *
++gupnp_dlna_android_img_information_new (AndroidMetadata *info)
++{
++        GUPnPDLNAAndroidImgInf *image_info;
++
++        if (info->image) {
++            return NULL;
++        }
++
++        image_info = GUPNP_DLNA_DROID_IMG_INF
++                (g_object_new (GUPNP_TYPE_DLNA_ANDROID_IMAGE_INFORMATION,
++                               "info",
++                               info->image,
++                               NULL));
++
++        return image_info;
++}
+diff --git a/libgupnp-dlna/metadata-backends/android/gupnp-dlna-android-image-information.h b/libgupnp-dlna/metadata-backends/android/gupnp-dlna-android-image-information.h
+new file mode 100644
+index 0000000..a94907d
+--- /dev/null
++++ b/libgupnp-dlna/metadata-backends/android/gupnp-dlna-android-image-information.h
+@@ -0,0 +1,77 @@
++/*
++ * Copyright (C) 2013 Intel Corporation.
++ *
++ * Author: Reynaldo H. Verdejo Pinochet <reynaldo@collabora.com>
++ *
++ * This library is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU Lesser General Public
++ * License as published by the Free Software Foundation; either
++ * version 2 of the License, or (at your option) any later version.
++ *
++ * This library is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++ * Lesser General Public License for more details.
++ *
++ * You should have received a copy of the GNU Lesser General Public
++ * License along with this library; if not, write to the
++ * Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
++ * Boston, MA 02110-1301, USA.
++ */
++
++#ifndef __GUPNP_DLNA_DROID_IMG_INF_H__
++#define __GUPNP_DLNA_DROID_IMG_INF_H__
++
++#include <glib-object.h>
++#include "gupnp-dlna-image-information.h"
++#include "gupnp-dlna-android-metadata.h"
++
++G_BEGIN_DECLS
++
++#define GUPNP_TYPE_DLNA_ANDROID_IMAGE_INFORMATION \
++        (gupnp_dlna_android_img_inf_get_type())
++
++#define GUPNP_DLNA_DROID_IMG_INF(obj) \
++        (G_TYPE_CHECK_INSTANCE_CAST ((obj), \
++                                     GUPNP_TYPE_DLNA_ANDROID_IMAGE_INFORMATION, \
++                                     GUPnPDLNAAndroidImgInf))
++
++#define GUPNP_DLNA_DROID_IMG_INF_CLASS(klass) \
++        (G_TYPE_CHECK_CLASS_CAST ((klass), \
++                                  GUPNP_TYPE_DLNA_ANDROID_IMAGE_INFORMATION, \
++                                  GUPnPDLNAAndroidImgInfClass))
++
++#define GUPNP_IS_DLNA_ANDROID_IMAGE_INFORMATION(obj) \
++        (G_TYPE_CHECK_INSTANCE_TYPE ((obj), \
++                                     GUPNP_TYPE_DLNA_ANDROID_IMAGE_INFORMATION))
++
++#define GUPNP_IS_DLNA_ANDROID_IMAGE_INFORMATION_CLASS(klass) \
++        (G_TYPE_CHECK_CLASS_TYPE ((klass), \
++                                  GUPNP_TYPE_DLNA_ANDROID_IMAGE_INFORMATION))
++
++#define GUPNP_DLNA_DROID_IMG_INF_GET_CLASS(obj) \
++        (G_TYPE_INSTANCE_GET_CLASS ((obj), \
++                                    GUPNP_TYPE_DLNA_ANDROID_IMAGE_INFORMATION, \
++                                    GUPnPDLNAAndroidImgInfClass))
++
++typedef struct _GUPnPDLNAAndroidImgInfPrivate
++                GUPnPDLNAAndroidImgInfPrivate;
++
++typedef struct {
++        GUPnPDLNAImageInformation parent;
++        GUPnPDLNAAndroidImgInfPrivate *priv;
++} GUPnPDLNAAndroidImgInf;
++
++typedef struct {
++        GUPnPDLNAImageInformationClass parent_class;
++} GUPnPDLNAAndroidImgInfClass;
++
++GType
++gupnp_dlna_android_img_inf_get_type (void);
++
++GUPnPDLNAAndroidImgInf *
++gupnp_dlna_android_img_information_new (AndroidMetadata *info);
++
++G_END_DECLS
++
++#endif /* __GUPNP_DLNA_DROID_IMG_INF_H__ */
+diff --git a/libgupnp-dlna/metadata-backends/android/gupnp-dlna-android-information.c b/libgupnp-dlna/metadata-backends/android/gupnp-dlna-android-information.c
+new file mode 100644
+index 0000000..18e5cf5
+--- /dev/null
++++ b/libgupnp-dlna/metadata-backends/android/gupnp-dlna-android-information.c
+@@ -0,0 +1,227 @@
++/*
++ * Copyright (C) 2013 Intel Corporation.
++ *
++ * Author: Reynaldo H. Verdejo Pinochet <reynaldo@collabora.com>
++ *
++ * This library is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU Lesser General Public
++ * License as published by the Free Software Foundation; either
++ * version 2 of the License, or (at your option) any later version.
++ *
++ * This library is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++ * Lesser General Public License for more details.
++ *
++ * You should have received a copy of the GNU Lesser General Public
++ * License along with this library; if not, write to the
++ * Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
++ * Boston, MA 02110-1301, USA.
++ */
++
++#ifdef HAVE_CONFIG_H
++#include "config.h"
++#endif /* HAVE_CONFIG_H_ */
++#include "gupnp-dlna-android-metadata.h"
++#include "gupnp-dlna-android-information.h"
++#include "gupnp-dlna-android-audio-information.h"
++#include "gupnp-dlna-android-container-information.h"
++#include "gupnp-dlna-android-image-information.h"
++#include "gupnp-dlna-android-video-information.h"
++
++G_DEFINE_TYPE (GUPnPDLNAndroidInformation,
++               gupnp_dlna_android_information,
++               GUPNP_TYPE_DLNA_INFORMATION)
++
++struct _GUPnPDLNAndroidInformationPrivate {
++    AndroidMetadata *info
++};
++
++enum {
++        PROP_0,
++        PROP_INFO
++};
++
++static void
++gupnp_dlna_android_information_dispose (GObject *object)
++{
++        GUPnPDLNAndroidInformation *info =
++                GUPNP_DLNA_DROID_INFORMATION (object);
++        GUPnPDLNAndroidInformationPrivate *priv = info->priv;
++        GObjectClass *parent_class = G_OBJECT_CLASS
++                (gupnp_dlna_android_information_parent_class);
++
++        gupnp_dlna_android_metadata_destroy (&priv->info);
++        parent_class->dispose (object);
++}
++
++static void
++gupnp_dlna_android_information_set_property (GObject *object,
++                                             guint property_id,
++                                             const GValue *value,
++                                             GParamSpec *pspec)
++{
++        GUPnPDLNAndroidInformation *info =
++                GUPNP_DLNA_DROID_INFORMATION (object);
++        GUPnPDLNAndroidInformationPrivate *priv = info->priv;
++
++        switch (property_id) {
++        case PROP_INFO:
++                gupnp_dlna_android_metadata_destroy (&priv->info);
++                priv->info = (AndroidMetadata *) g_slice_dup (AndroidMetadata,
++                                                              value);
++                break;
++
++        default:
++                G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
++                break;
++        }
++}
++
++static void
++gupnp_dlna_android_information_get_property (GObject *object,
++                                             guint property_id,
++                                             GValue *value,
++                                             GParamSpec *pspec)
++{
++        GUPnPDLNAndroidInformation *info =
++                GUPNP_DLNA_DROID_INFORMATION (object);
++        GUPnPDLNAndroidInformationPrivate *priv = info->priv;
++
++        switch (property_id) {
++        case PROP_INFO:
++                g_value_set_pointer (value, priv->info);
++                break;
++
++        default:
++                G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
++                break;
++        }
++}
++
++GUPnPDLNAAudioInformation *
++backend_get_audio_information (GUPnPDLNAInformation *self)
++{
++        GUPnPDLNAndroidInformation *android_info =
++                GUPNP_DLNA_DROID_INFORMATION (self);
++
++        if (android_info == NULL)
++                return NULL;
++
++        return GUPNP_DLNA_AUDIO_INFORMATION
++                (gupnp_dlna_android_audio_information_new
++                                        (android_info->priv->info));
++}
++
++GUPnPDLNAContainerInformation *
++backend_get_container_information (GUPnPDLNAInformation *self)
++{
++        GUPnPDLNAndroidInformation *android_info =
++                GUPNP_DLNA_DROID_INFORMATION (self);
++
++        if (android_info == NULL)
++                return NULL;
++
++        return GUPNP_DLNA_CONTAINER_INFORMATION
++                (gupnp_dlna_android_container_inf_info
++                                        (android_info->priv->info));
++}
++
++GUPnPDLNAImageInformation *
++backend_get_image_information (GUPnPDLNAInformation *self)
++{
++        GUPnPDLNAndroidInformation *android_info =
++                GUPNP_DLNA_DROID_INFORMATION (self);
++
++        return GUPNP_DLNA_IMAGE_INFORMATION
++                (gupnp_dlna_android_img_inf_info
++                                        (android_info->priv->info));
++}
++
++GUPnPDLNAVideoInformation *
++backend_get_video_information (GUPnPDLNAInformation *self)
++{
++        GUPnPDLNAndroidInformation *android_info =
++                GUPNP_DLNA_DROID_INFORMATION (self);
++
++        return GUPNP_DLNA_VIDEO_INFORMATION
++                (gupnp_dlna_android_video_inf_info
++                                        (android_info->priv->info));
++}
++
++static void
++gupnp_dlna_android_information_class_init
++        (GUPnPDLNAndroidInformationClass *android_info_class)
++{
++        GObjectClass *object_class = G_OBJECT_CLASS (android_info_class);
++        GParamSpec *pspec;
++        GUPnPDLNAInformationClass *info_class =
++                GUPNP_DLNA_INFORMATION_CLASS (android_info_class);
++
++        object_class->dispose = gupnp_dlna_android_information_dispose;
++        object_class->set_property =
++                gupnp_dlna_android_information_set_property;
++        object_class->get_property =
++                gupnp_dlna_android_information_get_property;
++        info_class->get_audio_information = backend_get_audio_information;
++        info_class->get_container_information =
++                backend_get_container_information;
++        info_class->get_image_information = backend_get_image_information;
++        info_class->get_video_information = backend_get_video_information;
++
++        pspec = g_param_spec_pointer ("info",
++                                      "info",
++                                      "android metadata",
++                                      G_PARAM_READWRITE |
++                                      G_PARAM_CONSTRUCT);
++
++        g_object_class_install_property (object_class,
++                                         PROP_INFO,
++                                         pspec);
++
++        g_type_class_add_private (android_info_class,
++                                  sizeof (GUPnPDLNAndroidInformationPrivate));
++}
++
++static void
++gupnp_dlna_android_information_init (GUPnPDLNAndroidInformation *self)
++{
++        GUPnPDLNAndroidInformationPrivate *priv =
++                G_TYPE_INSTANCE_GET_PRIVATE (
++                        self, GUPNP_TYPE_DLNA_ANDROID_INFORMATION,
++                        GUPnPDLNAndroidInformationPrivate);
++
++        priv->info = NULL;
++        self->priv = priv;
++}
++
++GUPnPDLNAndroidInformation *
++gupnp_dlna_android_information_new_from_parsed (const gchar *uri,
++        AndroidMetadata *info)
++{
++        GUPnPDLNAndroidInformation *android_info;
++
++        android_info = GUPNP_DLNA_DROID_INFORMATION (
++                g_object_new (GUPNP_TYPE_DLNA_ANDROID_INFORMATION,
++                              "uri",
++                              uri,
++                              "info",
++                              info,
++                              NULL));
++
++        return android_info;
++}
++
++GUPnPDLNAndroidInformation *
++gupnp_dlna_android_information_new_empty_with_uri (const gchar *uri)
++{
++        GUPnPDLNAndroidInformation *info;
++        
++        info = GUPNP_DLNA_DROID_INFORMATION
++                (g_object_new (GUPNP_TYPE_DLNA_ANDROID_INFORMATION,
++                               "uri",
++                               uri,
++                               NULL));
++
++        return info;
++}
+diff --git a/libgupnp-dlna/metadata-backends/android/gupnp-dlna-android-information.h b/libgupnp-dlna/metadata-backends/android/gupnp-dlna-android-information.h
+new file mode 100644
+index 0000000..b18da76
+--- /dev/null
++++ b/libgupnp-dlna/metadata-backends/android/gupnp-dlna-android-information.h
+@@ -0,0 +1,82 @@
++/*
++ * Copyright (C) 2013 Intel Corporation.
++ *
++ * Author: Reynaldo H. Verdejo Pinochet <reynaldo@collabora.com>
++ *
++ * This library is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU Lesser General Public
++ * License as published by the Free Software Foundation; either
++ * version 2 of the License, or (at your option) any later version.
++ *
++ * This library is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++ * Lesser General Public License for more details.
++ *
++ * You should have received a copy of the GNU Lesser General Public
++ * License along with this library; if not, write to the
++ * Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
++ * Boston, MA 02110-1301, USA.
++ */
++
++#ifndef __GUPNP_DLNA_DROID_INFORMATION_H__
++#define __GUPNP_DLNA_DROID_INFORMATION_H__
++
++#include <glib-object.h>
++#include "gupnp-dlna-information.h"
++
++G_BEGIN_DECLS
++
++#define GUPNP_TYPE_DLNA_ANDROID_INFORMATION (gupnp_dlna_android_information_get_type())
++
++#define GUPNP_DLNA_DROID_INFORMATION(obj) \
++        (G_TYPE_CHECK_INSTANCE_CAST ((obj), \
++                                     GUPNP_TYPE_DLNA_ANDROID_INFORMATION, \
++                                     GUPnPDLNAndroidInformation))
++
++#define GUPNP_DLNA_DROID_INFORMATION_CLASS(klass) \
++        (G_TYPE_CHECK_CLASS_CAST ((klass), \
++                                  GUPNP_TYPE_DLNA_ANDROID_INFORMATION, \
++                                  GUPnPDLNAndroidInformationClass))
++
++#define GUPNP_IS_DLNA_ANDROID_INFORMATION(obj) \
++        (G_TYPE_CHECK_INSTANCE_TYPE ((obj), \
++                                     GUPNP_TYPE_DLNA_ANDROID_INFORMATION))
++
++#define GUPNP_IS_DLNA_ANDROID_INFORMATION_CLASS(klass) \
++        (G_TYPE_CHECK_CLASS_TYPE ((klass), \
++                                  GUPNP_TYPE_DLNA_ANDROID_INFORMATION))
++
++#define GUPNP_DLNA_DROID_INFORMATION_GET_CLASS(obj) \
++        (G_TYPE_INSTANCE_GET_CLASS ((obj), \
++                                    GUPNP_TYPE_DLNA_ANDROID_INFORMATION, \
++                                    GUPnPDLNAndroidInformationClass))
++
++typedef struct _GUPnPDLNAndroidInformationPrivate GUPnPDLNAndroidInformationPrivate;
++
++typedef struct _GUPnPDLNAndroidMetadata GUPnPDLNAndroidinfo;
++
++#define GUPNP_ANDROID_METADATA(x) (GUPnPDLNAndroidMetadata *)(x)
++
++typedef struct {
++        GUPnPDLNAInformation parent;
++        GUPnPDLNAndroidInformationPrivate *priv;
++} GUPnPDLNAndroidInformation;
++
++typedef struct {
++        GUPnPDLNAInformationClass parent_class;
++} GUPnPDLNAndroidInformationClass;
++
++GType
++gupnp_dlna_android_information_get_type (void);
++
++GUPnPDLNAndroidInformation *
++gupnp_dlna_android_information_new_from_parsed
++        (const gchar *uri, AndroidMetadata *info);
++
++GUPnPDLNAndroidInformation *
++gupnp_dlna_android_information_new_empty_with_uri (const gchar *uri);
++
++G_END_DECLS
++
++#endif /* __GUPNP_DLNA_DROID_INFORMATION_H__ */
+diff --git a/libgupnp-dlna/metadata-backends/android/gupnp-dlna-android-metadata-backend.c b/libgupnp-dlna/metadata-backends/android/gupnp-dlna-android-metadata-backend.c
+new file mode 100644
+index 0000000..a1dc705
+--- /dev/null
++++ b/libgupnp-dlna/metadata-backends/android/gupnp-dlna-android-metadata-backend.c
+@@ -0,0 +1,37 @@
++/*
++ * Copyright (C) 2013 Intel Corporation.
++ *
++ * Author: Reynaldo H. Verdejo Pinochet <reynaldo@collabora.com>
++ *
++ * This library is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU Lesser General Public
++ * License as published by the Free Software Foundation; either
++ * version 2 of the License, or (at your option) any later version.
++ *
++ * This library is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++ * Lesser General Public License for more details.
++ *
++ * You should have received a copy of the GNU Lesser General Public
++ * License along with this library; if not, write to the
++ * Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
++ * Boston, MA 02110-1301, USA.
++ */
++
++#include <glib.h>
++#include <gmodule.h>
++#include "gupnp-dlna-android-metadata-extractor.h"
++
++G_MODULE_EXPORT GUPnPDLNAMetadataExtractor *
++gupnp_dlna_get_default_extractor (void)
++{
++        return GUPNP_DLNA_METADATA_EXTRACTOR
++                (gupnp_dlna_android_metadata_extractor_new ());
++}
++
++G_MODULE_EXPORT const gchar *
++g_module_check_init (GModule *module G_GNUC_UNUSED)
++{
++        return NULL;
++}
+diff --git a/libgupnp-dlna/metadata-backends/android/gupnp-dlna-android-metadata-extractor.c b/libgupnp-dlna/metadata-backends/android/gupnp-dlna-android-metadata-extractor.c
+new file mode 100644
+index 0000000..e51b6e3
+--- /dev/null
++++ b/libgupnp-dlna/metadata-backends/android/gupnp-dlna-android-metadata-extractor.c
+@@ -0,0 +1,1174 @@
++/*
++ * Copyright (C) 2013 Intel Corporation.
++ *
++ * Author: Reynaldo H. Verdejo Pinochet <reynaldo@collabora.com>
++ *
++ * This library is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU Lesser General Public
++ * License as published by the Free Software Foundation; either
++ * version 2 of the License, or (at your option) any later version.
++ *
++ * This library is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++ * Lesser General Public License for more details.
++ *
++ * You should have received a copy of the GNU Lesser General Public
++ * License along with this library; if not, write to the
++ * Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
++ * Boston, MA 02110-1301, USA.
++ */
++
++#include <glib.h>
++#include <gmodule.h>
++#include <pthread.h>
++#include <android/log.h>
++#include <jni.h>
++
++#include "gupnp-dlna-android-metadata.h"
++#include "gupnp-dlna-android-metadata-extractor.h"
++#include "gupnp-dlna-android-information.h"
++
++G_DEFINE_TYPE (GUPnPDLNAAndroidMetadataExtractor,
++               gupnp_dlna_android_metadata_extractor,
++               GUPNP_TYPE_DLNA_METADATA_EXTRACTOR)
++
++#define NO_KEY_VAL -9999
++
++static GModule *java_module;
++static JavaVM *java_vm;
++static gboolean started_java_vm = FALSE;
++static pthread_key_t current_jni_env;
++
++static jint (*get_created_java_vms) (JavaVM ** vmBuf, jsize bufLen, jsize * nVMs);
++static jint (*create_java_vm) (JavaVM ** p_vm, JNIEnv ** p_env, void *vm_args);
++
++AndroidImageMetadata *parsed_metadata;
++
++/* Globally cached method & consts refs */
++static struct
++{
++        jclass klass;
++        jmethodID constructor;
++} java_string;
++
++static struct
++{
++        jclass klass;
++        jmethodID constructor;
++        jmethodID set_data_src;
++        jmethodID extract_metadata;
++        jmethodID release;
++
++        int METADATA_KEY_BITRATE;
++        int METADATA_KEY_DURATION;
++        int METADATA_KEY_HAS_AUDIO;
++        int METADATA_KEY_HAS_VIDEO;
++        int METADATA_KEY_MIMETYPE;
++        int METADATA_KEY_NUM_TRACKS;
++        int METADATA_KEY_VIDEO_HEIGHT;
++        int METADATA_KEY_VIDEO_WIDTH;
++} metadata_retriever;
++
++static struct
++{
++        jclass klass;
++        jmethodID constructor;
++        jmethodID set_data_src;
++        jmethodID get_track_count;
++        jmethodID get_track_fmt;
++        jmethodID select_track;
++        jmethodID unselect_track;
++        jmethodID release;
++} media_extractor;
++
++static struct
++{
++        jclass klass;
++        jmethodID constructor;
++        jmethodID contains_key;
++        jmethodID get_int;
++        jmethodID get_string;
++} media_format;
++
++/**
++ * This one holds all the global references to our
++ * metadata extraction backend pieces.
++ */
++static struct {
++        jobject retriever;      /* android.media.MetadataRetriever */
++        jobject extractor;      /* android.media.MediaExtractor */
++        jobject format;         /* android.media.MediaFormat */
++} java_engine;
++
++static JNIEnv *
++attach_current_thread (void)
++{
++        JNIEnv *env;
++        JavaVMAttachArgs args;
++
++        LOGD (LOG_TAG, "Attaching thread %p", g_thread_self ());
++        args.version = JNI_VERSION_1_6;
++        args.name = NULL;
++        args.group = NULL;
++
++        if ((*java_vm)->AttachCurrentThread (java_vm, &env, &args) < 0) {
++                LOGE ("Failed to attach current thread");
++                return NULL;
++        }
++
++        return env;
++}
++
++static void
++detach_current_thread (void *env)
++{
++        LOGD ("Detaching thread %p", g_thread_self ());
++        (*java_vm)->DetachCurrentThread (java_vm);
++}
++
++
++static JNIEnv *
++get_jni_env (void)
++{
++        JNIEnv *env;
++
++        if ((env = pthread_getspecific (current_jni_env)) == NULL) {
++                env = attach_current_thread ();
++                pthread_setspecific (current_jni_env, env);
++        }
++
++        return env;
++}
++
++static gboolean
++initialize_java_vm (void)
++{
++        jsize n_vms;
++        java_module = g_module_open ("libdvm", G_MODULE_BIND_LOCAL);
++
++        if (!java_module) {
++                goto load_failed;
++        }
++
++        if (!g_module_symbol (java_module,
++                              "JNI_CreateJavaVM",
++                              (gpointer *) & create_java_vm)) {
++                goto symbol_error;
++        }
++
++        if (!g_module_symbol (java_module,
++                              "JNI_GetCreatedJavaVMs",
++                              (gpointer *) & get_created_java_vms)) {
++                goto symbol_error;
++        }
++
++        n_vms = 0;
++        if (get_created_java_vms (&java_vm, 1, &n_vms) < 0) {
++                goto get_created_failed;
++        }
++
++        if (n_vms > 0) {
++                LOGD ("Successfully got existing Java VM %p", java_vm);
++        } else {
++                JNIEnv *env;
++                JavaVMInitArgs vm_args;
++                JavaVMOption options[4];
++
++                options[0].optionString = "-verbose:jni";
++                options[1].optionString = "-verbose:gc";
++                options[2].optionString = "-Xcheck:jni";
++                options[3].optionString = "-Xdebug";
++
++                /* vm_args.version = JNI_VERSION_1_4; */
++                vm_args.version = JNI_VERSION_1_6;
++                vm_args.options = options;
++                vm_args.nOptions = 4;
++                vm_args.ignoreUnrecognized = JNI_TRUE;
++
++                if (create_java_vm (&java_vm, &env, &vm_args) < 0) {
++                        goto create_failed;
++                }
++
++                LOGD (LOG_TAG, "Successfully created Java VM %p", java_vm);
++                started_java_vm = TRUE;
++        }
++
++        return java_vm != NULL;
++
++load_failed:
++        LOGE ("Failed to load libdvm: %s", g_module_error ());
++        return FALSE;
++
++symbol_error:
++        LOGE ("Failed to locate required JNI symbols in libdvm: %s",
++              g_module_error ());
++
++        g_module_close (java_module);
++        java_module = NULL;
++        return FALSE;
++
++get_created_failed:
++        LOGE ("Failed to get already created VMs");
++        g_module_close (java_module);
++        java_module = NULL;
++        return FALSE;
++
++create_failed:
++        LOGE ("Failed to create a Java VM");
++        g_module_close (java_module);
++        java_module = NULL;
++        return FALSE;
++}
++
++/* FIXME: Missing method signatures */
++static inline gboolean
++fill_media_format_method_ids (JNIEnv *env)
++{
++        media_format.constructor =
++                (*env)->GetMethodID (env,
++                                     media_format.klass,
++                                     "<init>",
++                                     "(V)V");
++        media_format.contains_key =
++                (*env)->GetMethodID (env,
++                                     media_format.klass,
++                                     "containsKey",
++                                     "(Ljava/lang/String;)Z");
++        media_format.get_int =
++                (*env)->GetMethodID (env,
++                                     media_format.klass,
++                                     "getInteger",
++                                     "(Ljava/lang/String;)I");
++        media_format.get_string =
++                (*env)->GetMethodID (env,
++                                     media_format.klass,
++                                     "getString",
++                                     "(Ljava/lang/String;)Ljava/lang/String;");
++
++        if(!media_format.constructor ||
++           !media_format.contains_key ||
++           !media_format.get_int ||
++           !media_format.get_string) {
++                return FALSE;
++        }
++
++        return TRUE;
++}
++
++/* FIXME: Missing method signatures */
++static inline gboolean
++fill_media_extractor_method_ids (JNIEnv *env)
++{
++        media_extractor.constructor =
++                (*env)->GetMethodID (env,
++                                     media_extractor.klass,
++                                     "<init>",
++                                     "(V)V");
++        media_extractor.set_data_src =
++                (*env)->GetMethodID (env,
++                                     media_extractor.klass,
++                                     "setDataSource",
++                                     "(Ljava/lang/String;Ljava/util/Map;)V");
++        media_extractor.get_track_count =
++                (*env)->GetMethodID (env,
++                                     media_extractor.klass,
++                                     "getTrackCount",
++                                     "(V)I");
++        media_extractor.get_track_fmt =
++                (*env)->GetMethodID (env,
++                                     media_extractor.klass,
++                                     "getTrackFormat",
++                                     "(I)Landroid/media/MediaFormat;");
++        media_extractor.select_track =
++                (*env)->GetMethodID (env,
++                                     media_extractor.klass,
++                                     "selectTrack",
++                                     "(I)V");
++        media_extractor.unselect_track =
++                (*env)->GetMethodID (env,
++                                     media_extractor.klass,
++                                     "unselectTrack",
++                                     "(I)V");
++        media_extractor.release =
++                (*env)->GetMethodID (env,
++                                     media_extractor.klass,
++                                     "release",
++                                     "(V)V");
++
++        if (!media_extractor.constructor ||
++            !media_extractor.set_data_src ||
++            !media_extractor.get_track_count ||
++            !media_extractor.get_track_fmt ||
++            !media_extractor.select_track ||
++            !media_extractor.unselect_track ||
++            !media_extractor.release) {
++                return FALSE;
++        }
++
++        return TRUE;
++
++}
++
++/* FIXME: Missing some method signatures */
++static inline gboolean
++fill_metadata_method_ids (JNIEnv *env)
++{
++        metadata_retriever.constructor =
++                (*env)->GetMethodID (env,
++                                     metadata_retriever.klass,
++                                     "<init>",
++                                     "(V)V");
++        metadata_retriever.extract_metadata =
++                (*env)->GetMethodID (env,
++                                     metadata_retriever.klass,
++                                     "extractMetadata",
++                                     "(I)Ljava/lang/String;");
++        metadata_retriever.set_data_src =
++                (*env)->GetMethodID (env,
++                                     metadata_retriever.klass,
++                                     "setDataSource",
++                                     "(Ljava/lang/String;Ljava/util/Map;)V");
++        metadata_retriever.release =
++                (*env)->GetMethodID (env,
++                                     metadata_retriever.klass,
++                                     "release",
++                                     "(V)V");
++
++        if (!metadata_retriever.constructor ||
++            !metadata_retriever.extract_metadata ||
++            !metadata_retriever.set_data_src ||
++            !metadata_retriever.release) {
++                return FALSE;
++        }
++
++        return TRUE;
++}
++
++/* FIXME: Missing some method signatures */
++static inline gboolean
++fill_metadata_key_ids (JNIEnv *env)
++{
++        jfieldID fid;
++
++
++        fid = (*env)->GetStaticFieldID (env,
++                                        metadata_retriever.klass,
++                                        "METADATA_KEY_BITRATE",
++                                        "I");
++        metadata_retriever.METADATA_KEY_BITRATE =
++                (*env)->GetStaticIntField (env,
++                        metadata_retriever.klass,
++                        fid);
++
++        fid = (*env)->GetStaticFieldID (env,
++                                        metadata_retriever.klass,
++                                        "METADATA_KEY_DURATION",
++                                        "I");
++        metadata_retriever.METADATA_KEY_DURATION =
++                (*env)->GetStaticIntField (env,
++                        metadata_retriever.klass,
++                        fid);
++
++        fid = (*env)->GetStaticFieldID (env,
++                                        metadata_retriever.klass,
++                                        "METADATA_KEY_HAS_AUDIO",
++                                        "I");
++        metadata_retriever.METADATA_KEY_HAS_AUDIO =
++                (*env)->GetStaticIntField (env,
++                        metadata_retriever.klass,
++                        fid);
++
++        fid = (*env)->GetStaticFieldID (env,
++                                        metadata_retriever.klass,
++                                        "METADATA_KEY_HAS_VIDEO",
++                                        "I");
++        metadata_retriever.METADATA_KEY_HAS_VIDEO =
++                (*env)->GetStaticIntField (env,
++                        metadata_retriever.klass,
++                        fid);
++
++        fid = (*env)->GetStaticFieldID (env,
++                                        metadata_retriever.klass,
++                                        "METADATA_KEY_MIMETYPE",
++                                        "I");
++        metadata_retriever.METADATA_KEY_MIMETYPE =
++                (*env)->GetStaticIntField (env,
++                        metadata_retriever.klass,
++                        fid);
++
++        fid = (*env)->GetStaticFieldID (env,
++                                        metadata_retriever.klass,
++                                        "METADATA_KEY_NUM_TRACKS",
++                                        "I");
++        metadata_retriever.METADATA_KEY_NUM_TRACKS =
++                (*env)->GetStaticIntField (env,
++                        metadata_retriever.klass,
++                        fid);
++
++        fid = (*env)->GetStaticFieldID (env,
++                                        metadata_retriever.klass,
++                                        "METADATA_KEY_VIDEO_HEIGHT",
++                                        "I");
++        metadata_retriever.METADATA_KEY_VIDEO_HEIGHT =
++                (*env)->GetStaticIntField (env,
++                        metadata_retriever.klass,
++                        fid);
++
++        fid = (*env)->GetStaticFieldID (env,
++                                        metadata_retriever.klass,
++                                        "METADATA_KEY_VIDEO_WIDTH",
++                                        "I");
++        metadata_retriever.METADATA_KEY_VIDEO_WIDTH =
++                (*env)->GetStaticIntField (env,
++                        metadata_retriever.klass,
++                        fid);
++
++        fid = (*env)->GetStaticFieldID (env,
++                                        metadata_retriever.klass,
++                                        "METADATA_KEY_MIMETYPE",
++                                        "I");
++        metadata_retriever.METADATA_KEY_MIMETYPE =
++                (*env)->GetStaticIntField (env,
++                        metadata_retriever.klass,
++                        fid);
++
++        if (metadata_retriever.METADATA_KEY_BITRATE     == NO_KEY_VAL ||
++            metadata_retriever.METADATA_KEY_DURATION    == NO_KEY_VAL ||
++            metadata_retriever.METADATA_KEY_HAS_AUDIO   == NO_KEY_VAL ||
++            metadata_retriever.METADATA_KEY_HAS_VIDEO   == NO_KEY_VAL ||
++            metadata_retriever.METADATA_KEY_MIMETYPE    == NO_KEY_VAL ||
++            metadata_retriever.METADATA_KEY_NUM_TRACKS  == NO_KEY_VAL ||
++            metadata_retriever.METADATA_KEY_VIDEO_HEIGHT== NO_KEY_VAL ||
++            metadata_retriever.METADATA_KEY_VIDEO_WIDTH == NO_KEY_VAL ||
++            metadata_retriever.METADATA_KEY_MIMETYPE    == NO_KEY_VAL) {
++                return FALSE;
++        }
++
++        return TRUE;
++}
++
++static gboolean
++get_java_classes (void)
++{
++        gboolean ret = FALSE;
++        JNIEnv *env;
++        jclass tmp;
++        jfieldID fid;
++
++        env = get_jni_env ();
++
++        /* java/lang/String */
++
++        tmp = (*env)->FindClass (env, "java/lang/String");
++        if (!tmp) {
++                LOGE ("Failed to get string class");
++                goto done;
++        }
++
++        java_string.klass = (*env)->NewGlobalRef (env, tmp);
++        if (!java_string.klass) {
++                LOGE ("Failed to get string class global reference");
++                goto done;
++        }
++
++        (*env)->DeleteLocalRef (env, tmp);
++        tmp = NULL;
++
++        java_string.constructor =
++                (*env)->GetMethodID (env, java_string.klass, "<init>", "([C)V");
++        if (!java_string.constructor) {
++                LOGE ("Failed to get string methods");
++                goto done;
++        }
++
++        /* android/media/MediaMetadataRetriever */
++
++        tmp = (*env)->FindClass (env, "android/media/MediaMetadataRetriever");
++        if (!tmp) {
++                LOGE ("Failed to get MediaMetadataRetriever class");
++                goto done;
++        }
++
++        metadata_retriever.klass = (*env)->NewGlobalRef (env, tmp);
++        if (!metadata_retriever.klass) {
++                LOGE ("Failed to get MediaMetadataRetriever global reference");
++                goto done;
++        }
++
++        (*env)->DeleteLocalRef (env, tmp);
++        tmp = NULL;
++
++        if (!fill_metadata_key_ids (env)) {
++                LOGE ("Failed to fill metadata fields key ids");
++                goto done;
++        }
++
++        if (!fill_metadata_method_ids (env)) {
++                LOGE ("Failed to get metadata_retriever methods");
++                goto done;
++        }
++
++        /* android/media/MediaFormat */
++
++        tmp = (*env)->FindClass (env, "android/media/MediaFormat");
++        if (!tmp) {
++                LOGE ("Failed to get MediaFormat class");
++                goto done;
++        }
++
++        media_format.klass = (*env)->NewGlobalRef (env, tmp);
++        if (!media_format.klass) {
++                LOGE ("Failed to get MediaFormat class global reference");
++                goto done;
++        }
++
++        (*env)->DeleteLocalRef (env, tmp);
++        tmp = NULL;
++
++        if (!fill_media_format_method_ids (env)) {
++                LOGE ("Failed to get MediaFormat methods");
++                goto done;
++        }
++
++        /* android/media/MediaExtractor */
++
++        tmp = (*env)->FindClass (env, "android/media/MediaExtractor");
++        if (!tmp) {
++                LOGE ("Failed to get MediaExtractor class");
++                goto done;
++        }
++
++        media_extractor.klass = (*env)->NewGlobalRef (env, tmp);
++        if (!media_extractor.klass) {
++                LOGE ("Failed to get MediaExtractor class global reference");
++                goto done;
++        }
++
++        (*env)->DeleteLocalRef (env, tmp);
++        tmp = NULL;
++
++        if (!fill_media_extractor_method_ids (env)) {
++                LOGE ("Failed to get MediaExtractor methods");
++                goto done;
++        }
++
++        ret = TRUE;
++
++done:
++        if (!ret) {
++                (*env)->ExceptionClear (env);
++        }
++
++        if (tmp) {
++                (*env)->DeleteLocalRef (env, tmp);
++                tmp = NULL;
++        }
++
++        return ret;
++}
++
++
++static gboolean
++setup_java_backend (void)
++{
++        JNIEnv *env;
++        jobject object = NULL;
++        gboolean ret = TRUE;
++
++        env = get_jni_env ();
++
++        /* MetadataRetriever */
++
++        object =
++                (*env)->CallStaticObjectMethod (env,
++                                                metadata_retriever.klass,
++                                                metadata_retriever.constructor);
++
++        if ((*env)->ExceptionCheck (env) || !object) {
++                (*env)->ExceptionClear (env);
++                LOGE ("Failed to create MetadataRetriever");
++                goto error;
++        }
++
++        java_engine.retriever = (*env)->NewGlobalRef (env, object);
++        if (!java_engine.retriever) {
++                LOGE ("Failed to get global MetadataRetriever reference");
++                (*env)->ExceptionClear (env);
++                goto error;
++        }
++
++        /* MediaExtractor */
++
++        object = (*env)->CallStaticObjectMethod (env,
++                                                 media_extractor.klass,
++                                                 media_extractor.constructor);
++
++        if ((*env)->ExceptionCheck (env) || !object) {
++                (*env)->ExceptionClear (env);
++                LOGE ("Failed to create MediaExtractor");
++                goto error;
++        }
++
++        java_engine.extractor = (*env)->NewGlobalRef (env, object);
++        if (!java_engine.extractor) {
++                LOGE ("Failed to get global MediaExtractor reference");
++                (*env)->ExceptionClear (env);
++                goto error;
++        }
++
++        /* MediaFormat */
++
++        object = (*env)->CallStaticObjectMethod (env,
++                                                 media_format.klass,
++                                                 media_format.constructor);
++
++        if ((*env)->ExceptionCheck (env) || !object) {
++                (*env)->ExceptionClear (env);
++                LOGE ("Failed to create MediaFormat");
++                goto error;
++        }
++
++        java_engine.format = (*env)->NewGlobalRef (env, object);
++        if (!java_engine.format) {
++                LOGE ("Failed to get global MediaFormat reference");
++                (*env)->ExceptionClear (env);
++                goto error;
++        }
++
++done:
++        if (java_engine.retriever) {
++                (*env)->DeleteLocalRef (env, java_engine.retriever);
++        }
++        if (java_engine.extractor) {
++                (*env)->DeleteLocalRef (env, java_engine.extractor);
++        }
++        if (java_engine.format) {
++                (*env)->DeleteLocalRef (env, java_engine.format);
++        }
++
++        return ret;
++
++error:
++        ret = FALSE;
++        java_engine.retriever = NULL;
++        java_engine.extractor = NULL;
++        java_engine.format    = NULL;
++        goto done;
++}
++
++static void
++free_java_backend (void)
++{
++  JNIEnv *env;
++
++  env = get_jni_env ();
++
++  (*env)->DeleteGlobalRef (env, java_engine.retriever);
++  (*env)->DeleteGlobalRef (env, java_engine.extractor);
++  (*env)->DeleteGlobalRef (env, java_engine.format);
++}
++
++/**
++ * Android specific individual metadata extractors
++ * Missing implementation but should be rather ~trivial
++ * to get what _we can_ after the whole JNI mambojambo
++ * above (Or so I hope)
++ */
++
++static gboolean
++android_container_metadata_get (JNIEnv *env,
++                                AndroidMetadata *metadata)
++{
++        jstring j_uri;
++        jstring j_mime;
++        AndroidContainerMetadata *container;
++
++        j_uri = (*env)->NewStringUTF (env, metadata->uri);
++
++        if (j_uri == NULL) {
++                goto error;
++        }
++
++        /* Set data source on MetadataRetriever */
++        (*env)->CallVoidMethod (env,
++                                java_engine.retriever,
++                                metadata_retriever.set_data_src,
++                                j_uri,
++                                NULL);
++        if ((*env)->ExceptionCheck(env)) {
++                LOGE ("Failed setting data source on MediaMetadataRetriever");
++                (*env)->ExceptionClear (env);
++                goto error;
++        }
++
++        /* Mime type */
++        j_mime = (*env)->CallObjectMethod
++                (env,
++                 java_engine.retriever,
++                 metadata_retriever.extract_metadata,
++                 metadata_retriever.METADATA_KEY_MIMETYPE);
++        if ((*env)->ExceptionCheck(env)) {
++                LOGE ("Failed getting mime type from MediaMetadataRetriever");
++                (*env)->ExceptionClear (env);
++                goto done;
++        }
++
++        container->mime.value = g_strdup
++                ((*env)->GetStringUTFChars (env, j_mime, 0));
++        (*env)->ReleaseStringUTFChars /* FIXME: Is this call needed? */
++                (env, j_mime, container->mime.value);
++        container->mime.state = GUPNP_DLNA_VALUE_STATE_SET;
++
++        /* Source has audio? */
++        j_mime = (*env)->CallObjectMethod
++                (env,
++                 java_engine.retriever,
++                 metadata_retriever.extract_metadata,
++                 metadata_retriever.METADATA_KEY_HAS_AUDIO);
++        if ((*env)->ExceptionCheck(env)) {
++                LOGE ("Media does not have audio");
++                (*env)->ExceptionClear (env);
++                metadata->has_audio = FALSE;
++        } else {
++                LOGV ("Media has audio");
++                metadata->has_audio = TRUE;
++        }
++
++        /* Source has video? */
++        j_mime = (*env)->CallObjectMethod
++                (env,
++                 java_engine.retriever,
++                 metadata_retriever.extract_metadata,
++                 metadata_retriever.METADATA_KEY_HAS_VIDEO);
++        if ((*env)->ExceptionCheck(env)) {
++                LOGE ("Media does not have video");
++                (*env)->ExceptionClear (env);
++                metadata->has_video = FALSE;
++        } else {
++                LOGV ("Media has video");
++                metadata->has_video = TRUE;
++        }
++
++done:
++        return TRUE;
++error:
++        return FALSE;
++}
++
++/**
++ *  Per media type metadata extractors
++ */
++
++static gboolean
++android_video_metadata_get (JNIEnv *env, AndroidMetadata *metadata)
++{
++        jstring j_uri, j_mime;
++        int i, num_tracks;
++        jobject m_format;
++        gboolean is_video = FALSE;
++
++        AndroidVideoMetadata *video = metadata->video;
++
++        j_uri = (*env)->NewStringUTF (env, metadata->uri);
++
++        if (j_uri == NULL) {
++                goto error;
++        }
++
++        /* Set data source on MediaExtractor */
++        (*env)->CallVoidMethod (env,
++                                java_engine.extractor,
++                                media_extractor.set_data_src,
++                                j_uri,
++                                NULL);
++        if ((*env)->ExceptionCheck(env)) {
++                LOGE ("Failed setting data source on MediaExtractor");
++                (*env)->ExceptionClear (env);
++                goto error;
++        }
++
++        /* Get number of tracks */
++        num_tracks = (*env)->CallIntMethod (env,
++                                            java_engine.extractor,
++                                            media_extractor.get_track_count);
++        if ((*env)->ExceptionCheck(env)) {
++                LOGE ("Failed getting number of tracks from MediaExtractor");
++                (*env)->ExceptionClear (env);
++                goto error;
++        }
++
++        /**
++         * Traverse tracks in container to find the first
++         * video one and extract metadata for it
++         */
++
++        /* FIXME: Check whether I can acually pass a C const char *
++         * to MediaFormat's info retrieval methods */
++        for (i = 0; i < num_tracks; i++) {
++                m_format = (*env)->CallObjectMethod
++                        (env,
++                         java_engine.extractor,
++                         media_extractor.get_track_fmt,
++                         i);
++                is_video = (*env)->CallBooleanMethod
++                        (env,
++                         m_format,
++                         media_format.contains_key,
++                         "KEY_WIDTH");
++                if (!is_video) {
++                        (*env)->DeleteLocalRef (env, m_format);
++                        continue;
++                }
++
++                /* Found a video stream! */
++
++                /* Get Height */
++                video->height.value = (*env)->CallIntMethod
++                        (env,
++                         m_format,
++                         media_format.get_int,
++                         "KEY_HEIGHT");
++
++                if ((*env)->ExceptionCheck(env)) {
++                        LOGE ("Failed getting Height from MediaFormat");
++                        (*env)->ExceptionClear (env);
++                } else {
++                        video->height.state = GUPNP_DLNA_VALUE_STATE_SET;
++                }
++
++                /* Get Width */
++                video->width.value = (*env)->CallIntMethod
++                        (env,
++                         m_format,
++                         media_format.get_int,
++                         "KEY_WIDTH");
++
++                if ((*env)->ExceptionCheck(env)) {
++                        LOGE ("Failed getting width from MediaFormat");
++                        (*env)->ExceptionClear (env);
++                } else {
++                        video->bitrate.state = GUPNP_DLNA_VALUE_STATE_SET;
++                }
++
++                /* Get Mimetype */
++                j_mime = (*env)->CallIntMethod
++                        (env,
++                         m_format,
++                         media_format.get_int,
++                         "KEY_MIME");
++
++                if ((*env)->ExceptionCheck(env)) {
++                        LOGE ("Failed getting mime type from MediaFormat");
++                        (*env)->ExceptionClear (env);
++                } else {
++                        video->mime.value = g_strdup
++                                ((*env)->GetStringUTFChars (env, j_mime, 0));
++                        (*env)->ReleaseStringUTFChars /* FIXME: needed? */
++                                (env, j_mime, video->mime.value);
++                        video->mime.state = GUPNP_DLNA_VALUE_STATE_SET;
++                }
++
++                /* Done Parsing Metadata */
++                break;
++        }
++
++        return TRUE;
++error:
++        return FALSE;
++}
++
++/**
++ * FIXME: video and audio metadata extractors should probably
++ * be joined. Them been quite long routines made me to select
++ * splitting them for the time being though.
++ */
++static gboolean
++android_audio_metadata_get (JNIEnv *env, AndroidMetadata *metadata)
++{
++        jstring j_uri, j_mime;
++        int i, num_tracks;
++        jobject m_format;
++        gboolean is_audio = FALSE;
++
++        AndroidAudioMetadata *audio = metadata->audio;
++
++        j_uri = (*env)->NewStringUTF (env, metadata->uri);
++
++        if (j_uri == NULL) {
++                goto error;
++        }
++
++        /**
++         * CHECK: No need to  set data source on MediaExtractor?
++         * we already did this while extracting the video
++         * metadata. If it ends up being needed borrow the code
++         * from the video metadata extractor above.
++         */
++
++        LOGV ("Not re-setting the data source on the media extractor"
++              "Assuming same file..");
++
++        /* Get number of tracks */
++
++        /**
++         * FIXME: We might want to store this one in the main
++         * metadata estructure
++         */
++        num_tracks = (*env)->CallIntMethod (env,
++                                            java_engine.extractor,
++                                            media_extractor.get_track_count);
++        if ((*env)->ExceptionCheck(env)) {
++                LOGE ("Failed getting number of tracks from MediaExtractor");
++                (*env)->ExceptionClear (env);
++                goto error;
++        }
++
++        /**
++         * Traverse tracks in container to find the first
++         * audio one and extract metadata for it
++         */
++
++        /* FIXME: Check whether we can acually pass a C const char *
++         * to MediaFormat's info retrieval methods */
++        for (i = 0; i < num_tracks; i++) {
++                m_format = (*env)->CallObjectMethod
++                        (env,
++                         java_engine.extractor,
++                         media_extractor.get_track_fmt,
++                         i);
++                is_audio = (*env)->CallBooleanMethod
++                        (env,
++                         m_format,
++                         media_format.contains_key,
++                         "KEY_SAMPLE_RATE");
++                if (!is_audio) {
++                        (*env)->DeleteLocalRef (env, m_format);
++                        continue;
++                }
++
++                /* Found an audio stream! */
++
++                /* Get rate */
++                audio->rate.value = (*env)->CallIntMethod
++                        (env,
++                         m_format,
++                         media_format.get_int,
++                         "KEY_SAMPLE_RATE");
++
++                if ((*env)->ExceptionCheck(env)) {
++                        LOGE ("Failed getting sample rate from MediaFormat");
++                        (*env)->ExceptionClear (env);
++                } else {
++                        audio->rate.state = GUPNP_DLNA_VALUE_STATE_SET;
++                }
++
++                /* Get channel count */
++                audio->channels.value = (*env)->CallIntMethod
++                        (env,
++                         m_format,
++                         media_format.get_int,
++                         "KEY_CHANNEL_COUNT");
++
++                if ((*env)->ExceptionCheck(env)) {
++                        LOGE ("Failed getting channel count from MediaFormat");
++                        (*env)->ExceptionClear (env);
++                } else {
++                        audio->channels.state = GUPNP_DLNA_VALUE_STATE_SET;
++                }
++
++                /* Get Mimetype */
++                j_mime = (*env)->CallIntMethod
++                        (env,
++                         m_format,
++                         media_format.get_int,
++                         "KEY_MIME");
++
++                if ((*env)->ExceptionCheck(env)) {
++                        LOGE ("Failed getting mime type from MediaFormat");
++                        (*env)->ExceptionClear (env);
++                } else {
++                        audio->mime.value = g_strdup
++                                ((*env)->GetStringUTFChars (env, j_mime, 0));
++                        (*env)->ReleaseStringUTFChars /* FIXME: needed? */
++                                (env, j_mime, audio->mime.value);
++                        audio->mime.state = GUPNP_DLNA_VALUE_STATE_SET;
++                }
++
++                /* Done Parsing Metadata */
++                break;
++        }
++
++        return TRUE;
++error:
++        return FALSE;
++}
++
++/**
++ * Right now we just copy over the container's metadata
++ * mimetype as the image's mimetype
++ */
++static gboolean
++android_image_metadata_get (JNIEnv *env, AndroidMetadata *metadata)
++{
++        AndroidImageMetadata *image;
++        AndroidContainerMetadata *container;
++
++        image = metadata->image;
++        container = metadata->container;
++
++        image->mime.value = g_strdup (container->mime.value);
++        if (image->mime.value != NULL) {
++                image->mime.state = GUPNP_DLNA_VALUE_STATE_SET;
++        }
++
++        return TRUE;
++}
++
++/**
++ * GObject routines
++ */
++
++/**
++ * FIXME: missing implementation
++ *
++ * The java API we are relying on is a synchroneous one
++ * so the whole async logic will have to be facked with
++ * threads.
++ */
++gupnp_dlna_discovered_cb (GUPnPDLNAMetadataExtractor *self,
++                          AndroidMetadata *info,
++                          GError *error,
++                          gpointer user_data)
++{
++}
++
++/**
++ * FIXME: missing implementation. Se note on gupnp_dlna_discovered_cb
++ * function above.
++ */
++static gboolean
++backend_extract_async (GUPnPDLNAMetadataExtractor *extractor, const gchar *uri,
++        guint timeout, GError **error)
++{
++        return TRUE;
++}
++
++/**
++ * Extract Metadata for given URI and
++ * store it in parsed_metadata global
++ */
++static GUPnPDLNAInformation *
++backend_extract_sync (GUPnPDLNAMetadataExtractor  *extractor G_GNUC_UNUSED,
++                      const gchar *uri,
++                      guint timeout_in_ms,
++                      GError **error)
++{
++        GUPnPDLNAInformation *gupnp_info;
++        AndroidMetadata *parsed_metadata;
++        gboolean has_video = FALSE;
++        gboolean has_audio = FALSE;
++        gboolean has_image = FALSE;
++        gboolean tmp = FALSE;
++        JNIEnv *env;
++
++        /**
++         * Create empty metadata stub for storing the parsed
++         * async / sync parsed metadata
++         */
++
++        parsed_metadata = gupnp_dlna_android_metadata_new (uri);
++
++        env = get_jni_env ();
++
++        /**
++         * Extract Container metadata
++         * And figure out what kind of streams had been muxed on it
++         */
++
++        tmp = android_container_metadata_get (env, parsed_metadata);
++        if (!tmp) {
++                LOGE ("Unable to get container metadata");
++                goto error;
++        }
++
++        /* Extract Video metadata */
++        if (parsed_metadata->has_video) {
++                parsed_metadata->video =
++                        gupnp_dlna_android_video_metadata_new ();
++                tmp = android_video_metadata_get (env, parsed_metadata);
++                if (!tmp) {
++                    LOGE ("Unable to get video metadata");
++                }
++        }
++
++        /* Extract Audio metadata */
++        if (parsed_metadata->has_audio) {
++                parsed_metadata->audio =
++                        gupnp_dlna_android_audio_metadata_new ();
++                tmp = android_audio_metadata_get (env, parsed_metadata);
++                if (!tmp) {
++                    LOGE ("Unable to get audio metadata");
++                }
++        }
++
++        /* Extract Image metadata */
++        if (has_image) {
++                parsed_metadata->image =
++                        gupnp_dlna_android_image_metadata_new ();
++                tmp = android_image_metadata_get (env, parsed_metadata);
++                if (!tmp) {
++                    LOGE ("Unable to get image metadata");
++                }
++        }
++
++        gupnp_info = GUPNP_DLNA_INFORMATION (
++                gupnp_dlna_android_information_new_from_parsed
++                        (uri, parsed_metadata));
++
++        return gupnp_info;
++error:
++        gupnp_dlna_android_metadata_destroy (parsed_metadata);
++        return NULL;
++}
++
++/* drafted */
++static void
++gupnp_dlna_android_metadata_extractor_class_init
++        (GUPnPDLNAAndroidMetadataExtractorClass *android_extractor_class)
++{
++        GUPnPDLNAMetadataExtractorClass *extractor_class =
++                GUPNP_DLNA_METADATA_EXTRACTOR_CLASS (android_extractor_class);
++
++        extractor_class->extract_async = backend_extract_async;
++        extractor_class->extract_sync = backend_extract_sync;
++}
++
++/* drafted */
++static void
++gupnp_dlna_android_metadata_extractor_init
++        (GUPnPDLNAAndroidMetadataExtractor *self)
++{
++        /**
++         * Init java pieces for our metadata extractor backend
++         *
++         * FIXME: these can fail and need to be moved elsewere
++         * Need something like Gst's plugin_init()
++         */
++
++        initialize_java_vm ();
++        get_java_classes ();
++        setup_java_backend ();
++
++}
++
++GUPnPDLNAAndroidMetadataExtractor *
++gupnp_dlna_android_metadata_extractor_new (void)
++{
++        GUPnPDLNAAndroidMetadataExtractor *extractor;
++
++        extractor = GUPNP_DLNA_ANDROID_METADATA_EXTRACTOR
++                (g_object_new (GUPNP_TYPE_DLNA_ANDROID_METADATA_EXTRACTOR,
++                NULL));
++        return extractor;
++}
+diff --git a/libgupnp-dlna/metadata-backends/android/gupnp-dlna-android-metadata-extractor.h b/libgupnp-dlna/metadata-backends/android/gupnp-dlna-android-metadata-extractor.h
+new file mode 100644
+index 0000000..dbdb503
+--- /dev/null
++++ b/libgupnp-dlna/metadata-backends/android/gupnp-dlna-android-metadata-extractor.h
+@@ -0,0 +1,79 @@
++/*
++ * Copyright (C) 2013 Intel Corporation.
++ *
++ * Author: Reynaldo H. Verdejo Pinochet <reynaldo@collabora.com>
++ *
++ * This library is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU Lesser General Public
++ * License as published by the Free Software Foundation; either
++ * version 2 of the License, or (at your option) any later version.
++ *
++ * This library is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++ * Lesser General Public License for more details.
++ *
++ * You should have received a copy of the GNU Lesser General Public
++ * License along with this library; if not, write to the
++ * Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
++ * Boston, MA 02110-1301, USA.
++ */
++
++#ifndef _GUPNP_DLNA_ANDROID_METADATA_EXTRACTOR
++#define _GUPNP_DLNA_ANDROID_METADATA_EXTRACTOR
++
++#include <glib.h>
++#include <glib-object.h>
++#include "gupnp-dlna-metadata-extractor.h"
++#include "gupnp-dlna-information.h"
++
++G_BEGIN_DECLS
++
++#define GUPNP_TYPE_DLNA_ANDROID_METADATA_EXTRACTOR \
++        (gupnp_dlna_android_metadata_extractor_get_type())
++
++#define GUPNP_DLNA_ANDROID_METADATA_EXTRACTOR(obj) \
++        (G_TYPE_CHECK_INSTANCE_CAST ((obj), \
++                                     GUPNP_TYPE_DLNA_ANDROID_METADATA_EXTRACTOR, \
++                                     GUPnPDLNAAndroidMetadataExtractor))
++
++#define GUPNP_DLNA_ANDROID_METADATA_EXTRACTOR_CLASS(klass) \
++        (G_TYPE_CHECK_CLASS_CAST ((klass), \
++                                  GUPNP_TYPE_DLNA_ANDROID_METADATA_EXTRACTOR, \
++                                  GUPnPDLNAAndroidMetadataExtractorClass))
++
++#define GUPNP_IS_DLNA_ANDROID_METADATA_EXTRACTOR(obj) \
++        (G_TYPE_CHECK_INSTANCE_TYPE ((obj), \
++                                     GUPNP_TYPE_DLNA_ANDROID_METADATA_EXTRACTOR))
++
++#define GUPNP_IS_DLNA_ANDROID_METADATA_EXTRACTOR_CLASS(klass) \
++        (G_TYPE_CHECK_CLASS_TYPE ((klass), \
++                                  GUPNP_TYPE_DLNA_ANDROID_METADATA_EXTRACTOR))
++
++#define GUPNP_DLNA_ANDROID_METADATA_EXTRACTOR_GET_CLASS(obj) \
++        (G_TYPE_INSTANCE_GET_CLASS ((obj), \
++                                    GUPNP_TYPE_DLNA_ANDROID_METADATA_EXTRACTOR, \
++                                    GUPnPDLNAAndroidMetadataExtractorClass))
++
++/**
++ * GUPnPDLNAAndroidMetadataExtractor:
++ *
++ * The top-level object used to for metadata extraction.
++ */
++typedef struct {
++        GUPnPDLNAMetadataExtractor parent;
++} GUPnPDLNAAndroidMetadataExtractor;
++
++typedef struct {
++        GUPnPDLNAMetadataExtractorClass parent_class;
++} GUPnPDLNAAndroidMetadataExtractorClass;
++
++GType
++gupnp_dlna_android_metadata_extractor_get_type (void);
++
++GUPnPDLNAAndroidMetadataExtractor *
++gupnp_dlna_android_metadata_extractor_new (void);
++
++G_END_DECLS
++
++#endif /* _GUPNP_DLNA_ANDROID_METADATA_EXTRACTOR */
+diff --git a/libgupnp-dlna/metadata-backends/android/gupnp-dlna-android-metadata.c b/libgupnp-dlna/metadata-backends/android/gupnp-dlna-android-metadata.c
+new file mode 100644
+index 0000000..84a3142
+--- /dev/null
++++ b/libgupnp-dlna/metadata-backends/android/gupnp-dlna-android-metadata.c
+@@ -0,0 +1,271 @@
++/*
++ * Copyright (C) 2013 Intel Corporation.
++ *
++ * Author: Reynaldo H. Verdejo Pinochet <reynaldo@collabora.com>
++ *
++ * This library is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU Lesser General Public
++ * License as published by the Free Software Foundation; either
++ * version 2 of the License, or (at your option) any later version.
++ *
++ * This library is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++ * Lesser General Public License for more details.
++ *
++ * You should have received a copy of the GNU Lesser General Public
++ * License along with this library; if not, write to the
++ * Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
++ * Boston, MA 02110-1301, USA.
++ */
++
++#include <glib.h>
++#include <libgupnp-dlna/gupnp-dlna-values.h>
++#include "gupnp-dlna-android-metadata.h"
++
++AndroidMetadata *
++gupnp_dlna_android_metadata_new (const gchar *uri)
++{
++        AndroidVideoMetadata *video;
++        AndroidAudioMetadata *audio;
++        AndroidImageMetadata *image;
++        AndroidContainerMetadata *container;
++        AndroidMetadata *metadata;
++
++        metadata = g_slice_new0 (AndroidMetadata);
++        metadata->uri = g_strdup (uri);
++        metadata->video = NULL;
++        metadata->audio = NULL;
++        metadata->image = NULL;
++        metadata->container = NULL;
++
++        return metadata;
++}
++
++/**
++ * FIXME: It might be possible to borrow height/width
++ * from the video metadata. Got to check whether it's
++ * indeed possible. The API documentation only mentions
++ * video/audio.
++ */
++AndroidImageMetadata *
++gupnp_dlna_android_image_metadata_new (void)
++{
++        AndroidImageMetadata *ret;
++
++        ret = g_slice_new0 (AndroidImageMetadata);
++
++        /**
++         * Set defaults
++         *
++         * Should mod this initial settings if we start
++         * supporting extraction of one of the unsuported
++         * fields here.
++         */
++
++        ret->depth.state        = GUPNP_DLNA_VALUE_STATE_UNSUPPORTED;
++        ret->height.state       = GUPNP_DLNA_VALUE_STATE_UNSUPPORTED;
++        ret->width.state        = GUPNP_DLNA_VALUE_STATE_UNSUPPORTED;
++        ret->mime.state         = GUPNP_DLNA_VALUE_STATE_UNSET;
++
++        /* Set String values to NULL */
++
++        ret->mime.value = NULL;
++
++        return ret;
++}
++
++AndroidVideoMetadata *
++gupnp_dlna_android_video_metadata_new (void)
++{
++        AndroidVideoMetadata *ret;
++
++        ret = g_slice_new0 (AndroidVideoMetadata);
++
++        /**
++         * Set defaults
++         *
++         * Should mod this initial settings if we start
++         * supporting extraction of one of the unsuported
++         * fields here.
++         *
++         * We are setting bitrate for video but Android
++         * provides this as the 'average' bitrate computed
++         * from the container metadata. This value is not
++         * per contained stream. We assume here that audio
++         * bitrate is negligible compared to the video one
++         * so we get it and set its value as the video bitrate.
++         *
++         * If you find it hard to live with this half-lie, set
++         * bitrate here to UNSUPPORTED and drop the extracting
++         * logic in the container metadata extractor.
++         *
++         * Weird as it sounds. MediaExtractor/MediaFormat do not
++         * provide an straightforward way of getting the bitrate
++         * for audio/video streams. Go figure.
++         */
++
++        ret->bitrate.state              = GUPNP_DLNA_VALUE_STATE_UNSET;
++        ret->framerate.state            = GUPNP_DLNA_VALUE_STATE_UNSUPPORTED;
++        ret->height.state               = GUPNP_DLNA_VALUE_STATE_UNSET;
++        ret->is_interlaced.state        = GUPNP_DLNA_VALUE_STATE_UNSUPPORTED;
++        ret->level.state                = GUPNP_DLNA_VALUE_STATE_UNSUPPORTED;
++        ret->mpeg_version.state         = GUPNP_DLNA_VALUE_STATE_UNSUPPORTED;
++        ret->pixel_aspect_ratio.state   = GUPNP_DLNA_VALUE_STATE_UNSUPPORTED;
++        ret->profile.state              = GUPNP_DLNA_VALUE_STATE_UNSUPPORTED;
++        ret->is_system_stream.state     = GUPNP_DLNA_VALUE_STATE_UNSUPPORTED;
++        ret->width.state                = GUPNP_DLNA_VALUE_STATE_UNSET;
++        ret->mime.state                 = GUPNP_DLNA_VALUE_STATE_UNSET;
++
++        /* Set String values to NULL */
++
++        ret->profile.value      = NULL;
++        ret->level.value        = NULL;
++        ret->mime.value         = NULL;
++
++        return ret;
++}
++
++AndroidAudioMetadata *
++gupnp_dlna_android_audio_metadata_new (void)
++{
++        AndroidAudioMetadata *ret;
++
++        ret = g_slice_new0 (AndroidAudioMetadata);
++
++        /**
++         * Set defaults
++         *
++         * Should mod this initial settings if we start
++         * supporting extraction of one of the unsuported
++         * fields here.
++         */
++
++        ret->bitrate.state              = GUPNP_DLNA_VALUE_STATE_UNSUPPORTED;
++        ret->channels.state             = GUPNP_DLNA_VALUE_STATE_UNSET;
++        ret->depth.state                = GUPNP_DLNA_VALUE_STATE_UNSUPPORTED;
++        ret->layer.state                = GUPNP_DLNA_VALUE_STATE_UNSUPPORTED;
++        ret->level.state                = GUPNP_DLNA_VALUE_STATE_UNSUPPORTED;
++        ret->mpeg_audio_version.state   = GUPNP_DLNA_VALUE_STATE_UNSUPPORTED;
++        ret->mpeg_version.state         = GUPNP_DLNA_VALUE_STATE_UNSUPPORTED;
++        ret->profile.state              = GUPNP_DLNA_VALUE_STATE_UNSUPPORTED;
++        ret->rate.state                 = GUPNP_DLNA_VALUE_STATE_UNSET;
++        ret->stream_format.state        = GUPNP_DLNA_VALUE_STATE_UNSUPPORTED;
++        ret->wma_version.state          = GUPNP_DLNA_VALUE_STATE_UNSUPPORTED;
++        ret->mime.state                 = GUPNP_DLNA_VALUE_STATE_UNSET;
++
++        /* Set String values to NULL */
++
++        ret->profile.value      = NULL;
++        ret->level.value        = NULL;
++        ret->stream_format.value= NULL;
++        ret->mime.value         = NULL;
++
++        return ret;
++}
++
++AndroidContainerMetadata *
++gupnp_dlna_android_container_metadata_new (void)
++{
++        AndroidContainerMetadata *ret;
++
++        ret = g_slice_new0 (AndroidContainerMetadata);
++
++        /**
++         * Set defaults
++         * Should mod this initial settings if we start
++         * supporting extraction of one of the unsuported
++         * fields here
++         */
++
++        ret->mpeg_version.state         = GUPNP_DLNA_VALUE_STATE_UNSUPPORTED;
++        ret->packet_size.state          = GUPNP_DLNA_VALUE_STATE_UNSUPPORTED;
++        ret->profile.state              = GUPNP_DLNA_VALUE_STATE_UNSUPPORTED;
++        ret->is_system_stream.state     = GUPNP_DLNA_VALUE_STATE_UNSUPPORTED;
++        ret->variant.state              = GUPNP_DLNA_VALUE_STATE_UNSUPPORTED;
++        ret->mime.state                 = GUPNP_DLNA_VALUE_STATE_UNSET;
++
++        /* Set String values to NULL */
++
++        ret->profile.value = NULL;
++        ret->variant.value = NULL;
++        ret->mime.value    = NULL;
++
++        return ret;
++}
++
++void
++gupnp_dlna_android_metadata_atom_dispose
++        (void **p, AndroidMetadataAtomType type)
++{
++        AndroidContainerMetadata *container;
++        AndroidVideoMetadata *video;
++        AndroidAudioMetadata *audio;
++        AndroidImageMetadata *image;
++
++        if (!*p) {
++            goto thxbye;
++        }
++
++        /**
++         * Only GUPnPDLNAStringValues
++         * need to be freed from AndroidAudioMetadata
++         */
++
++        switch (type) {
++                case ANDROID_METADATA_ATOM_CONTAINER:
++                        container = *p;
++                        g_clear_pointer (&container->profile.value, g_free);
++                        g_clear_pointer (&container->variant.value, g_free);
++                        g_clear_pointer (&container->mime.value, g_free);
++                        g_slice_free (AndroidContainerMetadata, container);
++                        break;
++                case ANDROID_METADATA_ATOM_VIDEO:
++                        video = *p;
++                        g_clear_pointer (&video->level.value, g_free);
++                        g_clear_pointer (&video->profile.value, g_free);
++                        g_clear_pointer (&video->mime.value, g_free);
++                        g_slice_free (AndroidVideoMetadata, video);
++                        break;
++                case ANDROID_METADATA_ATOM_AUDIO:
++                        audio = *p;
++                        g_clear_pointer (&audio->level.value, g_free);
++                        g_clear_pointer (&audio->profile.value, g_free);
++                        g_clear_pointer (&audio->stream_format.value, g_free);
++                        g_clear_pointer (&audio->mime.value, g_free);
++                        g_slice_free (AndroidAudioMetadata, audio);
++                        break;
++                case ANDROID_METADATA_ATOM_IMAGE:
++                        image = *p;
++                        g_clear_pointer (&image->mime.value, g_free);
++                        g_slice_free (AndroidImageMetadata, image);
++        }
++thxbye:
++        p = NULL;
++}
++
++void
++gupnp_dlna_android_metadata_destroy (AndroidMetadata **metadata)
++{
++        if (!*metadata) {
++                return;
++        }
++
++        gupnp_dlna_android_metadata_atom_dispose
++                (&(*metadata)->container, ANDROID_METADATA_ATOM_CONTAINER);
++
++        gupnp_dlna_android_metadata_atom_dispose
++                (&(*metadata)->video, ANDROID_METADATA_ATOM_VIDEO);
++
++        gupnp_dlna_android_metadata_atom_dispose
++                (&(*metadata)->audio, ANDROID_METADATA_ATOM_AUDIO);
++
++        gupnp_dlna_android_metadata_atom_dispose
++                (&(*metadata)->image, ANDROID_METADATA_ATOM_IMAGE);
++
++        g_free ((*metadata)->uri);
++
++        g_slice_free (AndroidMetadata, *metadata);
++
++        metadata = NULL;
++}
+diff --git a/libgupnp-dlna/metadata-backends/android/gupnp-dlna-android-metadata.h b/libgupnp-dlna/metadata-backends/android/gupnp-dlna-android-metadata.h
+new file mode 100644
+index 0000000..d1fd864
+--- /dev/null
++++ b/libgupnp-dlna/metadata-backends/android/gupnp-dlna-android-metadata.h
+@@ -0,0 +1,115 @@
++/*
++ * Copyright (C) 2013 Intel Corporation.
++ *
++ * Author: Reynaldo H. Verdejo Pinochet <reynaldo@collabora.com>
++ *
++ * This library is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU Lesser General Public
++ * License as published by the Free Software Foundation; either
++ * version 2 of the License, or (at your option) any later version.
++ *
++ * This library is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++ * Lesser General Public License for more details.
++ *
++ * You should have received a copy of the GNU Lesser General Public
++ * License along with this library; if not, write to the
++ * Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
++ * Boston, MA 02110-1301, USA.
++ */
++
++#ifndef _ANDROID_METADATA
++#define _ANDROID_METADATA
++
++#include <glib.h>
++#include <libgupnp-dlna/gupnp-dlna-values.h>
++#include <android/log.h>
++
++#define LOG_TAG "gupnp-dlna"
++#define LOGD(...) __android_log_print(ANDROID_LOG_DEBUG, LOG_TAG, __VA_ARGS__)
++#define LOGI(...) __android_log_print(ANDROID_LOG_INFO, LOG_TAG, __VA_ARGS__)
++#define LOGW(...) __android_log_print(ANDROID_LOG_WARN, LOG_TAG, __VA_ARGS__)
++#define LOGE(...) __android_log_print(ANDROID_LOG_ERROR, LOG_TAG, __VA_ARGS__)
++
++typedef enum _AndroidMetadataAtomType {
++        ANDROID_METADATA_ATOM_CONTAINER,
++        ANDROID_METADATA_ATOM_VIDEO,
++        ANDROID_METADATA_ATOM_AUDIO,
++        ANDROID_METADATA_ATOM_IMAGE
++} AndroidMetadataAtomType;
++
++typedef struct _AndroidContainerMetadata AndroidContainerMetadata;
++typedef struct _AndroidVideoMetadata AndroidVideoMetadata;
++typedef struct _AndroidAudioMetadata AndroidAudioMetadata;
++typedef struct _AndroidImageMetadata AndroidImageMetadata;
++
++typedef struct _AndroidMetadata AndroidMetadata;
++
++AndroidImageMetadata * gupnp_dlna_android_image_metadata_new (void);
++AndroidVideoMetadata * gupnp_dlna_android_video_metadata_new (void);
++AndroidAudioMetadata * gupnp_dlna_android_audio_metadata_new (void);
++AndroidContainerMetadata * gupnp_dlna_android_container_metadata_new (void);
++
++void gupnp_dlna_android_metadata_atom_dispose
++        (void **p, AndroidMetadataAtomType type);
++void gupnp_dlna_android_metadata_destroy (AndroidMetadata **metadata);
++
++AndroidMetadata * gupnp_dlna_android_metadata_new (const gchar *uri);
++
++struct _AndroidMetadata {
++        const gchar *uri;
++        gboolean has_video;
++        gboolean has_audio;
++        AndroidContainerMetadata *container;
++        AndroidVideoMetadata     *video;
++        AndroidAudioMetadata     *audio;
++        AndroidImageMetadata     *image;
++};
++
++struct _AndroidContainerMetadata {
++        GUPnPDLNAIntValue mpeg_version;
++        GUPnPDLNAIntValue packet_size;
++        GUPnPDLNAStringValue profile;
++        GUPnPDLNABoolValue is_system_stream;
++        GUPnPDLNAStringValue variant;
++        GUPnPDLNAStringValue mime;
++};
++
++struct _AndroidVideoMetadata {
++        GUPnPDLNAIntValue bitrate;
++        GUPnPDLNAFractionValue framerate;
++        GUPnPDLNAIntValue height;
++        GUPnPDLNABoolValue is_interlaced;
++        GUPnPDLNAStringValue level;
++        GUPnPDLNAIntValue mpeg_version;
++        GUPnPDLNAFractionValue pixel_aspect_ratio;
++        GUPnPDLNAStringValue profile;
++        GUPnPDLNABoolValue is_system_stream;
++        GUPnPDLNAIntValue width;
++        GUPnPDLNAStringValue mime;
++};
++
++struct _AndroidAudioMetadata {
++        GUPnPDLNAIntValue bitrate;
++        GUPnPDLNAIntValue channels;
++        GUPnPDLNAIntValue depth;
++        GUPnPDLNAIntValue layer;
++        GUPnPDLNAStringValue level;
++        GUPnPDLNAIntValue mpeg_audio_version;
++        GUPnPDLNAIntValue mpeg_version;
++        GUPnPDLNAStringValue profile;
++        GUPnPDLNAIntValue rate;
++        GUPnPDLNAStringValue stream_format;
++        GUPnPDLNAIntValue wma_version;
++        GUPnPDLNAStringValue mime;
++};
++
++struct _AndroidImageMetadata {
++        GUPnPDLNAIntValue depth;
++        GUPnPDLNAIntValue height;
++        GUPnPDLNAIntValue width;
++        GUPnPDLNAStringValue mime;
++};
++
++#endif
+diff --git a/libgupnp-dlna/metadata-backends/android/gupnp-dlna-android-video-information.c b/libgupnp-dlna/metadata-backends/android/gupnp-dlna-android-video-information.c
+new file mode 100644
+index 0000000..3f4f710
+--- /dev/null
++++ b/libgupnp-dlna/metadata-backends/android/gupnp-dlna-android-video-information.c
+@@ -0,0 +1,282 @@
++/*
++ * Copyright (C) 2013 Intel Corporation.
++ *
++ * Author: Reynaldo H. Verdejo Pinochet <reynaldo@collabora.com>
++ *
++ * This library is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU Lesser General Public
++ * License as published by the Free Software Foundation; either
++ * version 2 of the License, or (at your option) any later version.
++ *
++ * This library is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++ * Lesser General Public License for more details.
++ *
++ * You should have received a copy of the GNU Lesser General Public
++ * License along with this library; if not, write to the
++ * Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
++ * Boston, MA 02110-1301, USA.
++ */
++
++#ifdef HAVE_CONFIG_H
++#include "config.h"
++#endif /* HAVE_CONFIG_H_ */
++#include "gupnp-dlna-android-metadata.h"
++#include "gupnp-dlna-android-video-information.h"
++
++G_DEFINE_TYPE (GUPnPDLNAAndroidVideoInf,
++               gupnp_dlna_android_video_inf,
++               GUPNP_TYPE_DLNA_VIDEO_INFORMATION)
++
++struct _GUPnPDLNAAndroidVideoInfPrivate {
++        AndroidVideoMetadata *info;
++};
++
++enum
++{
++        PROP_0,
++        PROP_INFO
++};
++
++/**
++ * Getters
++ */
++
++static GUPnPDLNAIntValue
++backend_get_bitrate (GUPnPDLNAVideoInformation *self)
++{
++        GUPnPDLNAAndroidVideoInf *info =
++                GUPNP_DLNA_DROID_VIDEO_INF (self);
++
++        AndroidVideoMetadata *android_info = info->priv->info;
++        return android_info->bitrate;
++}
++
++static GUPnPDLNAFractionValue
++backend_get_framerate (GUPnPDLNAVideoInformation *self)
++{
++        GUPnPDLNAAndroidVideoInf *info =
++                GUPNP_DLNA_DROID_VIDEO_INF (self);
++
++        AndroidVideoMetadata *android_info = info->priv->info;
++        return android_info->framerate;
++}
++
++static GUPnPDLNAIntValue
++backend_get_height (GUPnPDLNAVideoInformation *self)
++{
++        GUPnPDLNAAndroidVideoInf *info =
++                GUPNP_DLNA_DROID_VIDEO_INF (self);
++
++        AndroidVideoMetadata *android_info = info->priv->info;
++        return android_info->height;
++}
++
++static GUPnPDLNABoolValue
++backend_is_interlaced (GUPnPDLNAVideoInformation *self)
++{
++        GUPnPDLNAAndroidVideoInf *info =
++                GUPNP_DLNA_DROID_VIDEO_INF (self);
++
++        AndroidVideoMetadata *android_info = info->priv->info;
++        return android_info->is_interlaced;
++}
++
++static GUPnPDLNAStringValue
++backend_get_level (GUPnPDLNAVideoInformation *self)
++{
++        GUPnPDLNAAndroidVideoInf *info =
++                GUPNP_DLNA_DROID_VIDEO_INF (self);
++
++        AndroidVideoMetadata *android_info = info->priv->info;
++        return android_info->level;
++}
++
++static GUPnPDLNAIntValue
++backend_get_mpeg_version (GUPnPDLNAVideoInformation *self)
++{
++        GUPnPDLNAAndroidVideoInf *info =
++                GUPNP_DLNA_DROID_VIDEO_INF (self);
++
++        AndroidVideoMetadata *android_info = info->priv->info;
++        return android_info->mpeg_version;
++}
++
++static GUPnPDLNAFractionValue
++backend_get_pixel_aspect_ratio (GUPnPDLNAVideoInformation *self)
++{
++        GUPnPDLNAAndroidVideoInf *info =
++                GUPNP_DLNA_DROID_VIDEO_INF (self);
++
++        AndroidVideoMetadata *android_info = info->priv->info;
++        return android_info->pixel_aspect_ratio;
++}
++
++static GUPnPDLNAStringValue
++backend_get_profile (GUPnPDLNAVideoInformation *self)
++{
++        GUPnPDLNAAndroidVideoInf *info =
++                GUPNP_DLNA_DROID_VIDEO_INF (self);
++
++        AndroidVideoMetadata *android_info = info->priv->info;
++        return android_info->profile;
++}
++
++static GUPnPDLNABoolValue
++backend_is_system_stream (GUPnPDLNAVideoInformation *self)
++{
++        GUPnPDLNAAndroidVideoInf *info =
++                GUPNP_DLNA_DROID_VIDEO_INF (self);
++
++        AndroidVideoMetadata *android_info = info->priv->info;
++        return android_info->stream;
++}
++
++static GUPnPDLNAIntValue
++backend_get_width (GUPnPDLNAVideoInformation *self)
++{
++        GUPnPDLNAAndroidVideoInf *info =
++                GUPNP_DLNA_DROID_VIDEO_INF (self);
++
++        AndroidVideoMetadata *android_info = info->priv->info;
++        return android_info->width;
++}
++
++static GUPnPDLNAStringValue
++backend_get_mime (GUPnPDLNAVideoInformation *self)
++{
++        GUPnPDLNAAndroidVideoInf *info =
++                GUPNP_DLNA_DROID_VIDEO_INF (self);
++
++        AndroidVideoMetadata *android_info = info->priv->info;
++        return android_info->mime;
++}
++
++/**
++ * GObject cruft
++ */
++
++static void
++gupnp_dlna_android_video_inf_dispose (GObject *object)
++{
++        GUPnPDLNAAndroidVideoInf *info = GUPNP_DLNA_DROID_VIDEO_INF (object);
++        GObjectClass *parent_class = G_OBJECT_CLASS
++                (gupnp_dlna_android_video_inf_parent_class);
++
++        gupnp_android_metadata_atom_dispose (&info->priv->info,
++                                             ANDROID_METADATA_ATOM_VIDEO);
++        parent_class->dispose (object);
++}
++
++static void
++gupnp_dlna_android_video_inf_set_property (GObject      *object,
++                                               guint         property_id,
++                                               const GValue *value,
++                                               GParamSpec   *pspec)
++{
++        GUPnPDLNAAndroidVideoInf *info = GUPNP_DLNA_DROID_VIDEO_INF (object);
++        GUPnPDLNAAndroidVideoInfPrivate *priv = info->priv;
++
++        switch (property_id) {
++        case PROP_INFO:
++                gupnp_android_metadata_atom_dispose
++                        (&priv->info, ANDROID_METADATA_ATOM_VIDEO);
++                priv->info = (AndroidVideoMetadata *)
++                        g_slice_dup (AndroidVideoMetadata, value);
++                break;
++
++        default:
++                G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
++                break;
++        }
++}
++
++static void
++gupnp_dlna_android_video_inf_get_property (GObject *object,
++                                           guint property_id,
++                                           GValue *value,
++                                           GParamSpec *pspec)
++{
++        GUPnPDLNAAndroidVideoInf *info = GUPNP_DLNA_DROID_VIDEO_INF (object);
++        GUPnPDLNAAndroidVideoInfPrivate *priv = info->priv;
++
++        switch (property_id) {
++        case PROP_INFO:
++                g_value_set_pointer (value, priv->info);
++                break;
++
++        default:
++                G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
++                break;
++        }
++}
++
++static void
++gupnp_dlna_android_video_inf_class_init
++        (GUPnPDLNAAndroidVideoInfClass *android_info_class)
++{
++        GUPnPDLNAVideoInformationClass *info_class =
++                GUPNP_DLNA_VIDEO_INFORMATION_CLASS (android_info_class);
++        GObjectClass *object_class = G_OBJECT_CLASS (android_info_class);
++        GParamSpec *pspec;
++
++        object_class->get_property = gupnp_dlna_android_video_inf_get_property;
++        object_class->set_property = gupnp_dlna_android_video_inf_set_property;
++        object_class->dispose = gupnp_dlna_android_video_inf_dispose;
++
++        info_class->get_bitrate = backend_get_bitrate;
++        info_class->get_framerate = backend_get_framerate;
++        info_class->get_height = backend_get_height;
++        info_class->is_interlaced = backend_is_interlaced;
++        info_class->get_level = backend_get_level;
++        info_class->get_mpeg_version = backend_get_mpeg_version;
++        info_class->get_pixel_aspect_ratio = backend_get_pixel_aspect_ratio;
++        info_class->get_profile = backend_get_profile;
++        info_class->is_system_stream = backend_is_system_stream;
++        info_class->get_width = backend_get_width;
++        info_class->get_mime = backend_get_mime;
++
++        pspec = g_param_spec_pointer ("info",
++                                      "info",
++                                      "android metadata",
++                                      G_PARAM_READWRITE |
++                                      G_PARAM_CONSTRUCT);
++
++        g_object_class_install_property (object_class,
++                                         PROP_INFO,
++                                         pspec);
++
++        g_type_class_add_private (android_info_class,
++                                  sizeof (GUPnPDLNAAndroidVideoInfPrivate));
++}
++
++static void
++gupnp_dlna_android_video_inf_init (GUPnPDLNAAndroidVideoInf *self)
++{
++        GUPnPDLNAAndroidVideoInfPrivate *priv =
++                G_TYPE_INSTANCE_GET_PRIVATE
++                    (self,
++                     GUPNP_TYPE_DLNA_ANDROID_VIDEO_INFORMATION,
++                     GUPnPDLNAAndroidVideoInfPrivate);
++
++        priv->info = NULL;
++        self->priv = priv;
++}
++
++GUPnPDLNAAndroidVideoInf *
++gupnp_dlna_android_video_information_new (AndroidMetadata *info)
++{
++        GUPnPDLNAAndroidVideoInf *video_info;
++
++        if (!info->video) {
++            return NULL;
++        }
++
++        video_info = GUPNP_DLNA_DROID_VIDEO_INF (
++                g_object_new (GUPNP_TYPE_DLNA_ANDROID_VIDEO_INFORMATION,
++                              "info",
++                              info->video,
++                              NULL));
++        return video_info;
++}
+diff --git a/libgupnp-dlna/metadata-backends/android/gupnp-dlna-android-video-information.h b/libgupnp-dlna/metadata-backends/android/gupnp-dlna-android-video-information.h
+new file mode 100644
+index 0000000..e84278a
+--- /dev/null
++++ b/libgupnp-dlna/metadata-backends/android/gupnp-dlna-android-video-information.h
+@@ -0,0 +1,72 @@
++/*
++ * Copyright (C) 2013 Intel Corporation.
++ *
++ * Author: Reynaldo H. Verdejo Pinochet <reynaldo@collabora.com>
++ *
++ * This library is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU Lesser General Public
++ * License as published by the Free Software Foundation; either
++ * version 2 of the License, or (at your option) any later version.
++ *
++ * This library is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++ * Lesser General Public License for more details.
++ *
++ * You should have received a copy of the GNU Lesser General Public
++ * License along with this library; if not, write to the
++ * Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
++ * Boston, MA 02110-1301, USA.
++ */
++
++#ifndef __GUPNP_DLNA_DROID_VIDEO_INF_H__
++#define __GUPNP_DLNA_DROID_VIDEO_INF_H__
++
++#include <glib-object.h>
++#include "gupnp-dlna-video-information.h"
++#include "gupnp-dlna-android-metadata.h"
++
++G_BEGIN_DECLS
++
++#define GUPNP_TYPE_DLNA_ANDROID_VIDEO_INFORMATION gupnp_dlna_android_video_inf_get_type()
++
++#define GUPNP_DLNA_DROID_VIDEO_INF(obj)                                     \
++        (G_TYPE_CHECK_INSTANCE_CAST ((obj),                             \
++                                     GUPNP_TYPE_DLNA_ANDROID_VIDEO_INFORMATION,       \
++                                     GUPnPDLNAAndroidVideoInf))
++
++#define GUPNP_DLNA_DROID_VIDEO_INF_CLASS(klass)                             \
++        (G_TYPE_CHECK_CLASS_CAST ((klass),                              \
++                                  GUPNP_TYPE_DLNA_ANDROID_VIDEO_INFORMATION,          \
++                                  GUPnPDLNAAndroidVideoInfClass))
++
++#define GUPNP_IS_DLNA_ANDROID_VIDEO_INFORMATION(obj)                                  \
++        (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GUPNP_TYPE_DLNA_ANDROID_VIDEO_INFORMATION))
++
++#define GUPNP_IS_DLNA_ANDROID_VIDEO_INFORMATION_CLASS(klass)                          \
++        (G_TYPE_CHECK_CLASS_TYPE ((klass), GUPNP_TYPE_DLNA_ANDROID_VIDEO_INFORMATION))
++
++#define GUPNP_DLNA_DROID_VIDEO_INF_GET_CLASS(obj)                           \
++        (G_TYPE_INSTANCE_GET_CLASS ((obj),                              \
++                                    GUPNP_TYPE_DLNA_ANDROID_VIDEO_INFORMATION,        \
++                                    GUPnPDLNAAndroidVideoInfClass))
++
++typedef struct _GUPnPDLNAAndroidVideoInfPrivate GUPnPDLNAAndroidVideoInfPrivate;
++
++typedef struct {
++        GUPnPDLNAVideoInformation parent;
++        GUPnPDLNAAndroidVideoInfPrivate *priv;
++} GUPnPDLNAAndroidVideoInf;
++
++typedef struct {
++        GUPnPDLNAVideoInformationClass parent_class;
++} GUPnPDLNAAndroidVideoInfClass;
++
++GType gupnp_dlna_android_video_inf_get_type (void);
++
++GUPnPDLNAAndroidVideoInf *
++gupnp_dlna_android_video_information_new (AndroidMetadata *info);
++
++G_END_DECLS
++
++#endif /* __GUPNP_DLNA_DROID_VIDEO_INF_H__ */
+-- 
+1.7.10.4
+
