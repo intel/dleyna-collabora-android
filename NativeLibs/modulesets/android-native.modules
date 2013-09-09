@@ -119,8 +119,9 @@
 
     <!-- gupnp-dlna -->
 
-    <autotools id="gupnp-dlna" autogen-sh="autoreconf">
+    <autotools id="gupnp-dlna" autogen-sh="autoreconf" autogenargs="--enable-android-metadata-backend">
         <branch repo="gnome.org" module="gupnp-dlna/0.10/gupnp-dlna-0.10.1.tar.xz" version="0.10.1">
+        <patch file="gupnp-dlna/0001-Android-Add-Android-metadata-extractor-backend.patch" strip="1" />
         </branch>
         <dependencies>
             <dep package="gupnp"/>
