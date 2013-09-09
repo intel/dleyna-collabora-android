@@ -366,11 +366,11 @@ public class RendererService extends Service implements IConnectorClient {
          +-------------------*/
 
         public String hostFile(IRendererClient client, String objectPath, String path, Bundle extras) {
-            return null; // TODO
+            return doStringMethodString(client, objectPath, IFACE_PUSH_HOST, "HostFile", path, extras);
         }
 
         public void removeFile(IRendererClient client, String objectPath, String path, Bundle extras) {
-            // TODO
+            doVoidMethodString(client, objectPath, IFACE_PUSH_HOST, "RemoveFile", path, extras);
         }
 
         /*--------------------*/
@@ -499,7 +499,7 @@ public class RendererService extends Service implements IConnectorClient {
         RemoteObject ro = connector.getRemoteObject(objectPath, iface);
         if (ro != null) {
             if (LOG) Log.i(TAG, method + ": obj=" + objectPath);
-            GVariant gvArgs = GVariant.newString(arg); // TODO: this must be in a tuple!
+            GVariant gvArgs = GVariant.newTupleString(arg);
             Invocation invo = connector.dispatch(client, ro, iface, method, gvArgs);
             gvArgs.free();
             if (!invo.success) {
@@ -507,6 +507,27 @@ public class RendererService extends Service implements IConnectorClient {
                 extras.putString(Extras.KEY_ERR_MSG, invo.errMessage);
             }
         }
+    }
+
+    private String doStringMethodString(IRendererClient client, String objectPath, String iface,
+            String method, String arg, Bundle extras) {
+        String result = null;
+        RemoteObject ro = connector.getRemoteObject(objectPath, iface);
+        if (ro != null) {
+            if (LOG) Log.i(TAG, method + ": obj=" + objectPath);
+            GVariant gvArgs = GVariant.newTupleString(arg);
+            Invocation invo = connector.dispatch(client, ro, iface, method, gvArgs);
+            gvArgs.free();
+            if (invo.success) {
+                result = invo.result.getString();
+                if (LOG) Log.i(TAG, method + ": result=" + result);
+                invo.result.free();
+            } else {
+                extras.putInt(Extras.KEY_ERR_CODE, invo.errCode);
+                extras.putString(Extras.KEY_ERR_MSG, invo.errMessage);
+            }
+        }
+        return result;
     }
 
     private void doVoidMethodLong(IRendererClient client, String objectPath, String iface,
