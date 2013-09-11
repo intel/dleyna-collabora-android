@@ -25,15 +25,19 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import android.app.ListActivity;
+import android.content.Intent;
+import android.database.Cursor;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
-import android.os.Looper;
 import android.os.RemoteException;
+import android.provider.MediaStore;
 import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ArrayAdapter;
+import android.widget.Toast;
 
 import com.intel.dleyna.lib.DLeynaException;
 import com.intel.dleyna.lib.Renderer;
@@ -48,17 +52,29 @@ public class PushActivity extends ListActivity {
 
     private static final String TAG = App.TAG;
 
-    private Handler mainHandler;
-    private ExecutorService workerPool;
+    private Handler mainHandler = new Handler();
+    private ExecutorService workerPool = Executors.newSingleThreadExecutor();
+
+    private String mediaType;
+    private String mediaPath;
+
     private RendererManager rendererMgr;
+    private RendererDope[] renderersDope;
+    private Renderer renderer;
 
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        if (App.LOG) Log.i(TAG, "PushActivity: onCreate");
-        setContentView(R.layout.push);
-        getListView().setOnItemClickListener(itemClickListener);
-        mainHandler = new Handler(Looper.getMainLooper());
-        workerPool = Executors.newSingleThreadExecutor();
+        getMediaArgsFromIntent();
+        if (App.LOG) Log.i(TAG, String.format("PushActivity: onCreate: type=%s path=%s",
+                mediaType, mediaPath));
+        if (mediaPath == null) {
+            Toast.makeText(this, "No media", Toast.LENGTH_LONG).show();
+            finish();
+        } else {
+            setContentView(R.layout.push);
+            getListView().setOnItemClickListener(itemClickListener);
+            connectToService();
+        }
     }
 
     protected void onStart() {
@@ -69,16 +85,50 @@ public class PushActivity extends ListActivity {
     protected void onResume() {
         super.onResume();
         if (App.LOG) Log.i(TAG, "PushActivity: onResume");
+    }
+
+    private OnItemClickListener itemClickListener = new OnItemClickListener() {
+        public void onItemClick(AdapterView<?> parent, View v, int position, long id) {
+            if (App.LOG) Log.i(TAG, String.format("PushActivity: onItemClick: pos=%d id=%d",
+                    position, id));
+            getListView().setEnabled(false);
+            renderer = renderersDope[position].renderer;
+            hostAndPlay(mediaPath, renderer);
+        }
+    };
+
+    protected void onPause() {
+        super.onPause();
+        if (App.LOG) Log.i(TAG, "PushActivity: onPause");
+        stopAndUnhost(rendererMgr, renderer, mediaPath);
+    }
+
+    protected void onStop() {
+        super.onStop();
+        if (App.LOG) Log.i(TAG, "PushActivity: onStop");
+    }
+
+    protected void onDestroy() {
+        super.onDestroy();
+        if (App.LOG) Log.i(TAG, "PushActivity: onDestroy");
+        disconnectFromService();
+    }
+
+    private void connectToService() {
         rendererMgr = new RendererManager(new RendererManagerListener() {
             public void onConnected() {
+                if (App.LOG) Log.i(TAG, "PushActivity: onConnected");
                 updateList();
             }
             public void onDisconnected() {
+                if (App.LOG) Log.i(TAG, "PushActivity: onDisconnected");
             }
             public void onRendererFound(Renderer r) {
+                if (App.LOG) Log.i(TAG, "PushActivity: onRendererFound");
                 updateList();
             }
             public void onRendererLost(Renderer r) {
+                if (App.LOG) Log.i(TAG, "PushActivity: onRendererLost");
                 updateList();
             }
         });
@@ -92,23 +142,23 @@ public class PushActivity extends ListActivity {
                 // We're on a worker thread.
                 try {
                     Renderer[] rv = rendererMgr.getRenderers();
-                    RendererDope[] rdv = new RendererDope[rv.length];
+                    final RendererDope[] rdv = new RendererDope[rv.length];
                     for (int i=0; i < rv.length; i++) {
                         rdv[i] = new RendererDope();
                         rdv[i].renderer = rv[i];
                         rdv[i].friendlyName = rv[i].getFriendlyName();
                     }
-                    final RendererDope[] rdvFinal = rdv;
                     mainHandler.post(new Runnable() {
                         public void run() {
-                            // We're on the main thread.
+                            // We're on the UI thread.
                             ArrayAdapter<String> adapter = new ArrayAdapter<String>(
                                     PushActivity.this,
                                     android.R.layout.simple_list_item_1);
-                            for (int i=0; i < rdvFinal.length; i++) {
-                                adapter.add(rdvFinal[i].friendlyName);
+                            for (int i=0; i < rdv.length; i++) {
+                                adapter.add(rdv[i].friendlyName);
                             }
                             PushActivity.this.setListAdapter(adapter);
+                            renderersDope = rdv;
                         }
                     });
                 } catch (RemoteException e) {
@@ -120,29 +170,66 @@ public class PushActivity extends ListActivity {
         });
     }
 
-    protected void onPause() {
-        super.onPause();
-        if (App.LOG) Log.i(TAG, "PushActivity: onPause");
-        rendererMgr.disconnect();
-        rendererMgr = null;
+    private void hostAndPlay(final String mPath, final Renderer r) {
+        // We're on the UI thread.
+        workerPool.execute(new Runnable() {
+            public void run() {
+                // We're on a worker thread.
+                try {
+                    String url = r.hostFile(mPath);
+                    if (App.LOG) Log.i(TAG, "PushActivity: onItemClick: " + url);
+                    r.openUri(url);
+                    r.play();
+                } catch (RemoteException e) {
+                    e.printStackTrace();
+                } catch (DLeynaException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
     }
 
-    protected void onStop() {
-        super.onStop();
-        if (App.LOG) Log.i(TAG, "PushActivity: onStop");
+    private void stopAndUnhost(final RendererManager rMgr, final Renderer r, final String mPath) {
+        // We're on the UI thread.
+        workerPool.execute(new Runnable() {
+            public void run() {
+                // We're on a worker thread.
+                if (r != null) {
+                    try {
+                        r.stop();
+                        r.removeFile(mPath);
+                    } catch (RemoteException e) {
+                        e.printStackTrace();
+                    } catch (DLeynaException e) {
+                        e.printStackTrace();
+                    }
+                    if (App.LOG) Log.i(TAG, "PushActivity: stopAndUnhost: DONE");
+                }
+            }
+        });
     }
 
-    protected void onDestroy() {
-        super.onDestroy();
-        if (App.LOG) Log.i(TAG, "PushActivity: onDestroy");
-    }
-
-    private OnItemClickListener itemClickListener = new OnItemClickListener() {
-        public void onItemClick(AdapterView<?> parent, View v, int position, long id) {
-            if (App.LOG) Log.i(TAG, String.format("PushActivity: onItemClick: pos=%d id=%d", position, id));
-            // TODO: Do something in response to the click
+    private void disconnectFromService() {
+        if (rendererMgr != null) {
+            rendererMgr.disconnect();
         }
-    };
+    }
+
+    private void getMediaArgsFromIntent() {
+        Intent intent = getIntent();
+        mediaType = intent.getType();
+        Uri uri = (Uri) intent.getExtras().get(Intent.EXTRA_STREAM);
+        if (uri != null) {
+            mediaPath = getPathNameFromContentUri(uri);
+        }
+    }
+
+    private String getPathNameFromContentUri(Uri contentUri) {
+        String[] projection = new String[] { MediaStore.Images.Media.DATA };
+        Cursor cursor = managedQuery(contentUri, projection, null, null, null);
+        cursor.moveToFirst();
+        return cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA));
+    }
 
     private static class RendererDope {
         public Renderer renderer;

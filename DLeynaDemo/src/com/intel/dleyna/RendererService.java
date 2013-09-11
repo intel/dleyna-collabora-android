@@ -366,18 +366,18 @@ public class RendererService extends Service implements IConnectorClient {
          +-------------------*/
 
         public String hostFile(IRendererClient client, String objectPath, String path, Bundle extras) {
-            return null; // TODO
+            return doStringMethodString(client, objectPath, IFACE_PUSH_HOST, "HostFile", path, extras);
         }
 
         public void removeFile(IRendererClient client, String objectPath, String path, Bundle extras) {
-            // TODO
+            doVoidMethodString(client, objectPath, IFACE_PUSH_HOST, "RemoveFile", path, extras);
         }
 
         /*--------------------*/
 
         private String getStringDBusProperty(IRendererClient client, String objectPath, String iface,
                 String propName, Bundle extras) {
-            if (LOG) Log.i(TAG, "getStringDBusProp: obj=" + objectPath + " prop=" + propName);
+            if (LOG) logGetDBusProp("getStringDBusProp", objectPath, iface, propName);
             String result = null;
             RemoteObject ro = connector.getRemoteObject(objectPath, IFACE_DBUS_PROP);
             if (ro != null) {
@@ -398,7 +398,7 @@ public class RendererService extends Service implements IConnectorClient {
 
         private boolean getBooleanDBusProperty(IRendererClient client, String objectPath, String iface,
                 String propName, Bundle extras) {
-            if (LOG) Log.i(TAG, "getBooleanDBusProp: obj=" + objectPath + " prop=" + propName);
+            if (LOG) logGetDBusProp("getBooleanDBusProp", objectPath, iface, propName);
             boolean result = false;
             RemoteObject ro = connector.getRemoteObject(objectPath, IFACE_DBUS_PROP);
             if (ro != null) {
@@ -420,7 +420,7 @@ public class RendererService extends Service implements IConnectorClient {
 
     private double getDoubleDBusProperty(IRendererClient client, String objectPath, String iface,
             String propName, Bundle extras) {
-        if (LOG) Log.i(TAG, "getDoubleDBusProp: obj=" + objectPath + " prop=" + propName);
+        if (LOG) logGetDBusProp("getDoubleDBusProp", objectPath, iface, propName);
         double result = 0;
         RemoteObject ro = connector.getRemoteObject(objectPath, IFACE_DBUS_PROP);
         if (ro != null) {
@@ -441,7 +441,7 @@ public class RendererService extends Service implements IConnectorClient {
 
     private long getLongDBusProperty(IRendererClient client, String objectPath, String iface,
             String propName, Bundle extras) {
-        if (LOG) Log.i(TAG, "getLongDBusProp: obj=" + objectPath + " prop=" + propName);
+        if (LOG) logGetDBusProp("getLongDBusProp", objectPath, iface, propName);
         long result = 0;
         RemoteObject ro = connector.getRemoteObject(objectPath, IFACE_DBUS_PROP);
         if (ro != null) {
@@ -462,7 +462,7 @@ public class RendererService extends Service implements IConnectorClient {
 
     private int getUInt32DBusProperty(IRendererClient client, String objectPath, String iface,
             String propName, Bundle extras) {
-        if (LOG) Log.i(TAG, "getUInt32DBusProp: obj=" + objectPath + " prop=" + propName);
+        if (LOG) logGetDBusProp("getUInt32DBusProp", objectPath, iface, propName);
         int result = 0;
         RemoteObject ro = connector.getRemoteObject(objectPath, IFACE_DBUS_PROP);
         if (ro != null) {
@@ -481,11 +481,15 @@ public class RendererService extends Service implements IConnectorClient {
         return result;
     }
 
+    private void logGetDBusProp(String method, String objPath, String iface, String prop) {
+        Log.i(TAG, String.format("%s: prop=%s obj=%s iface=%s", method, prop, objPath, iface));
+    }
+
     private void doVoidMethodVoid(IRendererClient client, String objectPath, String iface,
             String method, Bundle extras) {
+        if (LOG) logDoMethod("doVoidMethodVoid", objectPath, iface, method);
         RemoteObject ro = connector.getRemoteObject(objectPath, iface);
         if (ro != null) {
-            if (LOG) Log.i(TAG, method + ": obj=" + objectPath);
             Invocation invo = connector.dispatch(client, ro, iface, method, null);
             if (!invo.success) {
                 extras.putInt(Extras.KEY_ERR_CODE, invo.errCode);
@@ -496,10 +500,10 @@ public class RendererService extends Service implements IConnectorClient {
 
     private void doVoidMethodString(IRendererClient client, String objectPath, String iface,
             String method, String arg, Bundle extras) {
+        if (LOG) logDoMethod("doVoidMethodString", objectPath, iface, method);
         RemoteObject ro = connector.getRemoteObject(objectPath, iface);
         if (ro != null) {
-            if (LOG) Log.i(TAG, method + ": obj=" + objectPath);
-            GVariant gvArgs = GVariant.newString(arg); // TODO: this must be in a tuple!
+            GVariant gvArgs = GVariant.newTupleString(arg);
             Invocation invo = connector.dispatch(client, ro, iface, method, gvArgs);
             gvArgs.free();
             if (!invo.success) {
@@ -509,11 +513,32 @@ public class RendererService extends Service implements IConnectorClient {
         }
     }
 
-    private void doVoidMethodLong(IRendererClient client, String objectPath, String iface,
-            String method, long arg, Bundle extras) {
+    private String doStringMethodString(IRendererClient client, String objectPath, String iface,
+            String method, String arg, Bundle extras) {
+        if (LOG) logDoMethod("doStringMethodString", objectPath, iface, method);
+        String result = null;
         RemoteObject ro = connector.getRemoteObject(objectPath, iface);
         if (ro != null) {
-            if (LOG) Log.i(TAG, method + ": obj=" + objectPath);
+            GVariant gvArgs = GVariant.newTupleString(arg);
+            Invocation invo = connector.dispatch(client, ro, iface, method, gvArgs);
+            gvArgs.free();
+            if (invo.success) {
+                result = invo.result.getString();
+                invo.result.free();
+            } else {
+                extras.putInt(Extras.KEY_ERR_CODE, invo.errCode);
+                extras.putString(Extras.KEY_ERR_MSG, invo.errMessage);
+            }
+        }
+        if (LOG) Log.i(TAG, "doStringMethodString: result=" + result);
+        return result;
+    }
+
+    private void doVoidMethodLong(IRendererClient client, String objectPath, String iface,
+            String method, long arg, Bundle extras) {
+        if (LOG) logDoMethod("doVoidMethodLong", objectPath, iface, method);
+        RemoteObject ro = connector.getRemoteObject(objectPath, iface);
+        if (ro != null) {
             GVariant gvArgs = GVariant.newLong(arg); // TODO: this must be in a tuple!
             Invocation invo = connector.dispatch(client, ro, iface, method, gvArgs);
             gvArgs.free();
@@ -526,9 +551,9 @@ public class RendererService extends Service implements IConnectorClient {
 
     private void doVoidMethodStringString(IRendererClient client, String objectPath, String iface,
             String method, String arg1, String arg2, Bundle extras) {
+        if (LOG) logDoMethod("doVoidMethodStringString", objectPath, iface, method);
         RemoteObject ro = connector.getRemoteObject(objectPath, iface);
         if (ro != null) {
-            if (LOG) Log.i(TAG, method + ": obj=" + objectPath);
             GVariant gvArgs = GVariant.newTupleStringString(arg1, arg2);
             Invocation invo = connector.dispatch(client, ro, iface, method, gvArgs);
             gvArgs.free();
@@ -537,6 +562,10 @@ public class RendererService extends Service implements IConnectorClient {
                 extras.putString(Extras.KEY_ERR_MSG, invo.errMessage);
             }
         }
+    }
+
+    private void logDoMethod(String method, String objPath, String iface, String method2) {
+        Log.i(TAG, String.format("%s: method=%s obj=%s iface=%s", method, method2, objPath, iface));
     }
 
     /*------------------+
