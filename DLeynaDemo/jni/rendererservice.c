@@ -36,7 +36,7 @@ JNIEXPORT jint JNICALL Java_com_intel_dleyna_RendererService_dleynaMainLoopStart
     LOGI("dleynaMainLoopStart: peer=%p connector=%p", peer, connector);
     // TODO: Some day there will be a dleyna_control_point_get_version() and it
     // should be used to get the version of dleyna-renderer to pass here.
-	return dleyna_main_loop_start(DLR_RENDERER_SERVICE_NAME, "X.Y.Z",
+	return dleyna_main_loop_start(DLR_RENDERER_SERVICE_NAME,
             dleyna_control_point_get_renderer(), (gpointer)connector);
 }
 
