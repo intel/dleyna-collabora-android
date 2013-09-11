@@ -1,6 +1,6 @@
-From b032265ebb5d358202255e9914baf1ebefcc2888 Mon Sep 17 00:00:00 2001
+From 10aacd59fcbe77c250f552bdc1e23f31e5164b79 Mon Sep 17 00:00:00 2001
 From: "Reynaldo H. Verdejo Pinochet" <reynaldo@collabora.com>
-Date: Tue, 10 Sep 2013 01:28:12 -0300
+Date: Wed, 11 Sep 2013 10:00:57 -0300
 Subject: [PATCH] Android: Add Android metadata extractor backend
 
 ---
@@ -16,13 +16,13 @@ Subject: [PATCH] Android: Add Android metadata extractor backend
  .../android/gupnp-dlna-android-information.c       |  227 ++++
  .../android/gupnp-dlna-android-information.h       |   82 ++
  .../android/gupnp-dlna-android-metadata-backend.c  |   37 +
- .../gupnp-dlna-android-metadata-extractor.c        | 1174 ++++++++++++++++++++
+ .../gupnp-dlna-android-metadata-extractor.c        | 1195 ++++++++++++++++++++
  .../gupnp-dlna-android-metadata-extractor.h        |   79 ++
  .../android/gupnp-dlna-android-metadata.c          |  271 +++++
  .../android/gupnp-dlna-android-metadata.h          |  115 ++
  .../android/gupnp-dlna-android-video-information.c |  282 +++++
  .../android/gupnp-dlna-android-video-information.h |   72 ++
- 18 files changed, 3377 insertions(+)
+ 18 files changed, 3398 insertions(+)
  create mode 100644 libgupnp-dlna/metadata-backends/android/android.am
  create mode 100644 libgupnp-dlna/metadata-backends/android/gupnp-dlna-android-audio-information.c
  create mode 100644 libgupnp-dlna/metadata-backends/android/gupnp-dlna-android-audio-information.h
@@ -1508,19 +1508,24 @@ index 0000000..a1dc705
 +}
 diff --git a/libgupnp-dlna/metadata-backends/android/gupnp-dlna-android-metadata-extractor.c b/libgupnp-dlna/metadata-backends/android/gupnp-dlna-android-metadata-extractor.c
 new file mode 100644
-index 0000000..e51b6e3
+index 0000000..d723198
 --- /dev/null
 +++ b/libgupnp-dlna/metadata-backends/android/gupnp-dlna-android-metadata-extractor.c
-@@ -0,0 +1,1174 @@
+@@ -0,0 +1,1195 @@
 +/*
 + * Copyright (C) 2013 Intel Corporation.
++ * Copyright (C) 2012 Collabora Ltd.
 + *
 + * Author: Reynaldo H. Verdejo Pinochet <reynaldo@collabora.com>
++ *
++ * Based on (LGPLv2.1) gstamc.c code from GStreamer's gst-plugins-bad
++ * (http://www.gstreamer.net/) Authored by
++ * Sebastian Dröge <sebastian.droege@collabora.co.uk>
 + *
 + * This library is free software; you can redistribute it and/or
 + * modify it under the terms of the GNU Lesser General Public
 + * License as published by the Free Software Foundation; either
-+ * version 2 of the License, or (at your option) any later version.
++ * version 2.1 of the License, or (at your option) any later version.
 + *
 + * This library is distributed in the hope that it will be useful,
 + * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -1613,6 +1618,7 @@ index 0000000..e51b6e3
 +        jobject retriever;      /* android.media.MetadataRetriever */
 +        jobject extractor;      /* android.media.MediaExtractor */
 +        jobject format;         /* android.media.MediaFormat */
++        gboolean started;
 +} java_engine;
 +
 +static JNIEnv *
@@ -1694,7 +1700,6 @@ index 0000000..e51b6e3
 +                options[2].optionString = "-Xcheck:jni";
 +                options[3].optionString = "-Xdebug";
 +
-+                /* vm_args.version = JNI_VERSION_1_4; */
 +                vm_args.version = JNI_VERSION_1_6;
 +                vm_args.options = options;
 +                vm_args.nOptions = 4;
@@ -1735,7 +1740,6 @@ index 0000000..e51b6e3
 +        return FALSE;
 +}
 +
-+/* FIXME: Missing method signatures */
 +static inline gboolean
 +fill_media_format_method_ids (JNIEnv *env)
 +{
@@ -1770,7 +1774,6 @@ index 0000000..e51b6e3
 +        return TRUE;
 +}
 +
-+/* FIXME: Missing method signatures */
 +static inline gboolean
 +fill_media_extractor_method_ids (JNIEnv *env)
 +{
@@ -1824,7 +1827,6 @@ index 0000000..e51b6e3
 +
 +}
 +
-+/* FIXME: Missing some method signatures */
 +static inline gboolean
 +fill_metadata_method_ids (JNIEnv *env)
 +{
@@ -1859,7 +1861,6 @@ index 0000000..e51b6e3
 +        return TRUE;
 +}
 +
-+/* FIXME: Missing some method signatures */
 +static inline gboolean
 +fill_metadata_key_ids (JNIEnv *env)
 +{
@@ -2171,6 +2172,32 @@ index 0000000..e51b6e3
 +        goto done;
 +}
 +
++/**
++ * FIXME: Should give a round of thought
++ * at how to react to a failing start here.
++ * We most definitely need to fail at an
++ * initialize_java_vm() failure, at least.
++ */
++static void initialize_java_engine (void)
++{
++        if (G_UNLIKELY (java_engine.started)) {
++                LOGI ("Not re-initializing java engine. Already started");
++                return;
++        }
++
++        if (!initialize_java_vm ()) {
++                LOGE ("Failed to start java virtual machine");
++        }
++        if (!get_java_classes ()) {
++                LOGE ("Failed to init java classes");
++        }
++        if (!setup_java_backend ()) {
++                LOGE ("Failed to start java_backend");
++        }
++
++        java_engine.started = TRUE;
++}
++
 +static void
 +free_java_backend (void)
 +{
@@ -2185,11 +2212,11 @@ index 0000000..e51b6e3
 +
 +/**
 + * Android specific individual metadata extractors
-+ * Missing implementation but should be rather ~trivial
-+ * to get what _we can_ after the whole JNI mambojambo
-+ * above (Or so I hope)
 + */
 +
++/**
++ * Container metadata extractor
++ */
 +static gboolean
 +android_container_metadata_get (JNIEnv *env,
 +                                AndroidMetadata *metadata)
@@ -2558,7 +2585,9 @@ index 0000000..e51b6e3
 +}
 +
 +/**
-+ * FIXME: missing implementation. Se note on gupnp_dlna_discovered_cb
++ * FIXME: missing implementation
++ *
++ * Se note on gupnp_dlna_discovered_cb()
 + * function above.
 + */
 +static gboolean
@@ -2646,7 +2675,6 @@ index 0000000..e51b6e3
 +        return NULL;
 +}
 +
-+/* drafted */
 +static void
 +gupnp_dlna_android_metadata_extractor_class_init
 +        (GUPnPDLNAAndroidMetadataExtractorClass *android_extractor_class)
@@ -2658,22 +2686,15 @@ index 0000000..e51b6e3
 +        extractor_class->extract_sync = backend_extract_sync;
 +}
 +
-+/* drafted */
 +static void
 +gupnp_dlna_android_metadata_extractor_init
 +        (GUPnPDLNAAndroidMetadataExtractor *self)
 +{
 +        /**
 +         * Init java pieces for our metadata extractor backend
-+         *
-+         * FIXME: these can fail and need to be moved elsewere
-+         * Need something like Gst's plugin_init()
 +         */
-+
-+        initialize_java_vm ();
-+        get_java_classes ();
-+        setup_java_backend ();
-+
++        java_engine.started = FALSE;
++        initialize_java_engine ();
 +}
 +
 +GUPnPDLNAAndroidMetadataExtractor *
@@ -2688,7 +2709,7 @@ index 0000000..e51b6e3
 +}
 diff --git a/libgupnp-dlna/metadata-backends/android/gupnp-dlna-android-metadata-extractor.h b/libgupnp-dlna/metadata-backends/android/gupnp-dlna-android-metadata-extractor.h
 new file mode 100644
-index 0000000..dbdb503
+index 0000000..93971b0
 --- /dev/null
 +++ b/libgupnp-dlna/metadata-backends/android/gupnp-dlna-android-metadata-extractor.h
 @@ -0,0 +1,79 @@
@@ -2700,7 +2721,7 @@ index 0000000..dbdb503
 + * This library is free software; you can redistribute it and/or
 + * modify it under the terms of the GNU Lesser General Public
 + * License as published by the Free Software Foundation; either
-+ * version 2 of the License, or (at your option) any later version.
++ * version 2.1 of the License, or (at your option) any later version.
 + *
 + * This library is distributed in the hope that it will be useful,
 + * but WITHOUT ANY WARRANTY; without even the implied warranty of
