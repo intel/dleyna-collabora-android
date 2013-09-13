@@ -217,8 +217,14 @@ public class PushActivity extends ListActivity {
 
     private void getMediaArgsFromIntent() {
         Intent intent = getIntent();
+        String action = intent.getAction();
         mediaType = intent.getType();
-        Uri uri = (Uri) intent.getExtras().get(Intent.EXTRA_STREAM);
+        Uri uri = null;
+        if (action.equals(Intent.ACTION_VIEW)) {
+            uri = intent.getData();
+        } else if (action.equals(Intent.ACTION_SEND)) {
+            uri = (Uri) intent.getExtras().get(Intent.EXTRA_STREAM);
+        }
         if (uri != null) {
             mediaPath = getPathNameFromContentUri(uri);
         }
