@@ -23,7 +23,7 @@
 
 <resources>
     <string name="app_name">DLeyna Demo</string>
-    <string name="app_push_name">DLeyna Demo Push</string>
+    <string name="app_push_name">DLeyna Push</string>
     <string name="cancel">Cancel</string>
     <string name="clear">Clear</string>
     <string name="connect">Conn</string>
@@ -32,6 +32,6 @@
     <string name="none">No Tests</string>
     <string name="pref_activity_name">DLeyna Demo\nSettings</string>
     <string name="rescan">Scan</string>
-    <string name="scanning">Scanning...</string>
+    <string name="scanning">Looking for Renderers...</string>
     <string name="settings">Settings</string>
 </resources>
