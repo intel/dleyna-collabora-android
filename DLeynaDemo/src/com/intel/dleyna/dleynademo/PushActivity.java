@@ -52,6 +52,10 @@ public class PushActivity extends ListActivity {
 
     private static final String TAG = App.TAG;
 
+    // Non-zero for testing only.
+    // TODO: remove some day.
+    private static final int NFAKE = 0;
+
     private Handler mainHandler = new Handler();
     private ExecutorService workerPool = Executors.newSingleThreadExecutor();
 
@@ -142,11 +146,16 @@ public class PushActivity extends ListActivity {
                 // We're on a worker thread.
                 try {
                     Renderer[] rv = rendererMgr.getRenderers();
-                    final RendererDope[] rdv = new RendererDope[rv.length];
+                    final RendererDope[] rdv = new RendererDope[rv.length + NFAKE];
                     for (int i=0; i < rv.length; i++) {
                         rdv[i] = new RendererDope();
                         rdv[i].renderer = rv[i];
                         rdv[i].friendlyName = rv[i].getFriendlyName();
+                    }
+                    for (int i=0; i < NFAKE; i++) {
+                        rdv[rv.length + i] = new RendererDope();
+                        rdv[rv.length + i].renderer = null;
+                        rdv[rv.length + i].friendlyName = "Fake Renderer " + i;
                     }
                     mainHandler.post(new Runnable() {
                         public void run() {
@@ -217,8 +226,14 @@ public class PushActivity extends ListActivity {
 
     private void getMediaArgsFromIntent() {
         Intent intent = getIntent();
+        String action = intent.getAction();
         mediaType = intent.getType();
-        Uri uri = (Uri) intent.getExtras().get(Intent.EXTRA_STREAM);
+        Uri uri = null;
+        if (action.equals(Intent.ACTION_VIEW)) {
+            uri = intent.getData();
+        } else if (action.equals(Intent.ACTION_SEND)) {
+            uri = (Uri) intent.getExtras().get(Intent.EXTRA_STREAM);
+        }
         if (uri != null) {
             mediaPath = getPathNameFromContentUri(uri);
         }
