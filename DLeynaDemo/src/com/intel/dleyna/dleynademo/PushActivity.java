@@ -24,7 +24,7 @@ package com.intel.dleyna.dleynademo;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import android.app.ListActivity;
+import android.app.Activity;
 import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
@@ -33,10 +33,6 @@ import android.os.Handler;
 import android.os.RemoteException;
 import android.provider.MediaStore;
 import android.util.Log;
-import android.view.View;
-import android.widget.AdapterView;
-import android.widget.AdapterView.OnItemClickListener;
-import android.widget.ArrayAdapter;
 import android.widget.Toast;
 
 import com.intel.dleyna.lib.DLeynaException;
@@ -48,13 +44,9 @@ import com.intel.dleyna.lib.RendererManagerListener;
  * This Activity takes media content as input from an Intent, and allows the
  * user to push it to any available DMR.
  */
-public class PushActivity extends ListActivity {
+public class PushActivity extends Activity {
 
     private static final String TAG = App.TAG;
-
-    // Non-zero for testing only.
-    // TODO: remove some day.
-    private static final int NFAKE = 0;
 
     private Handler mainHandler = new Handler();
     private ExecutorService workerPool = Executors.newSingleThreadExecutor();
@@ -63,21 +55,25 @@ public class PushActivity extends ListActivity {
     private String mediaPath;
 
     private RendererManager rendererMgr;
-    private RendererDope[] renderersDope;
+    private Renderer[] renderers = new Renderer[0];
     private Renderer renderer;
+    private String rendererObjPath;
 
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
+    public void onCreate(Bundle state) {
+        super.onCreate(state);
         getMediaArgsFromIntent();
-        if (App.LOG) Log.i(TAG, String.format("PushActivity: onCreate: type=%s path=%s",
-                mediaType, mediaPath));
-        if (mediaPath == null) {
-            Toast.makeText(this, "No media", Toast.LENGTH_LONG).show();
-            finish();
-        } else {
-            setContentView(R.layout.push);
-            getListView().setOnItemClickListener(itemClickListener);
+        if (App.LOG) Log.i(TAG, String.format("PushActivity: onCreate: relaunch=%b type=%s path=%s",
+                state, mediaType, mediaPath));
+        setContentView(R.layout.push);
+        if (mediaPath != null) {
             connectToService();
+            if (state == null) {
+                // We are not being relaunched.
+                launchChooser();
+            } else {
+                // Relaunched. We might already have the chosen renderer.
+                rendererObjPath = state.getString(RendererChoiceActivity.KEY_OBJ_PATH);
+            }
         }
     }
 
@@ -89,17 +85,19 @@ public class PushActivity extends ListActivity {
     protected void onResume() {
         super.onResume();
         if (App.LOG) Log.i(TAG, "PushActivity: onResume");
+        if (mediaPath == null) {
+            Toast.makeText(this, "No media!", Toast.LENGTH_LONG).show();
+            finish();
+        }
     }
 
-    private OnItemClickListener itemClickListener = new OnItemClickListener() {
-        public void onItemClick(AdapterView<?> parent, View v, int position, long id) {
-            if (App.LOG) Log.i(TAG, String.format("PushActivity: onItemClick: pos=%d id=%d",
-                    position, id));
-            getListView().setEnabled(false);
-            renderer = renderersDope[position].renderer;
-            hostAndPlay(mediaPath, renderer);
+    protected void onSaveInstanceState (Bundle state) {
+        super.onSaveInstanceState(state);
+        if (rendererObjPath != null) {
+            state.putString(RendererChoiceActivity.KEY_OBJ_PATH, rendererObjPath);
+
         }
-    };
+    }
 
     protected void onPause() {
         super.onPause();
@@ -122,52 +120,57 @@ public class PushActivity extends ListActivity {
         rendererMgr = new RendererManager(new RendererManagerListener() {
             public void onConnected() {
                 if (App.LOG) Log.i(TAG, "PushActivity: onConnected");
-                updateList();
-            }
+                updateListAndLookForChosen();
+             }
             public void onDisconnected() {
                 if (App.LOG) Log.i(TAG, "PushActivity: onDisconnected");
             }
             public void onRendererFound(Renderer r) {
                 if (App.LOG) Log.i(TAG, "PushActivity: onRendererFound");
-                updateList();
+                updateListAndLookForChosen();
             }
             public void onRendererLost(Renderer r) {
                 if (App.LOG) Log.i(TAG, "PushActivity: onRendererLost");
-                updateList();
+                updateListAndLookForChosen();
             }
         });
         rendererMgr.connect(this);
     }
 
-    private void updateList() {
+    private void launchChooser() {
+        Intent intent = new Intent(this, RendererChoiceActivity.class);
+        startActivityForResult(intent, RendererChoiceActivity.REQ_SINGLE);
+    }
+
+    protected void onActivityResult(int request, int result, Intent intent) {
+        if (App.LOG) Log.i(TAG, String.format("PushActivity: onActivityResult: req=%d res=%d",
+                request, result));
+        switch (result) {
+        case Activity.RESULT_CANCELED:
+            finish();
+            break;
+        case Activity.RESULT_OK:
+            rendererObjPath = intent.getStringExtra(RendererChoiceActivity.KEY_OBJ_PATH);
+            lookForChosen();
+            if (App.LOG) Log.i(TAG, String.format("PushActivity: onActivityResult: objPath=%s", rendererObjPath));
+            break;
+        default:
+            break;
+        }
+    }
+
+    private void updateListAndLookForChosen() {
         // We're on the UI thread.
         workerPool.execute(new Runnable() {
             public void run() {
                 // We're on a worker thread.
                 try {
-                    Renderer[] rv = rendererMgr.getRenderers();
-                    final RendererDope[] rdv = new RendererDope[rv.length + NFAKE];
-                    for (int i=0; i < rv.length; i++) {
-                        rdv[i] = new RendererDope();
-                        rdv[i].renderer = rv[i];
-                        rdv[i].friendlyName = rv[i].getFriendlyName();
-                    }
-                    for (int i=0; i < NFAKE; i++) {
-                        rdv[rv.length + i] = new RendererDope();
-                        rdv[rv.length + i].renderer = null;
-                        rdv[rv.length + i].friendlyName = "Fake Renderer " + i;
-                    }
+                    final Renderer[] rv = rendererMgr.getRenderers();
                     mainHandler.post(new Runnable() {
                         public void run() {
                             // We're on the UI thread.
-                            ArrayAdapter<String> adapter = new ArrayAdapter<String>(
-                                    PushActivity.this,
-                                    android.R.layout.simple_list_item_1);
-                            for (int i=0; i < rdv.length; i++) {
-                                adapter.add(rdv[i].friendlyName);
-                            }
-                            PushActivity.this.setListAdapter(adapter);
-                            renderersDope = rdv;
+                            renderers = rv;
+                            lookForChosen();
                         }
                     });
                 } catch (RemoteException e) {
@@ -177,6 +180,20 @@ public class PushActivity extends ListActivity {
                 }
             }
         });
+    }
+
+    private void lookForChosen() {
+        // We're on the UI thread.
+        if (renderer == null) {
+            if (rendererObjPath != null) {
+                for (Renderer r : renderers) {
+                    if (rendererObjPath.equals(r.getObjectPath())) {
+                        renderer = r;
+                        hostAndPlay(mediaPath, renderer); // TODO: a real controller UI
+                    }
+                }
+            }
+        }
     }
 
     private void hostAndPlay(final String mPath, final Renderer r) {
@@ -244,10 +261,5 @@ public class PushActivity extends ListActivity {
         Cursor cursor = managedQuery(contentUri, projection, null, null, null);
         cursor.moveToFirst();
         return cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA));
-    }
-
-    private static class RendererDope {
-        public Renderer renderer;
-        public String friendlyName;
     }
 }
