@@ -114,6 +114,7 @@ public class PushActivity extends Activity {
         super.onDestroy();
         if (App.LOG) Log.i(TAG, "PushActivity: onDestroy");
         disconnectFromService();
+        workerPool.shutdown();
     }
 
     private void connectToService() {
