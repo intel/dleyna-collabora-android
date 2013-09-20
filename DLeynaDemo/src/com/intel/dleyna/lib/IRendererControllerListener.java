@@ -38,7 +38,10 @@ public interface IRendererControllerListener {
     /**
      * Notification that the playback status has changed.
      * <p>
-     * @param status the new playback status: "Playing", "Paused", or "Stopped"
+     * @param status the new playback status: one of
+     * {@link IRendererController#PLAYBACK_PLAYING},
+     * {@link IRendererController#PLAYBACK_PAUSED},
+     * {@link IRendererController#PLAYBACK_STOPPED}
      * @param c the renderer controller
      */
     public void onPlaybackStatusChanged(IRendererController c, String status);
