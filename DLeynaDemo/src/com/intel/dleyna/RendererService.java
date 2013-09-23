@@ -635,9 +635,11 @@ public class RendererService extends Service implements IConnectorClient {
         GVariant gvEntries[] = gvDictionary.getArrayOfGVariant();
         for (GVariant gvEntry : gvEntries) {
             GVariant gvPropName = gvEntry.getChildAtIndex(0);
-            GVariant gvPropValue = gvEntry.getChildAtIndex(1);
+            GVariant gvPropValueVariant = gvEntry.getChildAtIndex(1);
+            GVariant gvPropValue = gvPropValueVariant.getChildAtIndex(0);
             addControllerProperty(props, gvPropName.getString(), gvPropValue);
             gvPropValue.free();
+            gvPropValueVariant.free();
             gvPropName.free();
             gvEntry.free();
         }
