@@ -395,6 +395,7 @@ public class RendererManager {
                                 break;
                             case CURRENT_TRACK:
                                 l.onCurrentTrackChanged(r, props.getInt(propName));
+                                break;
                             case NUMBER_OF_TRACKS:
                                 l.onNumberOfTracksChanged(r, props.getInt(propName));
                                 break;
