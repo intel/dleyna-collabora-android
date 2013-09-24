@@ -562,7 +562,7 @@ public class RendererService extends Service implements IConnectorClient {
         if (LOG) logDoMethod("doVoidMethodLong", objectPath, iface, method);
         RemoteObject ro = connector.getRemoteObject(objectPath, iface);
         if (ro != null) {
-            GVariant gvArgs = GVariant.newLong(arg); // TODO: this must be in a tuple!
+            GVariant gvArgs = GVariant.newTupleInt64(arg);
             Invocation invo = connector.dispatch(client, ro, iface, method, gvArgs);
             gvArgs.free();
             if (!invo.success) {
