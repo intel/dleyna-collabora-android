@@ -286,7 +286,7 @@ public class RendererService extends Service implements IConnectorClient {
         }
 
         public Bundle getMetadata(IRendererClient client, String objectPath, Bundle extras) {
-            return null; // TODO
+            return getDictDBusProperty(client, objectPath, IFACE_CONTROLLER, "Metadata", extras);
         }
 
         public double getVolume(IRendererClient client, String objectPath, Bundle extras) {
@@ -478,6 +478,29 @@ public class RendererService extends Service implements IConnectorClient {
             }
         }
         if (LOG) Log.i(TAG, "getUInt32DBusProp: result=" + result);
+        return result;
+    }
+
+    private Bundle getDictDBusProperty(IRendererClient client, String objectPath, String iface,
+            String propName, Bundle extras) {
+        if (LOG) logGetDBusProp("getDictDBusProp", objectPath, iface, propName);
+        Bundle result = null;
+
+        RemoteObject ro = connector.getRemoteObject(objectPath, IFACE_DBUS_PROP);
+        if (ro != null) {
+            GVariant args = GVariant.newTupleStringString(iface, propName);
+            Invocation invo = connector.dispatch(client, ro, IFACE_DBUS_PROP, "Get", args);
+            args.free();
+            if (invo.success) {
+                result = makeBundleFromDictionary(invo.result.getChildAtIndex(0));
+                invo.result.free();
+            } else {
+                extras.putInt(Extras.KEY_ERR_CODE, invo.errCode);
+                extras.putString(Extras.KEY_ERR_MSG, invo.errMessage);
+            }
+        }
+
+        if (LOG) Log.i(TAG, "getDictDBusProp: result=" + result);
         return result;
     }
 
@@ -687,8 +710,9 @@ public class RendererService extends Service implements IConnectorClient {
             if (LOG) Log.i(TAG, "CtlrPropChange: " + propName + ": " + l);
             break;
         case METADATA:
-            // TODO
-            if (LOG) Log.i(TAG, "CtlrPropChange: " + propName + ": " + "?");
+            if (LOG) Log.i(TAG, "CtlrPropChange: " + propName + " BEGIN");
+            bundle.putBundle(propName, makeBundleFromDictionary(gvPropValue));
+            if (LOG) Log.i(TAG, "CtlrPropChange: " + propName + " END");
             break;
         case TRANSPORT_PLAY_SPEEDS:
             double[] ad = gvPropValue.getArrayOfDouble();
@@ -708,5 +732,36 @@ public class RendererService extends Service implements IConnectorClient {
             Log.w(TAG, "Unhandled renderer controller property: " + propName);
             break;
         }
+    }
+
+    private Bundle makeBundleFromDictionary(GVariant gvDictionary) {
+        Bundle bundle = new Bundle();
+        GVariant gvEntries[] = gvDictionary.getArrayOfGVariant();
+        for (GVariant gvEntry : gvEntries) {
+            GVariant gvEntryName = gvEntry.getChildAtIndex(0);
+            GVariant gvEntryValueVariant = gvEntry.getChildAtIndex(1);
+            GVariant gvEntryValue = gvEntryValueVariant.getChildAtIndex(0);
+            putToBundleMaybe(bundle, gvEntryName.getString(), gvEntryValue);
+            gvEntryValue.free();
+            gvEntryValueVariant.free();
+            gvEntryName.free();
+            gvEntry.free();
+        }
+        return bundle;
+    }
+
+    // Add the (key, value) to the bundle if it's of a type we like.
+    private void putToBundleMaybe(Bundle bundle, String key, GVariant gvValue) {
+        String type = gvValue.getTypeString();
+        boolean added = false;
+        if (type.equals("o") || type.equals("s")) {
+            bundle.putString(key, gvValue.getString());
+            added = true;
+        } else if (type.equals("x") || type.equals("t")) {
+            bundle.putLong(key, gvValue.getInt64());
+            added = true;
+        }
+        if (LOG) Log.i(TAG, String.format("putToBundle: %s name=%s type=%s",
+                added ? "ADD " : "SKIP", key, type));
     }
 }

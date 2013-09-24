@@ -43,6 +43,13 @@ public interface IRendererController {
     /** There is no current track. */
     public static final String PLAYBACK_STOPPED = "Stopped";
 
+    /** Metadata key: Track ID: An object path string identifying a track. */
+    public static final String META_DATA_KEY_TRACK_ID = "mpris:trackid";
+    /** Metadata key: Track length: A 64-bit integer, microseconds. */
+    public static final String META_DATA_KEY_TRACK_LENGTH = "mpris:length";
+    /** Metadata key: Track Art: A URL designating an image for the track. */
+    public static final String META_DATA_KEY_TRACK_ART = "mpris:artUrl";
+
     /**
      * Register for notification of events from this controller.
      * <p>
