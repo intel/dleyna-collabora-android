@@ -385,7 +385,9 @@ public class RendererService extends Service implements IConnectorClient {
                 Invocation invo = connector.dispatch(client, ro, IFACE_DBUS_PROP, "Get", args);
                 args.free();
                 if (invo.success) {
-                    result = invo.result.getChildAtIndex(0).getString();
+                    GVariant gvString = invo.result.getChildAtIndex(0);
+                    result = gvString.getString();
+                    gvString.free();
                     invo.result.free();
                 } else {
                     extras.putInt(Extras.KEY_ERR_CODE, invo.errCode);
@@ -406,7 +408,9 @@ public class RendererService extends Service implements IConnectorClient {
                 Invocation invo = connector.dispatch(client, ro, IFACE_DBUS_PROP, "Get", args);
                 args.free();
                 if (invo.success) {
-                    result = invo.result.getChildAtIndex(0).getBoolean();
+                    GVariant gvBoolean = invo.result.getChildAtIndex(0);
+                    result = gvBoolean.getBoolean();
+                    gvBoolean.free();
                     invo.result.free();
                 } else {
                     extras.putInt(Extras.KEY_ERR_CODE, invo.errCode);
@@ -428,7 +432,9 @@ public class RendererService extends Service implements IConnectorClient {
             Invocation invo = connector.dispatch(client, ro, IFACE_DBUS_PROP, "Get", args);
             args.free();
             if (invo.success) {
-                result = invo.result.getChildAtIndex(0).getDouble();
+                GVariant gvDouble = invo.result.getChildAtIndex(0);
+                result = gvDouble.getDouble();
+                gvDouble.free();
                 invo.result.free();
             } else {
                 extras.putInt(Extras.KEY_ERR_CODE, invo.errCode);
@@ -449,7 +455,9 @@ public class RendererService extends Service implements IConnectorClient {
             Invocation invo = connector.dispatch(client, ro, IFACE_DBUS_PROP, "Get", args);
             args.free();
             if (invo.success) {
-                result = invo.result.getChildAtIndex(0).getInt64();
+                GVariant gvInt64 = invo.result.getChildAtIndex(0);
+                result = gvInt64.getInt64();
+                gvInt64.free();
                 invo.result.free();
             } else {
                 extras.putInt(Extras.KEY_ERR_CODE, invo.errCode);
@@ -470,7 +478,9 @@ public class RendererService extends Service implements IConnectorClient {
             Invocation invo = connector.dispatch(client, ro, IFACE_DBUS_PROP, "Get", args);
             args.free();
             if (invo.success) {
-                result = invo.result.getChildAtIndex(0).getUInt32();
+                GVariant gvUInt32 = invo.result.getChildAtIndex(0);
+                result = gvUInt32.getUInt32();
+                gvUInt32.free();
                 invo.result.free();
             } else {
                 extras.putInt(Extras.KEY_ERR_CODE, invo.errCode);
@@ -492,7 +502,9 @@ public class RendererService extends Service implements IConnectorClient {
             Invocation invo = connector.dispatch(client, ro, IFACE_DBUS_PROP, "Get", args);
             args.free();
             if (invo.success) {
-                result = makeBundleFromDictionary(invo.result.getChildAtIndex(0));
+                GVariant gvDictionary = invo.result.getChildAtIndex(0);
+                result = makeBundleFromDictionary(gvDictionary);
+                gvDictionary.free();
                 invo.result.free();
             } else {
                 extras.putInt(Extras.KEY_ERR_CODE, invo.errCode);
