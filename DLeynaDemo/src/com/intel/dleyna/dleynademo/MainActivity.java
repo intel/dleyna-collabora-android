@@ -217,6 +217,9 @@ public class MainActivity extends Activity {
                                 } catch (DLeynaUnknownPropertyException e) {
                                     publishProgress("\tSerialNumber: <NONE>");
                                 }
+                                Bundle metaData = r.getMetadata();
+                                publishProgress("\tMetaData: TrackID: " + metaData.getString(
+                                        IRendererController.META_DATA_KEY_TRACK_ID));
                                 try {
                                     publishProgress("\tPresentationURL: " + r.getPresentationURL());
                                 } catch (DLeynaUnknownPropertyException e) {
@@ -306,7 +309,8 @@ public class MainActivity extends Activity {
                     writeTty("(!) " + objPath + " Rate: " + rate + "\n");
                 }
                 public void onMetadataChanged(IRendererController c, Bundle metadata) {
-                    writeTty("(!) " + objPath + " Metadata: " + "?" + "\n"); // TODO
+                    String trackId = metadata.getString(IRendererController.META_DATA_KEY_TRACK_ID);
+                    writeTty("(!) " + objPath + " Metadata: TrackID: " + trackId + "\n");
                 }
                 public void onVolumeChanged(IRendererController c, double volume) {
                     writeTty("(!) " + objPath + " Volume: " + volume + "\n");

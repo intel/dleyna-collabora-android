@@ -81,6 +81,14 @@ JNIEXPORT jlong JNICALL Java_com_intel_dleyna_GVariant_newArrayNative
 
 /*
  * Class:     com_intel_dleyna_GVariant
+ * Method:    newTupleInt64Native
+ * Signature: (J)J
+ */
+JNIEXPORT jlong JNICALL Java_com_intel_dleyna_GVariant_newTupleInt64Native
+  (JNIEnv *, jclass, jlong);
+
+/*
+ * Class:     com_intel_dleyna_GVariant
  * Method:    newTupleStringNative
  * Signature: (Ljava/lang/String;)J
  */

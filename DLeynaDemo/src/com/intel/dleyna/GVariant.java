@@ -207,7 +207,17 @@ public class GVariant {
         return result;
     }
 
-    private static native long newArrayNative(GVariant[] gva, long elemType);
+    private static native long newArrayNative(GVariant[] gva, long elemType); // TODO jni level impl
+
+    /**
+     * Construct a new instance of type tuple of one int64.
+     * @param l the int64 value
+     */
+    public static GVariant newTupleInt64(long l) {
+        return new GVariant(newTupleInt64Native(l));
+    }
+
+    private static native long newTupleInt64Native(long l);
 
     /**
      * Construct a new instance of type tuple of one string.

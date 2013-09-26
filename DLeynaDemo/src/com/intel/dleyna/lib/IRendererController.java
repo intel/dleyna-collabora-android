@@ -36,6 +36,20 @@ import android.os.RemoteException;
  */
 public interface IRendererController {
 
+    /** A track is currently playing. */
+    public static final String PLAYBACK_PLAYING = "Playing";
+    /** A track is currently paused. */
+    public static final String PLAYBACK_PAUSED = "Paused";
+    /** There is no current track. */
+    public static final String PLAYBACK_STOPPED = "Stopped";
+
+    /** Metadata key: Track ID: An object path string identifying a track. */
+    public static final String META_DATA_KEY_TRACK_ID = "mpris:trackid";
+    /** Metadata key: Track length: A 64-bit integer, microseconds. */
+    public static final String META_DATA_KEY_TRACK_LENGTH = "mpris:length";
+    /** Metadata key: Track Art: A URL designating an image for the track. */
+    public static final String META_DATA_KEY_TRACK_ART = "mpris:artUrl";
+
     /**
      * Register for notification of events from this controller.
      * <p>
@@ -154,7 +168,10 @@ public interface IRendererController {
 
     /**
      * Get the current playback status.
-     * @return "Playing", "Paused", or "Stopped"
+     * @return one of
+     * {@link #PLAYBACK_PLAYING},
+     * {@link #PLAYBACK_PAUSED},
+     * {@link #PLAYBACK_STOPPED}
      * @throws RemoteException no connection to the background renderer service
      * @throws DLeynaException failure reported by the background renderer service
      */

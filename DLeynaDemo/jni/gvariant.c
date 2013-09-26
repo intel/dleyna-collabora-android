@@ -95,6 +95,13 @@ JNIEXPORT jlong JNICALL Java_com_intel_dleyna_GVariant_newArrayNative(
     return 0;
 }
 
+JNIEXPORT jlong JNICALL Java_com_intel_dleyna_GVariant_newTupleInt64Native(
+    JNIEnv* env, jclass clazz, jlong value)
+{
+    GVariant* gv = g_variant_new("(x)", value);
+    return PTR_TO_JLONG(gv);
+}
+
 JNIEXPORT jlong JNICALL Java_com_intel_dleyna_GVariant_newTupleStringNative(
     JNIEnv* env, jclass clazz, jstring str)
 {

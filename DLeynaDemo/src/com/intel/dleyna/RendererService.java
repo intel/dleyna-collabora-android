@@ -286,7 +286,7 @@ public class RendererService extends Service implements IConnectorClient {
         }
 
         public Bundle getMetadata(IRendererClient client, String objectPath, Bundle extras) {
-            return null; // TODO
+            return getDictDBusProperty(client, objectPath, IFACE_CONTROLLER, "Metadata", extras);
         }
 
         public double getVolume(IRendererClient client, String objectPath, Bundle extras) {
@@ -385,7 +385,9 @@ public class RendererService extends Service implements IConnectorClient {
                 Invocation invo = connector.dispatch(client, ro, IFACE_DBUS_PROP, "Get", args);
                 args.free();
                 if (invo.success) {
-                    result = invo.result.getChildAtIndex(0).getString();
+                    GVariant gvString = invo.result.getChildAtIndex(0);
+                    result = gvString.getString();
+                    gvString.free();
                     invo.result.free();
                 } else {
                     extras.putInt(Extras.KEY_ERR_CODE, invo.errCode);
@@ -406,7 +408,9 @@ public class RendererService extends Service implements IConnectorClient {
                 Invocation invo = connector.dispatch(client, ro, IFACE_DBUS_PROP, "Get", args);
                 args.free();
                 if (invo.success) {
-                    result = invo.result.getChildAtIndex(0).getBoolean();
+                    GVariant gvBoolean = invo.result.getChildAtIndex(0);
+                    result = gvBoolean.getBoolean();
+                    gvBoolean.free();
                     invo.result.free();
                 } else {
                     extras.putInt(Extras.KEY_ERR_CODE, invo.errCode);
@@ -428,7 +432,9 @@ public class RendererService extends Service implements IConnectorClient {
             Invocation invo = connector.dispatch(client, ro, IFACE_DBUS_PROP, "Get", args);
             args.free();
             if (invo.success) {
-                result = invo.result.getChildAtIndex(0).getDouble();
+                GVariant gvDouble = invo.result.getChildAtIndex(0);
+                result = gvDouble.getDouble();
+                gvDouble.free();
                 invo.result.free();
             } else {
                 extras.putInt(Extras.KEY_ERR_CODE, invo.errCode);
@@ -449,7 +455,9 @@ public class RendererService extends Service implements IConnectorClient {
             Invocation invo = connector.dispatch(client, ro, IFACE_DBUS_PROP, "Get", args);
             args.free();
             if (invo.success) {
-                result = invo.result.getChildAtIndex(0).getInt64();
+                GVariant gvInt64 = invo.result.getChildAtIndex(0);
+                result = gvInt64.getInt64();
+                gvInt64.free();
                 invo.result.free();
             } else {
                 extras.putInt(Extras.KEY_ERR_CODE, invo.errCode);
@@ -470,7 +478,9 @@ public class RendererService extends Service implements IConnectorClient {
             Invocation invo = connector.dispatch(client, ro, IFACE_DBUS_PROP, "Get", args);
             args.free();
             if (invo.success) {
-                result = invo.result.getChildAtIndex(0).getUInt32();
+                GVariant gvUInt32 = invo.result.getChildAtIndex(0);
+                result = gvUInt32.getUInt32();
+                gvUInt32.free();
                 invo.result.free();
             } else {
                 extras.putInt(Extras.KEY_ERR_CODE, invo.errCode);
@@ -478,6 +488,31 @@ public class RendererService extends Service implements IConnectorClient {
             }
         }
         if (LOG) Log.i(TAG, "getUInt32DBusProp: result=" + result);
+        return result;
+    }
+
+    private Bundle getDictDBusProperty(IRendererClient client, String objectPath, String iface,
+            String propName, Bundle extras) {
+        if (LOG) logGetDBusProp("getDictDBusProp", objectPath, iface, propName);
+        Bundle result = null;
+
+        RemoteObject ro = connector.getRemoteObject(objectPath, IFACE_DBUS_PROP);
+        if (ro != null) {
+            GVariant args = GVariant.newTupleStringString(iface, propName);
+            Invocation invo = connector.dispatch(client, ro, IFACE_DBUS_PROP, "Get", args);
+            args.free();
+            if (invo.success) {
+                GVariant gvDictionary = invo.result.getChildAtIndex(0);
+                result = makeBundleFromDictionary(gvDictionary);
+                gvDictionary.free();
+                invo.result.free();
+            } else {
+                extras.putInt(Extras.KEY_ERR_CODE, invo.errCode);
+                extras.putString(Extras.KEY_ERR_MSG, invo.errMessage);
+            }
+        }
+
+        if (LOG) Log.i(TAG, "getDictDBusProp: result=" + result);
         return result;
     }
 
@@ -539,7 +574,7 @@ public class RendererService extends Service implements IConnectorClient {
         if (LOG) logDoMethod("doVoidMethodLong", objectPath, iface, method);
         RemoteObject ro = connector.getRemoteObject(objectPath, iface);
         if (ro != null) {
-            GVariant gvArgs = GVariant.newLong(arg); // TODO: this must be in a tuple!
+            GVariant gvArgs = GVariant.newTupleInt64(arg);
             Invocation invo = connector.dispatch(client, ro, iface, method, gvArgs);
             gvArgs.free();
             if (!invo.success) {
@@ -635,9 +670,11 @@ public class RendererService extends Service implements IConnectorClient {
         GVariant gvEntries[] = gvDictionary.getArrayOfGVariant();
         for (GVariant gvEntry : gvEntries) {
             GVariant gvPropName = gvEntry.getChildAtIndex(0);
-            GVariant gvPropValue = gvEntry.getChildAtIndex(1);
+            GVariant gvPropValueVariant = gvEntry.getChildAtIndex(1);
+            GVariant gvPropValue = gvPropValueVariant.getChildAtIndex(0);
             addControllerProperty(props, gvPropName.getString(), gvPropValue);
             gvPropValue.free();
+            gvPropValueVariant.free();
             gvPropName.free();
             gvEntry.free();
         }
@@ -685,8 +722,9 @@ public class RendererService extends Service implements IConnectorClient {
             if (LOG) Log.i(TAG, "CtlrPropChange: " + propName + ": " + l);
             break;
         case METADATA:
-            // TODO
-            if (LOG) Log.i(TAG, "CtlrPropChange: " + propName + ": " + "?");
+            if (LOG) Log.i(TAG, "CtlrPropChange: " + propName + " BEGIN");
+            bundle.putBundle(propName, makeBundleFromDictionary(gvPropValue));
+            if (LOG) Log.i(TAG, "CtlrPropChange: " + propName + " END");
             break;
         case TRANSPORT_PLAY_SPEEDS:
             double[] ad = gvPropValue.getArrayOfDouble();
@@ -706,5 +744,36 @@ public class RendererService extends Service implements IConnectorClient {
             Log.w(TAG, "Unhandled renderer controller property: " + propName);
             break;
         }
+    }
+
+    private Bundle makeBundleFromDictionary(GVariant gvDictionary) {
+        Bundle bundle = new Bundle();
+        GVariant gvEntries[] = gvDictionary.getArrayOfGVariant();
+        for (GVariant gvEntry : gvEntries) {
+            GVariant gvEntryName = gvEntry.getChildAtIndex(0);
+            GVariant gvEntryValueVariant = gvEntry.getChildAtIndex(1);
+            GVariant gvEntryValue = gvEntryValueVariant.getChildAtIndex(0);
+            putToBundleMaybe(bundle, gvEntryName.getString(), gvEntryValue);
+            gvEntryValue.free();
+            gvEntryValueVariant.free();
+            gvEntryName.free();
+            gvEntry.free();
+        }
+        return bundle;
+    }
+
+    // Add the (key, value) to the bundle if it's of a type we like.
+    private void putToBundleMaybe(Bundle bundle, String key, GVariant gvValue) {
+        String type = gvValue.getTypeString();
+        boolean added = false;
+        if (type.equals("o") || type.equals("s")) {
+            bundle.putString(key, gvValue.getString());
+            added = true;
+        } else if (type.equals("x") || type.equals("t")) {
+            bundle.putLong(key, gvValue.getInt64());
+            added = true;
+        }
+        if (LOG) Log.i(TAG, String.format("putToBundle: %s name=%s type=%s",
+                added ? "ADD " : "SKIP", key, type));
     }
 }

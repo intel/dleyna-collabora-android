@@ -388,13 +388,14 @@ public class RendererManager {
                                 l.onPositionChanged(r, props.getLong(propName));
                                 break;
                             case METADATA:
-                                // TODO
+                                l.onMetadataChanged(r, props.getBundle(propName));
                                 break;
                             case TRANSPORT_PLAY_SPEEDS:
                                 l.onTransportPlaySpeedsChanged(r, props.getDoubleArray(propName));
                                 break;
                             case CURRENT_TRACK:
                                 l.onCurrentTrackChanged(r, props.getInt(propName));
+                                break;
                             case NUMBER_OF_TRACKS:
                                 l.onNumberOfTracksChanged(r, props.getInt(propName));
                                 break;
@@ -444,8 +445,8 @@ public class RendererManager {
                     if (LOG) Log.i(TAG, "CtlrPropChange: " + propName + ": " + l);
                     break;
                 case METADATA:
-                    // TODO
-                    if (LOG) Log.i(TAG, "CtlrPropChange: " + propName + ": " + "?");
+                    Bundle bundle = props.getBundle(propName);
+                    if (LOG) Log.i(TAG, "CtlrPropChange: " + propName + ": " + bundle);
                     break;
                 case TRANSPORT_PLAY_SPEEDS:
                     double[] ad = props.getDoubleArray(propName);

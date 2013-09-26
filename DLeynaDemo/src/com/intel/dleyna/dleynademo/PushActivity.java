@@ -26,6 +26,8 @@ import java.util.concurrent.Executors;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.content.pm.ActivityInfo;
+import android.content.res.Configuration;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
@@ -95,14 +97,13 @@ public class PushActivity extends Activity {
         super.onSaveInstanceState(state);
         if (rendererObjPath != null) {
             state.putString(RendererChoiceActivity.KEY_OBJ_PATH, rendererObjPath);
-
         }
     }
 
     protected void onPause() {
         super.onPause();
         if (App.LOG) Log.i(TAG, "PushActivity: onPause");
-        stopAndUnhost(rendererMgr, renderer, mediaPath);
+        stopAndUnhost(renderer, mediaPath);
     }
 
     protected void onStop() {
@@ -114,24 +115,31 @@ public class PushActivity extends Activity {
         super.onDestroy();
         if (App.LOG) Log.i(TAG, "PushActivity: onDestroy");
         disconnectFromService();
+        workerPool.shutdown();
     }
 
     private void connectToService() {
         rendererMgr = new RendererManager(new RendererManagerListener() {
             public void onConnected() {
                 if (App.LOG) Log.i(TAG, "PushActivity: onConnected");
-                updateListAndLookForChosen();
+                if (renderer == null) {
+                    updateListAndLookForChosen();
+                }
              }
             public void onDisconnected() {
                 if (App.LOG) Log.i(TAG, "PushActivity: onDisconnected");
             }
             public void onRendererFound(Renderer r) {
                 if (App.LOG) Log.i(TAG, "PushActivity: onRendererFound");
-                updateListAndLookForChosen();
+                if (renderer == null) {
+                    updateListAndLookForChosen();
+                }
             }
             public void onRendererLost(Renderer r) {
                 if (App.LOG) Log.i(TAG, "PushActivity: onRendererLost");
-                updateListAndLookForChosen();
+                if (renderer == null) {
+                    updateListAndLookForChosen();
+                }
             }
         });
         rendererMgr.connect(this);
@@ -151,7 +159,7 @@ public class PushActivity extends Activity {
             break;
         case Activity.RESULT_OK:
             rendererObjPath = intent.getStringExtra(RendererChoiceActivity.KEY_OBJ_PATH);
-            lookForChosen();
+            lookForChosenRenderer();
             if (App.LOG) Log.i(TAG, String.format("PushActivity: onActivityResult: objPath=%s", rendererObjPath));
             break;
         default:
@@ -160,85 +168,74 @@ public class PushActivity extends Activity {
     }
 
     private void updateListAndLookForChosen() {
-        // We're on the UI thread.
-        workerPool.execute(new Runnable() {
-            public void run() {
-                // We're on a worker thread.
-                try {
-                    final Renderer[] rv = rendererMgr.getRenderers();
-                    mainHandler.post(new Runnable() {
-                        public void run() {
-                            // We're on the UI thread.
-                            renderers = rv;
-                            lookForChosen();
-                        }
-                    });
-                } catch (RemoteException e) {
-                    e.printStackTrace();
-                } catch (DLeynaException e) {
-                    e.printStackTrace();
-                }
-            }
-        });
+        workerPool.execute(new Doable() { protected void doIt() throws RemoteException, DLeynaException {
+            // We're on a worker thread.
+            final Renderer[] rv = rendererMgr.getRenderers();
+            mainHandler.post(new Runnable() { public void run() {
+                // We're on the UI thread.
+                renderers = rv;
+                lookForChosenRenderer();
+            }});
+        }});
     }
 
-    private void lookForChosen() {
-        // We're on the UI thread.
-        if (renderer == null) {
+    private void lookForChosenRenderer() {
+         if (renderer == null) {
             if (rendererObjPath != null) {
                 for (Renderer r : renderers) {
                     if (rendererObjPath.equals(r.getObjectPath())) {
+                        // We have the renderer chosen by the user.
                         renderer = r;
-                        hostAndPlay(mediaPath, renderer); // TODO: a real controller UI
+                        onRendererChosen();
                     }
                 }
             }
         }
     }
 
-    private void hostAndPlay(final String mPath, final Renderer r) {
-        // We're on the UI thread.
-        workerPool.execute(new Runnable() {
-            public void run() {
-                // We're on a worker thread.
-                try {
-                    String url = r.hostFile(mPath);
-                    if (App.LOG) Log.i(TAG, "PushActivity: onItemClick: " + url);
-                    r.openUri(url);
-                    r.play();
-                } catch (RemoteException e) {
-                    e.printStackTrace();
-                } catch (DLeynaException e) {
-                    e.printStackTrace();
-                }
-            }
-        });
+    private void onRendererChosen() {
+        preventOrientationRelaunches();
+        hostAndOpen(renderer, mediaPath);
     }
 
-    private void stopAndUnhost(final RendererManager rMgr, final Renderer r, final String mPath) {
-        // We're on the UI thread.
-        workerPool.execute(new Runnable() {
-            public void run() {
-                // We're on a worker thread.
-                if (r != null) {
-                    try {
-                        r.stop();
-                        r.removeFile(mPath);
-                    } catch (RemoteException e) {
-                        e.printStackTrace();
-                    } catch (DLeynaException e) {
-                        e.printStackTrace();
-                    }
-                    if (App.LOG) Log.i(TAG, "PushActivity: stopAndUnhost: DONE");
-                }
+    private void hostAndOpen(final Renderer r, final String mPath) {
+        workerPool.execute(new Doable() { protected void doIt() throws RemoteException, DLeynaException {
+            // We're on a worker thread.
+            if (r != null) {
+                String url = r.hostFile(mediaPath);
+                r.openUri(url);
+                if (App.LOG) Log.i(TAG, "PushActivity: stopAndUnhost: DONE");
             }
-        });
+        }});
+    }
+
+    private void stopAndUnhost(final Renderer r, final String mPath) {
+        workerPool.execute(new Doable() { protected void doIt() throws RemoteException, DLeynaException {
+            // We're on a worker thread.
+            if (r != null) {
+                r.stop();
+                r.removeFile(mPath);
+                if (App.LOG) Log.i(TAG, "PushActivity: stopAndUnhost: DONE");
+            }
+        }});
     }
 
     private void disconnectFromService() {
         if (rendererMgr != null) {
             rendererMgr.disconnect();
         }
+    }
+
+    /**
+     * This prevents further relaunches caused by the user rotating the device.
+     * It sets the allowed orientation to be the current orientation or 180 degrees
+     * from that. (An orientation change of 180 degrees does not cause a relaunch.)
+     */
+    private void preventOrientationRelaunches() {
+        setRequestedOrientation(
+            getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT ?
+            ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT :
+            ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE);
     }
 
     private void getMediaArgsFromIntent() {
@@ -261,5 +258,18 @@ public class PushActivity extends Activity {
         Cursor cursor = managedQuery(contentUri, projection, null, null, null);
         cursor.moveToFirst();
         return cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA));
+    }
+
+    private static abstract class Doable implements Runnable {
+        public final void run() {
+            try {
+                doIt();
+            } catch (RemoteException e) {
+                e.printStackTrace();
+            } catch (DLeynaException e) {
+                e.printStackTrace();
+            }
+        }
+        protected abstract void doIt() throws RemoteException, DLeynaException;
     }
 }

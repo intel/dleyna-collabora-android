@@ -110,6 +110,7 @@ public class RendererChoiceActivity extends ListActivity {
         super.onDestroy();
         if (App.LOG) Log.i(TAG, "RendererChoiceActivity: onDestroy");
         disconnectFromService();
+        workerPool.shutdown();
     }
 
     private void connectToService() {
