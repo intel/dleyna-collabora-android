@@ -128,6 +128,18 @@ JNIEXPORT jlong JNICALL Java_com_intel_dleyna_GVariant_newTupleStringStringNativ
     return PTR_TO_JLONG(gv);
 }
 
+JNIEXPORT jlong JNICALL Java_com_intel_dleyna_GVariant_newTupleObjPathInt64Native(
+    JNIEnv* env, jclass clazz, jstring str, jlong l)
+{
+    const jbyte* strC = (*env)->GetStringUTFChars(env, str, NULL);
+    if (strC == NULL) {
+        return 0;
+    }
+    GVariant* gv = g_variant_new("(ox)", strC, l);
+    (*env)->ReleaseStringUTFChars(env, str, strC);
+    return PTR_TO_JLONG(gv);
+}
+
 JNIEXPORT jboolean JNICALL Java_com_intel_dleyna_GVariant_getBooleanNative(
     JNIEnv* env, jclass clazz, jlong _gv)
 {

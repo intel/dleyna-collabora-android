@@ -242,6 +242,18 @@ public class GVariant {
     private static native long newTupleStringStringNative(String s1, String s2);
 
     /**
+     * Construct a new instance of type tuple of string and int64.
+     * @param s the string
+     * @param l the int64
+     * @return the new instance
+     */
+    public static GVariant newTupleObjPathInt64(String s, long l) {
+        return new GVariant(newTupleObjPathInt64Native(s, l));
+    }
+
+    private static native long newTupleObjPathInt64Native(String s, long l);
+
+    /**
      * @return the value of this object, which must be of type boolean.
      */
     public boolean getBoolean() {
