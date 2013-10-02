@@ -21,6 +21,8 @@
 
 package com.intel.dleyna;
 
+import android.util.Log;
+
 /**
  * This is a wrapper class for the native GVariant class.
  * <p>
@@ -75,17 +77,17 @@ public class GVariant {
         peer = 0;
     }
 
-    private void unref() {
-        unref(peer);
+    protected void finalize() {
+        if (peer != 0) {
+            Log.w("GVariant", "finalize: peer leakage");
+            unref(peer);
+            peer = 0;
+        }
     }
 
     private static native void refSink(long peer);
 
     private static native void unref(long peer);
-
-    protected void finalize() {
-        free();
-    }
 
     public long getPeer() {
         return peer;
