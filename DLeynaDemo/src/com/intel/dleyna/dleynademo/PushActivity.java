@@ -35,6 +35,9 @@ import android.os.Handler;
 import android.os.RemoteException;
 import android.provider.MediaStore;
 import android.util.Log;
+import android.view.View;
+import android.widget.ImageButton;
+import android.widget.SeekBar;
 import android.widget.Toast;
 
 import com.intel.dleyna.lib.DLeynaException;
@@ -61,12 +64,17 @@ public class PushActivity extends Activity {
     private Renderer renderer;
     private String rendererObjPath;
 
+    View controllerLayout;
+    RendererControlUI controller;
+
     public void onCreate(Bundle state) {
         super.onCreate(state);
         getMediaArgsFromIntent();
         if (App.LOG) Log.i(TAG, String.format("PushActivity: onCreate: relaunch=%b type=%s path=%s",
                 state, mediaType, mediaPath));
         setContentView(R.layout.push);
+        controllerLayout = findViewById(R.id.controllerLayout);
+        controllerLayout.setVisibility(View.INVISIBLE);
         if (mediaPath != null) {
             connectToService();
             if (state == null) {
@@ -104,6 +112,9 @@ public class PushActivity extends Activity {
         super.onPause();
         if (App.LOG) Log.i(TAG, "PushActivity: onPause");
         stopAndUnhost(renderer, mediaPath);
+        if (controller != null) {
+            controller.stop();
+        }
     }
 
     protected void onStop() {
@@ -169,7 +180,7 @@ public class PushActivity extends Activity {
 
     private void updateListAndLookForChosen() {
         workerPool.execute(new Doable() { protected void doIt() throws RemoteException, DLeynaException {
-            // We're on a worker thread.
+            // We're on the worker thread.
             final Renderer[] rv = rendererMgr.getRenderers();
             mainHandler.post(new Runnable() { public void run() {
                 // We're on the UI thread.
@@ -195,23 +206,38 @@ public class PushActivity extends Activity {
 
     private void onRendererChosen() {
         preventOrientationRelaunches();
+        getWindow().setBackgroundDrawableResource(android.R.drawable.screen_background_dark);
+        controller = new RendererControlUI(
+                renderer,
+                (SeekBar)findViewById(R.id.positionBar),
+                (ImageButton)findViewById(R.id.playButton),
+                (ImageButton)findViewById(R.id.pauseButton));
+        controllerLayout.setVisibility(View.VISIBLE);
         hostAndOpen(renderer, mediaPath);
     }
 
     private void hostAndOpen(final Renderer r, final String mPath) {
+        if (App.LOG) Log.i(TAG, "PushActivity: hostAndOpen");
         workerPool.execute(new Doable() { protected void doIt() throws RemoteException, DLeynaException {
-            // We're on a worker thread.
+            // We're on the worker thread.
             if (r != null) {
                 String url = r.hostFile(mediaPath);
                 r.openUri(url);
-                if (App.LOG) Log.i(TAG, "PushActivity: stopAndUnhost: DONE");
+                mainHandler.post(new Runnable() { public void run() {
+                    // We're on the UI thread.
+                    onHostedAndOpened();
+                }});
             }
         }});
     }
 
+    private void onHostedAndOpened() {
+        if (App.LOG) Log.i(TAG, "PushActivity: onHostedAndOpenend");
+    }
+
     private void stopAndUnhost(final Renderer r, final String mPath) {
         workerPool.execute(new Doable() { protected void doIt() throws RemoteException, DLeynaException {
-            // We're on a worker thread.
+            // We're on the worker thread.
             if (r != null) {
                 r.stop();
                 r.removeFile(mPath);

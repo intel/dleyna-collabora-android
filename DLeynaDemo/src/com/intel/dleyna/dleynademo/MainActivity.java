@@ -380,8 +380,12 @@ public class MainActivity extends Activity {
     }
 
     private static final String help =
-        "This app will someday demonstrate dLeyna.\n" +
-        "\n";
+        "DLeyna Test App.\n\n" +
+        "Use the 'Conn' and 'Disc' buttons to connect/disconnect to/from the background service. " +
+        "The 'List' button will list the properties of any known renderers. " +
+        "The 'Scan' button will request a upnp rescan.\n\n" +
+        "For a more interesting user experience, go to the Gallery app, " +
+        "share or play a video or photo, and choose DLeyna as the vehicle.\n\n";
 
     private void showHelp() {
         ttyTextView.append(help);

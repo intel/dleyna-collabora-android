@@ -21,6 +21,8 @@
 
 package com.intel.dleyna;
 
+import android.util.Log;
+
 /**
  * This is a wrapper class for the native GVariant class.
  * <p>
@@ -75,17 +77,17 @@ public class GVariant {
         peer = 0;
     }
 
-    private void unref() {
-        unref(peer);
+    protected void finalize() {
+        if (peer != 0) {
+            Log.w("GVariant", "finalize: peer leakage");
+            unref(peer);
+            peer = 0;
+        }
     }
 
     private static native void refSink(long peer);
 
     private static native void unref(long peer);
-
-    protected void finalize() {
-        free();
-    }
 
     public long getPeer() {
         return peer;
@@ -240,6 +242,18 @@ public class GVariant {
     }
 
     private static native long newTupleStringStringNative(String s1, String s2);
+
+    /**
+     * Construct a new instance of type tuple of string and int64.
+     * @param s the string
+     * @param l the int64
+     * @return the new instance
+     */
+    public static GVariant newTupleObjPathInt64(String s, long l) {
+        return new GVariant(newTupleObjPathInt64Native(s, l));
+    }
+
+    private static native long newTupleObjPathInt64Native(String s, long l);
 
     /**
      * @return the value of this object, which must be of type boolean.

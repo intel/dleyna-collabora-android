@@ -105,6 +105,14 @@ JNIEXPORT jlong JNICALL Java_com_intel_dleyna_GVariant_newTupleStringStringNativ
 
 /*
  * Class:     com_intel_dleyna_GVariant
+ * Method:    newTupleObjPathInt64Native
+ * Signature: (Ljava/lang/String;J)J
+ */
+JNIEXPORT jlong JNICALL Java_com_intel_dleyna_GVariant_newTupleObjPathInt64Native
+  (JNIEnv *, jclass, jstring, jlong);
+
+/*
+ * Class:     com_intel_dleyna_GVariant
  * Method:    getBooleanNative
  * Signature: (J)Z
  */

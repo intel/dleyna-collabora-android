@@ -53,6 +53,8 @@ public class RendererService extends Service implements IConnectorClient {
     private static final String IFACE_PUSH_HOST  = "com.intel.dLeynaRenderer.PushHost";
     private static final String IFACE_DBUS_PROP  = "org.freedesktop.DBus.Properties";
 
+    private static final String FAKE_TRACK_ID = "/yo/mammas/track";
+
     private Thread daemonThread;
 
     private Connector connector;
@@ -266,7 +268,8 @@ public class RendererService extends Service implements IConnectorClient {
         }
 
         public void setPosition(IRendererClient client, String objectPath, long position, Bundle extras) {
-            doVoidMethodLong(client, objectPath, IFACE_CONTROLLER, "SetPosition", position, extras);
+            doVoidMethodStringLong(client, objectPath, IFACE_CONTROLLER, "SetPosition", FAKE_TRACK_ID, position,
+                    extras);
         }
 
         public void openUri(IRendererClient client, String objectPath, String uri, Bundle extras) {
@@ -590,6 +593,22 @@ public class RendererService extends Service implements IConnectorClient {
         RemoteObject ro = connector.getRemoteObject(objectPath, iface);
         if (ro != null) {
             GVariant gvArgs = GVariant.newTupleStringString(arg1, arg2);
+            Invocation invo = connector.dispatch(client, ro, iface, method, gvArgs);
+            gvArgs.free();
+            if (!invo.success) {
+                extras.putInt(Extras.KEY_ERR_CODE, invo.errCode);
+                extras.putString(Extras.KEY_ERR_MSG, invo.errMessage);
+            }
+        }
+    }
+
+    private void doVoidMethodStringLong(IRendererClient client, String objectPath, String iface,
+            String method, String arg1, long arg2, Bundle extras) {
+        if (LOG) logDoMethod("doVoidMethodStringLong", objectPath, iface, method);
+        if (LOG) Log.i(TAG, "doVoidMethodStringLong: s=" + arg1 + " l=" + arg2);
+        RemoteObject ro = connector.getRemoteObject(objectPath, iface);
+        if (ro != null) {
+            GVariant gvArgs = GVariant.newTupleObjPathInt64(arg1, arg2);
             Invocation invo = connector.dispatch(client, ro, iface, method, gvArgs);
             gvArgs.free();
             if (!invo.success) {
