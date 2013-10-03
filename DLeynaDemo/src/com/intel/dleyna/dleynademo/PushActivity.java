@@ -274,8 +274,14 @@ public class PushActivity extends Activity {
         } else if (action.equals(Intent.ACTION_SEND)) {
             uri = (Uri) intent.getExtras().get(Intent.EXTRA_STREAM);
         }
+        if (App.LOG) Log.i(TAG, "PushActivity: getMediaArgs: act=" + action + " type=" + mediaType + " uri=" + uri);
         if (uri != null) {
-            mediaPath = getPathNameFromContentUri(uri);
+            String scheme = uri.getScheme();
+            if (scheme.equals("file")) {
+                mediaPath = uri.getPath();
+            } else if (scheme.equals("content")) {
+                mediaPath = getPathNameFromContentUri(uri);
+            }
         }
     }
 
