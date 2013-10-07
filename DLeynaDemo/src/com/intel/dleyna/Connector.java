@@ -288,8 +288,9 @@ public class Connector {
             pendingInvocations.append(invocation.id, invocation);
 
             if (LOG) Log.i(TAG, String.format(
-                    "dispatch: SCHEDUL id=%d meth=%s args=0x%08x obj=%s iface=%s f=0x%08x",
-                    invocation.id, meth, args, obj.objectPath, iface, obj.dispatchCb));
+                    "dispatch: SCHEDUL id=%d meth=%s args=%s obj=%s iface=%s f=0x%08x",
+                    invocation.id, meth, gvArgs == null ? "null" : gvArgs.getTypeString(),
+                    obj.objectPath, iface, obj.dispatchCb));
 
             // Schedule the invocation to run on the g_main_loop.
             gMainLoop.idleAdd(new Runnable() {

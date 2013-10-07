@@ -223,6 +223,7 @@ public class PushActivity extends Activity {
             if (r != null) {
                 String url = r.hostFile(mediaPath);
                 r.openUri(url);
+                r.setVolume(1.0);
                 mainHandler.post(new Runnable() { public void run() {
                     // We're on the UI thread.
                     onHostedAndOpened();

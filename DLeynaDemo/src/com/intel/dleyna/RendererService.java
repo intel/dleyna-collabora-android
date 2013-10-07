@@ -297,7 +297,7 @@ public class RendererService extends Service implements IConnectorClient {
         }
 
         public void setVolume(IRendererClient client, String objectPath, double volume, Bundle extras) {
-            // TODO
+            setDoubleDBusProperty(client, objectPath, IFACE_CONTROLLER, "Volume", volume, extras);
         }
 
         public long getPosition(IRendererClient client, String objectPath, Bundle extras) {
@@ -521,6 +521,25 @@ public class RendererService extends Service implements IConnectorClient {
 
     private void logGetDBusProp(String method, String objPath, String iface, String prop) {
         Log.i(TAG, String.format("%s: prop=%s obj=%s iface=%s", method, prop, objPath, iface));
+    }
+
+    private void setDoubleDBusProperty(IRendererClient client, String objectPath, String iface,
+            String propName, double d, Bundle extras) {
+        if (LOG) Log.i(TAG, String.format("setDoubleDBusProperty: prop=%s obj=%s iface=%s val=%f",
+                propName, objectPath, iface, d));
+        RemoteObject ro = connector.getRemoteObject(objectPath, IFACE_DBUS_PROP);
+        if (ro != null) {
+            GVariant gvD = GVariant.newDouble(d);
+            GVariant args = GVariant.newTupleStringStringVariant(iface, propName, gvD);
+            Invocation invo = connector.dispatch(client, ro, IFACE_DBUS_PROP, "Set", args);
+            // TODO: error from connector: "Interface (null) not managed for property setting"
+            gvD.free();
+            args.free();
+            if (!invo.success) {
+                extras.putInt(Extras.KEY_ERR_CODE, invo.errCode);
+                extras.putString(Extras.KEY_ERR_MSG, invo.errMessage);
+            }
+        }
     }
 
     private void doVoidMethodVoid(IRendererClient client, String objectPath, String iface,

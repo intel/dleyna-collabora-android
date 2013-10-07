@@ -132,7 +132,6 @@ public class RendererControlUI {
 
         public void onPlaybackStatusChanged(IRendererController c, String status) {
             if (App.LOG) Log.i(TAG, "onPlaybackStatusChg: " + status);
-            int oldStatus = playbackStatus;
 
             if (status.equals(IRendererController.PLAYBACK_PAUSED)) {
                 playbackStatus = PB_PAUSED;
