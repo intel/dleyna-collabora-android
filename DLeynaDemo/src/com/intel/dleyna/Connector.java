@@ -62,7 +62,7 @@ import com.intel.dleyna.lib.IRendererClient;
  */
 public class Connector {
 
-    private static final boolean LOG = true;
+    private static final boolean LOG = false;
     private static final String TAG = "Connector";
 
     /** The current set of remote objects */

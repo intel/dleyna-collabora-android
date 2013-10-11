@@ -38,7 +38,7 @@ import com.intel.dleyna.lib.RendererControllerProps;
 
 public class RendererService extends Service implements IConnectorClient {
 
-    private static final boolean LOG = true;
+    private static final boolean LOG = false;
     private static final String TAG = "RendererService";
 
     private static final String DAEMON_THREAD_NAME = "RendererDaemon";

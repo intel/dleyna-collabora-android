@@ -59,7 +59,7 @@ import android.util.Log;
  */
 public class RendererManager {
 
-    private static final boolean LOG = true;
+    private static final boolean LOG = false;
     private static final String TAG = "RendererMgr";
 
     /** The application package containing the Renderer service. */

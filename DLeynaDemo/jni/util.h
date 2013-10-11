@@ -30,7 +30,7 @@
  * Android logging macros.
  */
 
-#define DOLOG 1 // 0 <=> do not log
+#define DOLOG 0 // 0 <=> do not log
 
 #define TAG "DLeynaNative"
 
