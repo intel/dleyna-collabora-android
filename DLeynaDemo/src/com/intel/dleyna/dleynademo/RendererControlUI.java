@@ -26,6 +26,8 @@ public class RendererControlUI {
     private static final int PB_PAUSED = 1;
     private static final int PB_PLAYING = 2;
 
+    private static final int VOLUME_BAR_MAX = 1024;
+
     private Handler mainHandler = new Handler();
     private ExecutorService workerPool = Executors.newSingleThreadExecutor();
 
@@ -33,31 +35,38 @@ public class RendererControlUI {
     private SeekBar positionBar;
     private ImageButton playButton;
     private ImageButton pauseButton;
+    private SeekBar volumeBar;
 
     private int playbackStatus;
-    private int duration;
-    private int position;
+    private int duration; // msec.
+    private int position; // msec.
 
     public RendererControlUI(
             Renderer renderer,
             SeekBar positionBar,
             ImageButton playButton,
-            ImageButton pauseButton) {
+            ImageButton pauseButton,
+            SeekBar volumeBar) {
 
         this.renderer = renderer;
         this.positionBar = positionBar;
         this.playButton = playButton;
         this.pauseButton = pauseButton;
+        this.volumeBar = volumeBar;
 
         renderer.addControllerListener(listener);
         positionBar.setOnSeekBarChangeListener(positionBarListener);
         playButton.setOnClickListener(playButtonListener);
         pauseButton.setOnClickListener(pauseButtonListener);
+        volumeBar.setOnSeekBarChangeListener(volumeBarListener);
 
         positionBar.setEnabled(false);
         playButton.setEnabled(false);
         pauseButton.setEnabled(false);
+        volumeBar.setEnabled(false);
+        volumeBar.setMax(VOLUME_BAR_MAX);
 
+        getInitialVolume();
         positionThread.start();
     }
 
@@ -88,12 +97,11 @@ public class RendererControlUI {
                 playButton.setEnabled(false);
                 workerPool.execute(new Doable() { protected void doIt() throws RemoteException, DLeynaException {
                     // We're on the worker thread.
-                    if (App.LOG) Log.i(TAG, "onStopTrackingTouch: pos=" + posFromUser);
                     renderer.setPosition(((long)posFromUser) * 1000);
                     mainHandler.post(new Runnable() { public void run() {
                         // We're on the UI thread.
                         position = posFromUser;
-                        updateWidgets();
+                        updatePositionWidgets();
                     }});
                 }});
             }
@@ -128,6 +136,45 @@ public class RendererControlUI {
         }
     };
 
+    private void getInitialVolume() {
+        workerPool.execute(new Doable() { protected void doIt() throws RemoteException, DLeynaException {
+            // We're on the worker thread.
+            final int v = (int)(renderer.getVolume() * VOLUME_BAR_MAX);
+            mainHandler.post(new Runnable() { public void run() {
+                // We're on the UI thread.
+                volumeBar.setProgress(v);
+                volumeBar.setEnabled(true);
+            }});
+        }});
+    }
+
+    private final SeekBar.OnSeekBarChangeListener volumeBarListener = new SeekBar.OnSeekBarChangeListener() {
+
+        private int volFromUser;
+
+        public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+            if (fromUser) {
+                volFromUser = progress;
+            }
+        }
+
+        public void onStartTrackingTouch(SeekBar seekBar) {
+        }
+
+        public void onStopTrackingTouch(SeekBar seekBar) {
+            volumeBar.setEnabled(false);
+            final double v = ((double)volFromUser) / VOLUME_BAR_MAX;
+            workerPool.execute(new Doable() { protected void doIt() throws RemoteException, DLeynaException {
+                // We're on the worker thread.
+                renderer.setVolume(v);
+                mainHandler.post(new Runnable() { public void run() {
+                    // We're on the UI thread.
+                    volumeBar.setEnabled(true);
+                }});
+            }});
+        }
+    };
+
     private IRendererControllerListener listener = new RendererControllerListener() {
 
         public void onPlaybackStatusChanged(IRendererController c, String status) {
@@ -140,13 +187,13 @@ public class RendererControlUI {
             } else {
                 playbackStatus = PB_STOPPED;
             }
-            updateWidgets();
+            updatePositionWidgets();
         }
 
         public void onMetadataChanged(IRendererController c, Bundle metadata) {
             String trackId = metadata.getString(IRendererController.META_DATA_KEY_TRACK_ID);
             duration = (int) (metadata.getLong(IRendererController.META_DATA_KEY_TRACK_LENGTH, 0) / 1000);
-            updateWidgets();
+            updatePositionWidgets();
             if (App.LOG) Log.i(TAG, String.format("onMetadataChg: duration=%d trackId=%s", duration, trackId));
         }
 
@@ -178,7 +225,7 @@ public class RendererControlUI {
                                 mainHandler.post(new Runnable() { public void run() {
                                     // We're on the UI thread.
                                     position = pos;
-                                    updateWidgets();
+                                    updatePositionWidgets();
                                 }});
                             } catch (RemoteException e) {
                                 positionThreadStopFlag = true;
@@ -202,7 +249,7 @@ public class RendererControlUI {
         positionThreadStopFlag = true;
     }
 
-    private void updateWidgets() {
+    private void updatePositionWidgets() {
         positionBar.setMax(duration);
         positionBar.setProgress(position);
         if (playbackStatus == PB_STOPPED) {

@@ -206,13 +206,6 @@ public class PushActivity extends Activity {
 
     private void onRendererChosen() {
         preventOrientationRelaunches();
-        getWindow().setBackgroundDrawableResource(android.R.drawable.screen_background_dark);
-        controller = new RendererControlUI(
-                renderer,
-                (SeekBar)findViewById(R.id.positionBar),
-                (ImageButton)findViewById(R.id.playButton),
-                (ImageButton)findViewById(R.id.pauseButton));
-        controllerLayout.setVisibility(View.VISIBLE);
         hostAndOpen(renderer, mediaPath);
     }
 
@@ -223,7 +216,6 @@ public class PushActivity extends Activity {
             if (r != null) {
                 String url = r.hostFile(mediaPath);
                 r.openUri(url);
-                r.setVolume(1.0);
                 mainHandler.post(new Runnable() { public void run() {
                     // We're on the UI thread.
                     onHostedAndOpened();
@@ -234,6 +226,14 @@ public class PushActivity extends Activity {
 
     private void onHostedAndOpened() {
         if (App.LOG) Log.i(TAG, "PushActivity: onHostedAndOpenend");
+        getWindow().setBackgroundDrawableResource(android.R.drawable.screen_background_dark);
+        controller = new RendererControlUI(
+                renderer,
+                (SeekBar)findViewById(R.id.positionBar),
+                (ImageButton)findViewById(R.id.playButton),
+                (ImageButton)findViewById(R.id.pauseButton),
+                (SeekBar)findViewById(R.id.volumeBar));
+        controllerLayout.setVisibility(View.VISIBLE);
     }
 
     private void stopAndUnhost(final Renderer r, final String mPath) {

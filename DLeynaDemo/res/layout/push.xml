@@ -6,17 +6,16 @@
     <RelativeLayout
         android:id="@+id/controllerLayout"
         android:layout_width="fill_parent"
-        android:layout_height="140dp"
+        android:layout_height="200dp"
         android:layout_gravity="center" >
 
         <SeekBar
             android:id="@+id/positionBar"
-            android:layout_width="match_parent"
+            android:layout_width="330dp"
             android:layout_height="wrap_content"
-            android:layout_alignParentTop="true"
-            android:layout_marginLeft="20dp"
-            android:layout_marginRight="20dp"
-            android:layout_marginBottom="20dp" />
+            android:layout_above="@+id/playButton"
+            android:layout_centerHorizontal="true"
+            android:layout_marginBottom="10dp" />
 
         <ImageButton
             android:id="@+id/playButton"
@@ -30,9 +29,26 @@
             android:id="@+id/pauseButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_alignLeft="@+id/playButton"
             android:layout_alignParentBottom="true"
-            android:layout_centerHorizontal="true"
             android:src="@android:drawable/ic_media_pause" />
+
+        <SeekBar
+            android:id="@+id/volumeBar"
+            android:layout_width="220dp"
+            android:layout_height="wrap_content"
+            android:layout_alignParentTop="true"
+            android:layout_centerHorizontal="true" />
+
+        <TextView
+            android:id="@+id/volumeText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/volumeBar"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="5dp"
+            android:gravity="center"
+            android:text="@string/volume" />
 
     </RelativeLayout>
 
