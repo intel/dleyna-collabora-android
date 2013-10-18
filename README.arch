@@ -1,0 +1,49 @@
+
++-----------------------------+
+| DLeyna Android Architecture |
++-----------------------------+
+
+DLeyna Android applications are built upon two components:
+    (1) the DLeyna Library
+    (2) the DLeyna Services App
+
+The DLeyna Library is a thin API layer written in Java and made avaiable as an
+Android "library project" to application developers who incorporate it into
+their applications. At run-time, it communicates via Binder IPC with the DLeyna
+Services App.
+
+The DLeyna Services App contains the bulk of the DLeyna code -- multiple open
+source libraries written in C and adapted to Android, some C <-> Java glue code,
+and Java code for communicating with client applications via Binder IPC. It is
+an Android application (.apk) that must be installed on the target device in
+addition to any client applications.
+
+The following diagram shows two client applications running simultaneously on
+the same device and communicating via Binder IPC with the services app:
+
+         +--------------------+    +--------------------+
+         |                    |    |                    |
+         |    Client App 1    |    |    Client App 2    |
+         |                    |    |                    |
+         +--------------------+    +--------------------+
+         |   DLeyna Library   |    |   DLeyna Library   |
+         +--------------------+    +--------------------+
+                         ^             ^
+                         |             |
+                       Binder        Binder
+                        IPC           IPC
+                         |             |
+                         v             v
+                      +-------------------+
+                      |                   |
+                      |  DLeyna Services  |
+                      |        App        |
+                      |                   |
+                      +-------------------+
+                                ^
+                                |
+                                v
+         ------------------------------------------------
+                          Local Network
+         ------------------------------------------------
+
