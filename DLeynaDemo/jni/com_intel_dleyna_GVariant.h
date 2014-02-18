@@ -89,6 +89,14 @@ JNIEXPORT jlong JNICALL Java_com_intel_dleyna_GVariant_newTupleInt64Native
 
 /*
  * Class:     com_intel_dleyna_GVariant
+ * Method:    newTupleDoubleNative
+ * Signature: (D)J
+ */
+JNIEXPORT jlong JNICALL Java_com_intel_dleyna_GVariant_newTupleDoubleNative
+  (JNIEnv *, jclass, jdouble);
+
+/*
+ * Class:     com_intel_dleyna_GVariant
  * Method:    newTupleStringNative
  * Signature: (Ljava/lang/String;)J
  */
@@ -102,6 +110,14 @@ JNIEXPORT jlong JNICALL Java_com_intel_dleyna_GVariant_newTupleStringNative
  */
 JNIEXPORT jlong JNICALL Java_com_intel_dleyna_GVariant_newTupleStringStringNative
   (JNIEnv *, jclass, jstring, jstring);
+
+/*
+ * Class:     com_intel_dleyna_GVariant
+ * Method:    newTupleStringStringVariantNative
+ * Signature: (Ljava/lang/String;Ljava/lang/String;J)J
+ */
+JNIEXPORT jlong JNICALL Java_com_intel_dleyna_GVariant_newTupleStringStringVariantNative
+  (JNIEnv *, jclass, jstring, jstring, jlong);
 
 /*
  * Class:     com_intel_dleyna_GVariant

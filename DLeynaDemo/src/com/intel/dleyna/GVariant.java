@@ -222,6 +222,16 @@ public class GVariant {
     private static native long newTupleInt64Native(long l);
 
     /**
+     * Construct a new instance of type tuple of one double.
+     * @param d the double value
+     */
+    public static GVariant newTupleDouble(double d) {
+        return new GVariant(newTupleDoubleNative(d));
+    }
+
+    private static native long newTupleDoubleNative(double d);
+
+    /**
      * Construct a new instance of type tuple of one string.
      * @param s the string
      */
@@ -242,6 +252,20 @@ public class GVariant {
     }
 
     private static native long newTupleStringStringNative(String s1, String s2);
+
+
+    /**
+     * Construct a new instance of type tuple of two strings and a variant: (ssv).
+     * @param s1 fist string
+     * @param s2 second string
+     * @param v the variant value
+     * @return the new instance
+     */
+    public static GVariant newTupleStringStringVariant(String s1, String s2, GVariant v) {
+        return new GVariant(newTupleStringStringVariantNative(s1, s2, v.getPeer()));
+    }
+
+    private static native long newTupleStringStringVariantNative(String s1, String s2, long vNative);
 
     /**
      * Construct a new instance of type tuple of string and int64.

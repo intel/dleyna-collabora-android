@@ -27,7 +27,7 @@ import android.util.Log;
 public class App extends Application {
 
     /** Whether to log. */
-    public static final boolean LOG = true;
+    public static final boolean LOG = false;
 
     /** Tag for logging. */
     public static final String TAG = "DLeynaDemo";

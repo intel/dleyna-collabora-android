@@ -102,6 +102,13 @@ JNIEXPORT jlong JNICALL Java_com_intel_dleyna_GVariant_newTupleInt64Native(
     return PTR_TO_JLONG(gv);
 }
 
+JNIEXPORT jlong JNICALL Java_com_intel_dleyna_GVariant_newTupleDoubleNative(
+    JNIEnv* env, jclass clazz, jdouble value)
+{
+    GVariant* gv = g_variant_new("(d)", value);
+    return PTR_TO_JLONG(gv);
+}
+
 JNIEXPORT jlong JNICALL Java_com_intel_dleyna_GVariant_newTupleStringNative(
     JNIEnv* env, jclass clazz, jstring str)
 {
@@ -123,6 +130,20 @@ JNIEXPORT jlong JNICALL Java_com_intel_dleyna_GVariant_newTupleStringStringNativ
         return 0;
     }
     GVariant* gv = g_variant_new("(ss)", str1C, str2C);
+    (*env)->ReleaseStringUTFChars(env, str1, str1C);
+    (*env)->ReleaseStringUTFChars(env, str2, str2C);
+    return PTR_TO_JLONG(gv);
+}
+
+JNIEXPORT jlong JNICALL Java_com_intel_dleyna_GVariant_newTupleStringStringVariantNative(
+    JNIEnv* env, jclass clazz, jstring str1, jstring str2, jlong vNative)
+{
+    const jbyte* str1C = (*env)->GetStringUTFChars(env, str1, NULL);
+    const jbyte* str2C = (*env)->GetStringUTFChars(env, str2, NULL);
+    if (str1C == NULL || str2C == NULL) {
+        return 0;
+    }
+    GVariant* gv = g_variant_new("(ssv)", str1C, str2C, JLONG_TO_PTR(vNative));
     (*env)->ReleaseStringUTFChars(env, str1, str1C);
     (*env)->ReleaseStringUTFChars(env, str2, str2C);
     return PTR_TO_JLONG(gv);

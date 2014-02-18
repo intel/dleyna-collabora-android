@@ -38,7 +38,7 @@ import com.intel.dleyna.lib.RendererControllerProps;
 
 public class RendererService extends Service implements IConnectorClient {
 
-    private static final boolean LOG = true;
+    private static final boolean LOG = false;
     private static final String TAG = "RendererService";
 
     private static final String DAEMON_THREAD_NAME = "RendererDaemon";
@@ -241,7 +241,7 @@ public class RendererService extends Service implements IConnectorClient {
 
         public void next(IRendererClient client, String objectPath, Bundle extras) {
             doVoidMethodVoid(client, objectPath, IFACE_CONTROLLER, "Next", extras);
-       }
+        }
 
         public void previous(IRendererClient client, String objectPath, Bundle extras) {
             doVoidMethodVoid(client, objectPath, IFACE_CONTROLLER, "Previous", extras);
@@ -268,8 +268,8 @@ public class RendererService extends Service implements IConnectorClient {
         }
 
         public void setPosition(IRendererClient client, String objectPath, long position, Bundle extras) {
-            doVoidMethodStringLong(client, objectPath, IFACE_CONTROLLER, "SetPosition", FAKE_TRACK_ID, position,
-                    extras);
+            doVoidMethodObjPathLong(client, objectPath, IFACE_CONTROLLER, "SetPosition", FAKE_TRACK_ID,
+                    position, extras);
         }
 
         public void openUri(IRendererClient client, String objectPath, String uri, Bundle extras) {
@@ -297,7 +297,7 @@ public class RendererService extends Service implements IConnectorClient {
         }
 
         public void setVolume(IRendererClient client, String objectPath, double volume, Bundle extras) {
-            // TODO
+            setDoubleDBusProperty(client, objectPath, IFACE_CONTROLLER, "Volume", volume, extras);
         }
 
         public long getPosition(IRendererClient client, String objectPath, Bundle extras) {
@@ -375,74 +375,41 @@ public class RendererService extends Service implements IConnectorClient {
         public void removeFile(IRendererClient client, String objectPath, String path, Bundle extras) {
             doVoidMethodString(client, objectPath, IFACE_PUSH_HOST, "RemoveFile", path, extras);
         }
-
-        /*--------------------*/
-
-        private String getStringDBusProperty(IRendererClient client, String objectPath, String iface,
-                String propName, Bundle extras) {
-            if (LOG) logGetDBusProp("getStringDBusProp", objectPath, iface, propName);
-            String result = null;
-            RemoteObject ro = connector.getRemoteObject(objectPath, IFACE_DBUS_PROP);
-            if (ro != null) {
-                GVariant args = GVariant.newTupleStringString(iface, propName);
-                Invocation invo = connector.dispatch(client, ro, IFACE_DBUS_PROP, "Get", args);
-                args.free();
-                if (invo.success) {
-                    GVariant gvString = invo.result.getChildAtIndex(0);
-                    result = gvString.getString();
-                    gvString.free();
-                    invo.result.free();
-                } else {
-                    extras.putInt(Extras.KEY_ERR_CODE, invo.errCode);
-                    extras.putString(Extras.KEY_ERR_MSG, invo.errMessage);
-                }
-            }
-            if (LOG) Log.i(TAG, "getStringDBusProp: result=" + result);
-            return result;
-        }
-
-        private boolean getBooleanDBusProperty(IRendererClient client, String objectPath, String iface,
-                String propName, Bundle extras) {
-            if (LOG) logGetDBusProp("getBooleanDBusProp", objectPath, iface, propName);
-            boolean result = false;
-            RemoteObject ro = connector.getRemoteObject(objectPath, IFACE_DBUS_PROP);
-            if (ro != null) {
-                GVariant args = GVariant.newTupleStringString(iface, propName);
-                Invocation invo = connector.dispatch(client, ro, IFACE_DBUS_PROP, "Get", args);
-                args.free();
-                if (invo.success) {
-                    GVariant gvBoolean = invo.result.getChildAtIndex(0);
-                    result = gvBoolean.getBoolean();
-                    gvBoolean.free();
-                    invo.result.free();
-                } else {
-                    extras.putInt(Extras.KEY_ERR_CODE, invo.errCode);
-                    extras.putString(Extras.KEY_ERR_MSG, invo.errMessage);
-                }
-            }
-            if (LOG) Log.i(TAG, "getBooleanDBusProp: result=" + result);
-            return result;
-        }
     };
+
+    /*--------------------*/
+
+    private String getStringDBusProperty(IRendererClient client, String objectPath, String iface,
+            String propName, Bundle extras) {
+        String result = null;
+        GVariant gvResult = getDBusProperty(client, objectPath, iface, propName, extras);
+        if (gvResult != null) {
+            result = gvResult.getString();
+            gvResult.free();
+        }
+        if (LOG) Log.i(TAG, "getStringDBusProp: result=" + result);
+        return result;
+    }
+
+    private boolean getBooleanDBusProperty(IRendererClient client, String objectPath, String iface,
+            String propName, Bundle extras) {
+        boolean result = false;
+        GVariant gvResult = getDBusProperty(client, objectPath, iface, propName, extras);
+        if (gvResult != null) {
+            result = gvResult.getBoolean();
+            gvResult.free();
+        }
+        if (LOG) Log.i(TAG, "getBooleanDBusProp: result=" + result);
+        return result;
+    }
 
     private double getDoubleDBusProperty(IRendererClient client, String objectPath, String iface,
             String propName, Bundle extras) {
-        if (LOG) logGetDBusProp("getDoubleDBusProp", objectPath, iface, propName);
         double result = 0;
-        RemoteObject ro = connector.getRemoteObject(objectPath, IFACE_DBUS_PROP);
-        if (ro != null) {
-            GVariant args = GVariant.newTupleStringString(iface, propName);
-            Invocation invo = connector.dispatch(client, ro, IFACE_DBUS_PROP, "Get", args);
-            args.free();
-            if (invo.success) {
-                GVariant gvDouble = invo.result.getChildAtIndex(0);
-                result = gvDouble.getDouble();
-                gvDouble.free();
-                invo.result.free();
-            } else {
-                extras.putInt(Extras.KEY_ERR_CODE, invo.errCode);
-                extras.putString(Extras.KEY_ERR_MSG, invo.errMessage);
-            }
+        GVariant gvResult = getDBusProperty(client, objectPath, iface, propName, extras);
+        if (gvResult != null) {
+            result = gvResult.getDouble();
+            gvResult.free();
         }
         if (LOG) Log.i(TAG, "getDoubleDBusProp: result=" + result);
         return result;
@@ -450,22 +417,11 @@ public class RendererService extends Service implements IConnectorClient {
 
     private long getLongDBusProperty(IRendererClient client, String objectPath, String iface,
             String propName, Bundle extras) {
-        if (LOG) logGetDBusProp("getLongDBusProp", objectPath, iface, propName);
         long result = 0;
-        RemoteObject ro = connector.getRemoteObject(objectPath, IFACE_DBUS_PROP);
-        if (ro != null) {
-            GVariant args = GVariant.newTupleStringString(iface, propName);
-            Invocation invo = connector.dispatch(client, ro, IFACE_DBUS_PROP, "Get", args);
-            args.free();
-            if (invo.success) {
-                GVariant gvInt64 = invo.result.getChildAtIndex(0);
-                result = gvInt64.getInt64();
-                gvInt64.free();
-                invo.result.free();
-            } else {
-                extras.putInt(Extras.KEY_ERR_CODE, invo.errCode);
-                extras.putString(Extras.KEY_ERR_MSG, invo.errMessage);
-            }
+        GVariant gvResult = getDBusProperty(client, objectPath, iface, propName, extras);
+        if (gvResult != null) {
+            result = gvResult.getInt64();
+            gvResult.free();
         }
         if (LOG) Log.i(TAG, "getLongDBusProp: result=" + result);
         return result;
@@ -473,22 +429,11 @@ public class RendererService extends Service implements IConnectorClient {
 
     private int getUInt32DBusProperty(IRendererClient client, String objectPath, String iface,
             String propName, Bundle extras) {
-        if (LOG) logGetDBusProp("getUInt32DBusProp", objectPath, iface, propName);
         int result = 0;
-        RemoteObject ro = connector.getRemoteObject(objectPath, IFACE_DBUS_PROP);
-        if (ro != null) {
-            GVariant args = GVariant.newTupleStringString(iface, propName);
-            Invocation invo = connector.dispatch(client, ro, IFACE_DBUS_PROP, "Get", args);
-            args.free();
-            if (invo.success) {
-                GVariant gvUInt32 = invo.result.getChildAtIndex(0);
-                result = gvUInt32.getUInt32();
-                gvUInt32.free();
-                invo.result.free();
-            } else {
-                extras.putInt(Extras.KEY_ERR_CODE, invo.errCode);
-                extras.putString(Extras.KEY_ERR_MSG, invo.errMessage);
-            }
+        GVariant gvResult = getDBusProperty(client, objectPath, iface, propName, extras);
+        if (gvResult != null) {
+            result = gvResult.getUInt32();
+            gvResult.free();
         }
         if (LOG) Log.i(TAG, "getUInt32DBusProp: result=" + result);
         return result;
@@ -496,129 +441,128 @@ public class RendererService extends Service implements IConnectorClient {
 
     private Bundle getDictDBusProperty(IRendererClient client, String objectPath, String iface,
             String propName, Bundle extras) {
-        if (LOG) logGetDBusProp("getDictDBusProp", objectPath, iface, propName);
         Bundle result = null;
+        GVariant gvResult = getDBusProperty(client, objectPath, iface, propName, extras);
+        if (gvResult != null) {
+            result = makeBundleFromDictionary(gvResult);
+            gvResult.free();
+        }
+        if (LOG) Log.i(TAG, "getDictDBusProp: result=" + result);
+        return result;
+    }
 
+    private GVariant getDBusProperty(IRendererClient client, String objectPath, String iface,
+            String propName, Bundle extras) {
+        if (LOG) Log.i(TAG, String.format("getDBusProp: prop=%s obj=%s iface=%s", propName, objectPath, iface));
+        GVariant result = null;
         RemoteObject ro = connector.getRemoteObject(objectPath, IFACE_DBUS_PROP);
         if (ro != null) {
             GVariant args = GVariant.newTupleStringString(iface, propName);
             Invocation invo = connector.dispatch(client, ro, IFACE_DBUS_PROP, "Get", args);
             args.free();
             if (invo.success) {
-                GVariant gvDictionary = invo.result.getChildAtIndex(0);
-                result = makeBundleFromDictionary(gvDictionary);
-                gvDictionary.free();
+                result = invo.result.getChildAtIndex(0);
                 invo.result.free();
             } else {
                 extras.putInt(Extras.KEY_ERR_CODE, invo.errCode);
                 extras.putString(Extras.KEY_ERR_MSG, invo.errMessage);
             }
         }
-
-        if (LOG) Log.i(TAG, "getDictDBusProp: result=" + result);
         return result;
     }
 
-    private void logGetDBusProp(String method, String objPath, String iface, String prop) {
-        Log.i(TAG, String.format("%s: prop=%s obj=%s iface=%s", method, prop, objPath, iface));
+    private void setDoubleDBusProperty(IRendererClient client, String objectPath, String iface,
+            String propName, double value, Bundle extras) {
+        if (LOG) Log.i(TAG, String.format("setDoubleDBusProperty: prop=%s obj=%s iface=%s val=%f",
+                propName, objectPath, iface, value));
+        GVariant gvValue = GVariant.newDouble(value);
+        setDBusProperty(client, objectPath, iface, propName, gvValue, extras);
+        gvValue.free();
+    }
+
+    private void setDBusProperty(IRendererClient client, String objectPath, String iface,
+            String propName, GVariant value, Bundle extras) {
+        RemoteObject ro = connector.getRemoteObject(objectPath, IFACE_DBUS_PROP);
+        if (ro != null) {
+            GVariant args = GVariant.newTupleStringStringVariant(iface, propName, value);
+            Invocation invo = connector.dispatch(client, ro, IFACE_DBUS_PROP, "Set", args);
+            args.free();
+            if (!invo.success) {
+                extras.putInt(Extras.KEY_ERR_CODE, invo.errCode);
+                extras.putString(Extras.KEY_ERR_MSG, invo.errMessage);
+            }
+        }
     }
 
     private void doVoidMethodVoid(IRendererClient client, String objectPath, String iface,
             String method, Bundle extras) {
         if (LOG) logDoMethod("doVoidMethodVoid", objectPath, iface, method);
-        RemoteObject ro = connector.getRemoteObject(objectPath, iface);
-        if (ro != null) {
-            Invocation invo = connector.dispatch(client, ro, iface, method, null);
-            if (!invo.success) {
-                extras.putInt(Extras.KEY_ERR_CODE, invo.errCode);
-                extras.putString(Extras.KEY_ERR_MSG, invo.errMessage);
-            }
-        }
+        doMethod(client, objectPath, iface, method, null, extras);
     }
 
     private void doVoidMethodString(IRendererClient client, String objectPath, String iface,
             String method, String arg, Bundle extras) {
         if (LOG) logDoMethod("doVoidMethodString", objectPath, iface, method);
-        RemoteObject ro = connector.getRemoteObject(objectPath, iface);
-        if (ro != null) {
-            GVariant gvArgs = GVariant.newTupleString(arg);
-            Invocation invo = connector.dispatch(client, ro, iface, method, gvArgs);
-            gvArgs.free();
-            if (!invo.success) {
-                extras.putInt(Extras.KEY_ERR_CODE, invo.errCode);
-                extras.putString(Extras.KEY_ERR_MSG, invo.errMessage);
-            }
-        }
+        GVariant gvArgs = GVariant.newTupleString(arg);
+        doMethod(client, objectPath, iface, method, gvArgs, extras);
+        gvArgs.free();
     }
 
     private String doStringMethodString(IRendererClient client, String objectPath, String iface,
             String method, String arg, Bundle extras) {
         if (LOG) logDoMethod("doStringMethodString", objectPath, iface, method);
         String result = null;
-        RemoteObject ro = connector.getRemoteObject(objectPath, iface);
-        if (ro != null) {
-            GVariant gvArgs = GVariant.newTupleString(arg);
-            Invocation invo = connector.dispatch(client, ro, iface, method, gvArgs);
-            gvArgs.free();
-            if (invo.success) {
-                result = invo.result.getString();
-                invo.result.free();
-            } else {
-                extras.putInt(Extras.KEY_ERR_CODE, invo.errCode);
-                extras.putString(Extras.KEY_ERR_MSG, invo.errMessage);
-            }
+        GVariant gvArgs = GVariant.newTupleString(arg);
+        GVariant gvResult = doMethod(client, objectPath, iface, method, gvArgs, extras);
+        gvArgs.free();
+        if (gvResult != null) {
+            result = gvResult.getString();
+            gvResult.free();
         }
-        if (LOG) Log.i(TAG, "doStringMethodString: result=" + result);
         return result;
     }
 
     private void doVoidMethodLong(IRendererClient client, String objectPath, String iface,
             String method, long arg, Bundle extras) {
         if (LOG) logDoMethod("doVoidMethodLong", objectPath, iface, method);
-        RemoteObject ro = connector.getRemoteObject(objectPath, iface);
-        if (ro != null) {
-            GVariant gvArgs = GVariant.newTupleInt64(arg);
-            Invocation invo = connector.dispatch(client, ro, iface, method, gvArgs);
-            gvArgs.free();
-            if (!invo.success) {
-                extras.putInt(Extras.KEY_ERR_CODE, invo.errCode);
-                extras.putString(Extras.KEY_ERR_MSG, invo.errMessage);
-            }
-        }
+        GVariant gvArgs = GVariant.newTupleInt64(arg);
+        doMethod(client, objectPath, iface, method, gvArgs, extras);
+        gvArgs.free();
     }
 
     private void doVoidMethodStringString(IRendererClient client, String objectPath, String iface,
             String method, String arg1, String arg2, Bundle extras) {
         if (LOG) logDoMethod("doVoidMethodStringString", objectPath, iface, method);
-        RemoteObject ro = connector.getRemoteObject(objectPath, iface);
-        if (ro != null) {
-            GVariant gvArgs = GVariant.newTupleStringString(arg1, arg2);
-            Invocation invo = connector.dispatch(client, ro, iface, method, gvArgs);
-            gvArgs.free();
-            if (!invo.success) {
-                extras.putInt(Extras.KEY_ERR_CODE, invo.errCode);
-                extras.putString(Extras.KEY_ERR_MSG, invo.errMessage);
-            }
-        }
+        GVariant gvArgs = GVariant.newTupleStringString(arg1, arg2);
+        doMethod(client, objectPath, iface, method, gvArgs, extras);
+        gvArgs.free();
     }
 
-    private void doVoidMethodStringLong(IRendererClient client, String objectPath, String iface,
+    private void doVoidMethodObjPathLong(IRendererClient client, String objectPath, String iface,
             String method, String arg1, long arg2, Bundle extras) {
         if (LOG) logDoMethod("doVoidMethodStringLong", objectPath, iface, method);
-        if (LOG) Log.i(TAG, "doVoidMethodStringLong: s=" + arg1 + " l=" + arg2);
+        GVariant gvArgs = GVariant.newTupleObjPathInt64(arg1, arg2);
+        doMethod(client, objectPath, iface, method, gvArgs, extras);
+        gvArgs.free();
+    }
+
+    private GVariant doMethod(IRendererClient client, String objectPath, String iface,
+            String method, GVariant args, Bundle extras) {
+        GVariant gvResult = null;
         RemoteObject ro = connector.getRemoteObject(objectPath, iface);
         if (ro != null) {
-            GVariant gvArgs = GVariant.newTupleObjPathInt64(arg1, arg2);
-            Invocation invo = connector.dispatch(client, ro, iface, method, gvArgs);
-            gvArgs.free();
-            if (!invo.success) {
+            Invocation invo = connector.dispatch(client, ro, iface, method, args);
+            if (invo.success) {
+                gvResult = invo.result;
+            } else {
                 extras.putInt(Extras.KEY_ERR_CODE, invo.errCode);
                 extras.putString(Extras.KEY_ERR_MSG, invo.errMessage);
             }
         }
+        return gvResult;
     }
 
-    private void logDoMethod(String method, String objPath, String iface, String method2) {
+    private static void logDoMethod(String method, String objPath, String iface, String method2) {
         Log.i(TAG, String.format("%s: method=%s obj=%s iface=%s", method, method2, objPath, iface));
     }
 
@@ -708,7 +652,7 @@ public class RendererService extends Service implements IConnectorClient {
     }
 
     /** Add the controller property with the given name and value to the given bundle. */
-    private void addControllerProperty(Bundle bundle, String propName, GVariant gvPropValue) {
+    private static void addControllerProperty(Bundle bundle, String propName, GVariant gvPropValue) {
         RendererControllerProps.Enum e = RendererControllerProps.getEnum(propName);
         switch (e) {
         case PLAYBACK_STATUS:
@@ -765,7 +709,7 @@ public class RendererService extends Service implements IConnectorClient {
         }
     }
 
-    private Bundle makeBundleFromDictionary(GVariant gvDictionary) {
+    private static Bundle makeBundleFromDictionary(GVariant gvDictionary) {
         Bundle bundle = new Bundle();
         GVariant gvEntries[] = gvDictionary.getArrayOfGVariant();
         for (GVariant gvEntry : gvEntries) {
@@ -782,7 +726,7 @@ public class RendererService extends Service implements IConnectorClient {
     }
 
     // Add the (key, value) to the bundle if it's of a type we like.
-    private void putToBundleMaybe(Bundle bundle, String key, GVariant gvValue) {
+    private static void putToBundleMaybe(Bundle bundle, String key, GVariant gvValue) {
         String type = gvValue.getTypeString();
         boolean added = false;
         if (type.equals("o") || type.equals("s")) {
