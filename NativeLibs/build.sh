@@ -15,10 +15,17 @@
 # this program; if not, write to the Free Software Foundation, Inc., 51 Franklin St 
 # - Fifth Floor, Boston, MA 02110-1301 USA
 
+function pause(){
+   read -p "Press [Enter] key to continue..."
+}
+
 set -ex
 
 # Which target architecture (armeabi or x86).
 ARCH=${ARCH:-x86}
+
+# Which Host System (32-bit or 64-bit).
+HOST_SYSTEM=`uname -m`
 
 # Which Android "API Level" to build for (3,4,5,8,9, or 14).
 API_LEVEL=${API_LEVEL:-9}
@@ -27,7 +34,7 @@ API_LEVEL=${API_LEVEL:-9}
 TOOLCHAIN_VERSION=${TOOLCHAIN_VERSION:-4.6}
 
 # Where the Android NDK lives.
-NDK_NAME=${NDK_NAME:-android-ndk-r9}
+NDK_NAME=${NDK_NAME:-android-ndk-r9d}
 NDK_DIR=${NDK_DIR:-$HOME}/$NDK_NAME
 
 # Where the Android SDK lives.
@@ -38,11 +45,13 @@ SDK_DIR=${SDK_DIR:-$HOME}/$SDK_NAME
 if ! test -d $NDK_DIR; then
     mkdir -p $NDK_DIR
     pushd $NDK_DIR/..
-        wget http://dl.google.com/android/ndk/$NDK_NAME-linux-x86.tar.bz2 \
-            && tar jxf $NDK_NAME-linux-x86.tar.bz2 \
-            && rm $NDK_NAME-linux-x86.tar.bz2
+        wget http://dl.google.com/android/ndk/$NDK_NAME-linux-$HOST_SYSTEM.tar.bz2 \
+            && tar jxf $NDK_NAME-linux-$HOST_SYSTEM.tar.bz2 \
+            && rm $NDK_NAME-linux-$HOST_SYSTEM.tar.bz2
     popd
 fi
+
+#pause
 
 # Download the Android SDK if necessary.
 if ! test -d $SDK_DIR; then
@@ -53,6 +62,8 @@ if ! test -d $SDK_DIR; then
             && rm android-sdk_r21-linux.tgz
     popd
 fi
+
+#pause
 
 # Update the Android SDK if necessary.
 #$SDK_DIR/tools/android update sdk -u --filter platform-tool,tool
@@ -72,7 +83,6 @@ case $ARCH in
         ;;
 esac
 
-HOST_SYSTEM=`uname -m`
 if [[ $HOST_SYSTEM = "x86_64" ]]
     then EXTRA_SYSTEM_FLAG="--system=linux-x86_64"
 fi
@@ -97,6 +107,8 @@ if ! test -d jhbuild; then
         make install
     popd
 fi
+
+#pause
 
 mkdir -p $JHB_PREFIX/share/aclocal
 cp /usr/share/aclocal/gtk-doc.m4 $JHB_PREFIX/share/aclocal/
@@ -134,5 +146,8 @@ export PKG_CONFIG="pkg-config \
     --define-variable=glib_compile_resources=/usr/bin/glib-compile-resources \
 "
 
+#pause
+
 # Do it.
 $JHB_PREFIX/bin/jhbuild -f jhbuildrc-android -m modulesets/android-native.modules ${*:-build gupnp-av gupnp-dlna rygel}
+#$JHB_PREFIX/bin/jhbuild -f jhbuildrc-android -m modulesets/android-native.modules ${*:-build gupnp-av gupnp-dlna}
