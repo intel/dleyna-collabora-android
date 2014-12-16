@@ -37,7 +37,7 @@ version of the cross-compiler from the Android NDK to use:
 where
 
     <arch>    is 'x86' or 'armeabi' (default 'x86')
-    <level>   is an Android API level: 3,4,5,8,9, or 14 (default '9')
+    <level>   is an Android API level: 3,4,5,8,9,14 or 19 (default '19')
     <cmd>...  is a JHBuild command and args (default 'build gupnp-dlna')
 
 The result of the build will be left in a subdirectory named
@@ -46,7 +46,7 @@ The result of the build will be left in a subdirectory named
 
 which might be, for example
 
-    install-x86-android-9
+    install-x86-android-19
 
 Test Native Libraries
 ---------------------
@@ -61,10 +61,10 @@ Before building the test app, you have to make a copy of the configured library
 source code into a directory with a name that contains the target architecture
 and api level (because some of the unit tests include internal header files
 that aren't built out to the install directory). So for example if you're
-building for arm and api level 14, you must do the following:
+building for x86 and api level 19, you must do the following:
 
     cd NativeLibs
-    cp -r sources sources-armeabi-android-14
+    cp -r sources sources-x86-android-19
 
 After doing so, you need to check the correct architecture is selected
 in TestNativeLibs/jni/Application.mk You should be able to switch freely
@@ -77,9 +77,9 @@ TestNativeLibs/ each time you change API versions while building the NativeLibs
 (And for that, the first time you build). Although this is not always required,
 it certainly doesn't hurt:
 
-android update project --name testnativeapps --path . -s --target "android-14"
+android update project --name testnativeapps --path . -s --target "android-19"
 
-Example above is for API level 14 as you might have guessed.
+Example above is for API level 19 as you might have guessed.
 
 The final step is building the application .apk install package. You do this
 from the TestNativeLibs/jni directory, issuing the following command:
