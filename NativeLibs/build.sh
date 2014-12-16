@@ -28,7 +28,7 @@ ARCH=${ARCH:-x86}
 HOST_SYSTEM=`uname -m`
 
 # Which Android "API Level" to build for (3,4,5,8,9, or 14).
-API_LEVEL=${API_LEVEL:-9}
+API_LEVEL=${API_LEVEL:-19}
 
 # Which version of the Android NDK toolchain to use (e.g. 4.6). 
 TOOLCHAIN_VERSION=${TOOLCHAIN_VERSION:-4.6}
