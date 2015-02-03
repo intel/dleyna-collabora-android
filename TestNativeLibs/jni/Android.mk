@@ -93,6 +93,12 @@ LOCAL_MODULE := gupnp
 LOCAL_SRC_FILES := ../../NativeLibs/install-$(TARGET_ARCH_ABI)-$(TARGET_PLATFORM)/lib/libgupnp-1.0.a
 include $(PREBUILT_STATIC_LIBRARY)
 
+# gupnp-dlna
+include $(CLEAR_VARS)
+LOCAL_MODULE := gupnp-dlna
+LOCAL_SRC_FILES := ../../NativeLibs/install-$(TARGET_ARCH_ABI)-$(TARGET_PLATFORM)/lib/libgupnp-dlna-2.0.a
+include $(PREBUILT_STATIC_LIBRARY)
+
 # gupnp-av
 include $(CLEAR_VARS)
 LOCAL_MODULE := gupnp-av
@@ -105,6 +111,7 @@ MY_GLIB := glib-2.34.3
 MY_LIBSOUP := libsoup-2.40.3
 MY_GSSDP := gssdp-0.14.4
 MY_GUPNP := gupnp-0.20.5
+MY_GUPNPDLNA := gupnp-dlna-0.10.1
 MY_GUPNPAV := gupnp-av-0.12.1
 
 LOCAL_MODULE := dleyna-jni
@@ -133,6 +140,12 @@ LOCAL_C_INCLUDES := \
 \
     ../../NativeLibs/sources-$(TARGET_ARCH_ABI)-$(TARGET_PLATFORM)/$(MY_GUPNP) \
     ../../NativeLibs/sources-$(TARGET_ARCH_ABI)-$(TARGET_PLATFORM)/$(MY_GUPNP)/tests \
+\
+    ../../NativeLibs/install-$(TARGET_ARCH_ABI)-$(TARGET_PLATFORM)/include/gupnp-dlna-2.0 \
+    ../../NativeLibs/install-$(TARGET_ARCH_ABI)-$(TARGET_PLATFORM)/include/gupnp-dlna-2.0/libgupnp-dlna \
+    ../../NativeLibs/sources-$(TARGET_ARCH_ABI)-$(TARGET_PLATFORM)/gupnp-dlna-0.10.1/libgupnp-dlna \
+    ../../NativeLibs/sources-$(TARGET_ARCH_ABI)-$(TARGET_PLATFORM)/$(MY_GUPNPDLNA) \
+    ../../NativeLibs/sources-$(TARGET_ARCH_ABI)-$(TARGET_PLATFORM)/$(MY_GUPNPDLNA)/tests \
 \
     ../../NativeLibs/install-$(TARGET_ARCH_ABI)-$(TARGET_PLATFORM)/include/gupnp-av-1.0 \
     ../../NativeLibs/install-$(TARGET_ARCH_ABI)-$(TARGET_PLATFORM)/include/gupnp-av-1.0/libgupnp-av \
@@ -188,7 +201,8 @@ LOCAL_SRC_FILES := \
     $(MY_GLIB)/glib/tests/rwlock.c \
     $(MY_GLIB)/glib/tests/scannerapi.c \
     $(MY_GLIB)/glib/tests/sequence.c \
-    $(MY_GLIB)/tests/slice-test.c $(MY_GLIB)/tests/memchunks.c \
+    $(MY_GLIB)/tests/slice-test.c \
+    $(MY_GLIB)/tests/memchunks.c \
     $(MY_GLIB)/glib/tests/slist.c \
     $(MY_GLIB)/glib/tests/sort.c \
     $(MY_GLIB)/tests/spawn-test.c \
@@ -295,6 +309,9 @@ LOCAL_SRC_FILES := \
     $(MY_GUPNP)/tests/test-introspection.c \
     $(MY_GUPNP)/tests/test-proxy.c \
     $(MY_GUPNP)/tests/test-server.c \
+    $(MY_GUPNP)/tests/test-white-list.c \
+\
+    $(MY_GUPNPDLNA)/tests/sets.c \
 \
     $(MY_GUPNPAV)/tests/check-feature-list-parser.c \
     $(MY_GUPNPAV)/tests/check-search.c \
@@ -315,5 +332,5 @@ LOCAL_SRC_FILES := \
 
 LOCAL_CFLAGS += -DSRCDIR=\"/data/data/com.intel.dleyna.testnativelibs/files/SRCDIR\"
 LOCAL_LDLIBS := -llog -landroid -lz
-LOCAL_STATIC_LIBRARIES := gupnp-av gupnp gssdp libsoup libxml2 gthread gio gobject gmodule glib iconv libintl ffi
+LOCAL_STATIC_LIBRARIES := gupnp-av gupnp-dlna gupnp gssdp libsoup libxml2 gthread gio gobject gmodule glib iconv libintl ffi
 include $(BUILD_SHARED_LIBRARY)

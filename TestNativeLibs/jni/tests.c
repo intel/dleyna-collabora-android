@@ -199,6 +199,11 @@ DEFINE_TEST(gupnp_browsing_test, gupnpBrowsingTest)
 DEFINE_TEST(gupnp_introspection_test, gupnpIntrospectionTest)
 DEFINE_TEST(gupnp_proxy_test, gupnpProxyTest)
 DEFINE_TEST(gupnp_server_test, gupnpServerTest)
+DEFINE_TEST(gupnp_white_list_test, gupnpWhiteListTest)
+
+// gupnp-dlna
+
+DEFINE_TEST(gupnpdlna_sets_test, gupnpdlnaSetsTest)
 
 // gupnp-av
 

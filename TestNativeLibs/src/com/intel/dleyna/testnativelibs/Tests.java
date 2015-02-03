@@ -183,6 +183,10 @@ public class Tests {
     public static native void gupnpIntrospectionTest();
     public static native void gupnpProxyTest();
     public static native void gupnpServerTest();
+    public static native void gupnpWhiteListTest();
+
+    // gupnp-dlna
+    public static native void gupnpdlnaSetsTest();
 
     // gupnp-av
     public static native void gupnpavListParserTest();
@@ -634,6 +638,15 @@ public class Tests {
         }),
         GUPNP_SERVER_TEST("", new Impl() {
             public void exec() { gupnpServerTest(); }
+        }),
+        GUPNP_WHITE_LIST_TEST("", new Impl() {
+            public void exec() { gupnpWhiteListTest(); }
+        }),
+
+        // gupnp-dlna
+
+        GUPNPDLNA_SETS_TEST("", new Impl() {
+            public void exec() { gupnpdlnaSetsTest(); }
         }),
 
         // gupnp-av
