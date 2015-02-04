@@ -13,4 +13,4 @@ APP_ABI := armeabi x86
 #   android-9  <=> Android 2.3
 #   android-14 <=> Android 4.0
 #   android-18 <=> Android 4.3
-APP_PLATFORM := android-9
+APP_PLATFORM := android-19
