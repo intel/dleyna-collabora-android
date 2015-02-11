@@ -188,6 +188,26 @@ DEFINE_TEST(soup_timeout_test, soupTimeoutTest, "--debug")
 DEFINE_TEST(soup_tld_test, soupTldTest, "--debug")
 DEFINE_TEST(soup_uri_parsing, soupUriParsing, "--debug")
 
+// libxml2
+
+DEFINE_TEST(libxml2_run_suite, libxml2RunSuite)
+DEFINE_TEST(libxml2_run_xml_conf, libxml2RunXmlConf)
+DEFINE_TEST(libxml2_test_api, libxml2TestApi)
+DEFINE_TEST(libxml2_test_automata, libxml2TestAutomata)
+DEFINE_TEST(libxml2_test_c14n, libxml2TestC14n, "--with-comments", SRCDIR "/c14n/with-comments/example-1.xml")
+DEFINE_TEST(libxml2_test_html, libxml2TestHtml, "--debug", SRCDIR "/HTML/test2.html", SRCDIR "/HTML/test3.html")
+DEFINE_TEST(libxml2_test_limits, libxml2TestLimits)
+DEFINE_TEST(libxml2_test_module, libxml2TestModule)
+DEFINE_TEST(libxml2_test_reader, libxml2TestReader, "--debug", SRCDIR "/valid/REC-xml-19980210.xml")
+DEFINE_TEST(libxml2_test_regexp, libxml2TestRegexp, "--debug", "--expr", "--input", SRCDIR "/regexp/content")
+DEFINE_TEST(libxml2_test_relax, libxml2TestRelax, "--debug")
+DEFINE_TEST(libxml2_test_sax, libxml2TestSax, "--debug", SRCDIR "/valid/REC-xml-19980210.xml")
+DEFINE_TEST(libxml2_test_schemas, libxml2TestSchemas, "--debug")
+DEFINE_TEST(libxml2_test_uri, libxml2TestUri, "--debug", "http://developer.android.com/tools/sdk/ndk/index.html")
+DEFINE_TEST(libxml2_test_xpath, libxml2TestXpath, "--debug", "--input", SRCDIR "/XPath/docs/id", "--file", SRCDIR "/XPath/tests/idsimple")
+DEFINE_TEST(libxml2_xml_catalog, libxml2XmlCatalog, "--verbose")
+DEFINE_TEST(libxml2_xml_lint, libxml2XmlLint, "--debug")
+
 // gssdp
 
 DEFINE_TEST(gssdp_browser_test, gssdpBrowserTest)

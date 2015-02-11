@@ -71,7 +71,7 @@ test_states (const gchar *global, const gchar *gplugin_a,
 static SimpleFunc plugin_clash_func = NULL;
 
 int
-module_test_main (int   arg,
+glib_module_test_main (int   arg,
       char *argv[])
 {
   GModule *module_self, *module_a, *module_b;

@@ -46,7 +46,17 @@ adb $DEVICE_ARG shell mkdir $SRCDIR
 
 echo "Installing ..."
 for src in `cat ResourceFiles`; do
-    dest=${src#*/tests/}
-    echo -n "${src} "
+
+    testdir=$(echo "${src}"  | sed -e 's|/test/.*$|/test/|')
+    testsdir=$(echo "${src}"  | sed -e 's|/tests/.*$|/tests/|')
+
+    if [ -d "../NativeLibs/sources/${testsdir}" ]; then
+      dest=${src#*/tests/}
+    fi
+    if [ -d "../NativeLibs/sources/${testdir}" ]; then
+      dest=${src#*/test/}
+    fi
+
+    echo -n "${src} --> ${dest} "
     adb $DEVICE_ARG push ../NativeLibs/sources/$src $SRCDIR/$dest
 done

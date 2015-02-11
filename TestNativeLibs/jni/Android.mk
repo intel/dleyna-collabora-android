@@ -109,6 +109,7 @@ include $(PREBUILT_STATIC_LIBRARY)
 include $(CLEAR_VARS)
 MY_GLIB := glib-2.34.3
 MY_LIBSOUP := libsoup-2.40.3
+MY_LIBXML2 := libxml2-2.9.0
 MY_GSSDP := gssdp-0.14.4
 MY_GUPNP := gupnp-0.20.5
 MY_GUPNPDLNA := gupnp-dlna-0.10.1
@@ -143,8 +144,8 @@ LOCAL_C_INCLUDES := \
 \
     ../../NativeLibs/install-$(TARGET_ARCH_ABI)-$(TARGET_PLATFORM)/include/gupnp-dlna-2.0 \
     ../../NativeLibs/install-$(TARGET_ARCH_ABI)-$(TARGET_PLATFORM)/include/gupnp-dlna-2.0/libgupnp-dlna \
-    ../../NativeLibs/sources-$(TARGET_ARCH_ABI)-$(TARGET_PLATFORM)/gupnp-dlna-0.10.1/libgupnp-dlna \
     ../../NativeLibs/sources-$(TARGET_ARCH_ABI)-$(TARGET_PLATFORM)/$(MY_GUPNPDLNA) \
+    ../../NativeLibs/sources-$(TARGET_ARCH_ABI)-$(TARGET_PLATFORM)/$(MY_GUPNPDLNA)/libgupnp-dlna \
     ../../NativeLibs/sources-$(TARGET_ARCH_ABI)-$(TARGET_PLATFORM)/$(MY_GUPNPDLNA)/tests \
 \
     ../../NativeLibs/install-$(TARGET_ARCH_ABI)-$(TARGET_PLATFORM)/include/gupnp-av-1.0 \
@@ -152,7 +153,8 @@ LOCAL_C_INCLUDES := \
     ../../NativeLibs/sources-$(TARGET_ARCH_ABI)-$(TARGET_PLATFORM)/$(MY_GUPNPAV) \
     ../../NativeLibs/sources-$(TARGET_ARCH_ABI)-$(TARGET_PLATFORM)/$(MY_GUPNPAV)/tests \
 \
-    ../../NativeLibs/install-$(TARGET_ARCH_ABI)-$(TARGET_PLATFORM)/include/libxml2
+    ../../NativeLibs/install-$(TARGET_ARCH_ABI)-$(TARGET_PLATFORM)/include/libxml2 \
+    ../../NativeLibs/sources-$(TARGET_ARCH_ABI)-$(TARGET_PLATFORM)/$(MY_LIBXML2)
 
 LOCAL_SRC_FILES := \
     dleyna-jni.c \
@@ -302,6 +304,24 @@ LOCAL_SRC_FILES := \
     $(MY_LIBSOUP)/tests/uri-parsing.c \
     $(MY_LIBSOUP)/tests/test-utils.c \
 \
+    $(MY_LIBXML2)/runsuite.c \
+    $(MY_LIBXML2)/runxmlconf.c \
+    $(MY_LIBXML2)/testapi.c \
+    $(MY_LIBXML2)/testAutomata.c \
+    $(MY_LIBXML2)/testC14N.c \
+    $(MY_LIBXML2)/testHTML.c \
+    $(MY_LIBXML2)/testlimits.c \
+    $(MY_LIBXML2)/testModule.c \
+    $(MY_LIBXML2)/testReader.c \
+    $(MY_LIBXML2)/testRegexp.c \
+    $(MY_LIBXML2)/testRelax.c \
+    $(MY_LIBXML2)/testSAX.c \
+    $(MY_LIBXML2)/testSchemas.c \
+    $(MY_LIBXML2)/testURI.c \
+    $(MY_LIBXML2)/testXPath.c \
+    $(MY_LIBXML2)/xmlcatalog.c \
+    $(MY_LIBXML2)/xmllint.c \
+\
     $(MY_GSSDP)/tests/test-browser.c \
     $(MY_GSSDP)/tests/test-publish.c \
 \
@@ -326,9 +346,13 @@ LOCAL_SRC_FILES := \
 #   $(MY_LIBSOUP)/tests/range-test.c \
 #   $(MY_LIBSOUP)/tests/xmlrpc-server-test.c \
 #   $(MY_LIBSOUP)/tests/xmlrpc-test.c \
+#   $(MY_LIBXML2)/nanoftp.c \
+#   $(MY_LIBXML2)/nanohttp.c \
 
 # DOES NOT COMPILE
 #   $(MY_GLIB)/gio/tests/gdbus-test-codegen.c \
+#   $(MY_LIBXML2)/runtest.c \
+#   $(MY_LIBXML2)/testrecurse.c \
 
 LOCAL_CFLAGS += -DSRCDIR=\"/data/data/com.intel.dleyna.testnativelibs/files/SRCDIR\"
 LOCAL_LDLIBS := -llog -landroid -lz
