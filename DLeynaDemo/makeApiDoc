@@ -3,7 +3,7 @@
 DOC_NAME=dleyna-lib-doc
 OUT_DIR=/tmp
 SDK_DIR=${SDK_DIR:-$HOME/android-sdk-linux}
-API_LEVEL=${API_LEVEL:=17} # should always use the latest
+API_LEVEL=${API_LEVEL:=19} # should always use the latest
 
 rm -rf $OUT_DIR/$DOC_NAME
 mkdir $OUT_DIR/$DOC_NAME
