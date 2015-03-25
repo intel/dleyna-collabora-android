@@ -1,0 +1,33 @@
+#!/bin/bash
+
+# Imperfect but very useful tool to generate .h files declaring the native
+# methods found in the .java files of a typical Android application.
+# Run this whenever you add/modify a native method to the java source.
+# It will create/modify the .h files that declare the native prototypes.
+# You may elect to edit the generated .h files before committing them to remove
+# some extraneous stuff...
+#
+# You should be in the Android application root directory. Under that there
+# should be the following subdirectory trees from which input is taken
+#   src/ - java source code (.java files)
+#   bin/classes/ - compiled java code (.class files)
+# The generated .h files will be left in the jni/ subdirectory.
+
+
+# Set this to point to wherever you put the Android SDK
+SDK_DIR=$HOME/android-sdk-linux
+
+# Set this to the SDK platform version (aka API level) to use.
+API_LEVEL=10
+
+if [[ ! ( -d src && -d jni && -d bin/classes ) ]] ; then
+    echo "You're not in the right directory"
+    exit 1
+fi
+
+ANDROID_CLASSES=${SDK_DIR}/platforms/android-${API_LEVEL}/android.jar
+CLASSES=$(find src -name '*.java' | xargs grep -l '[    ]native[  ].* [a-z][a-zA-Z]*(' | sed -e 's/^src\///' -e 's/\//\./g' -e 's/\.java//')
+for f in $CLASSES; do
+    echo $f
+done
+javah -d jni -classpath bin/classes:$ANDROID_CLASSES $CLASSES
