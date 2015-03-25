@@ -7,8 +7,6 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-#undef com_intel_dleyna_RendererService_LOG
-#define com_intel_dleyna_RendererService_LOG 1L
 /*
  * Class:     com_intel_dleyna_RendererService
  * Method:    dleynaMainLoopStart

@@ -186,7 +186,6 @@ public class GVariant {
         return newArray(gva, GVariantType.newBasic(GVariantType.STRING));
     }
 
-
     /**
      * Construct a new instance of type array-of-object-path.
      * @param value the array-of-object-path value
@@ -201,7 +200,11 @@ public class GVariant {
     }
 
     private static GVariant newArray(GVariant[] gva, GVariantType elemType) {
-        GVariant result = new GVariant(newArrayNative(gva, elemType.getPeer()));
+        long[] gvaPeers = new long[gva.length];
+        for (int i = 0; i < gva.length; i++) {
+            gvaPeers[i] = gva[i].peer;
+        }
+        GVariant result = new GVariant(newArrayNative(gvaPeers, elemType.getPeer()));
         for (int i = 0; i < gva.length; i++) {
             gva[i].free();
         }
@@ -209,7 +212,7 @@ public class GVariant {
         return result;
     }
 
-    private static native long newArrayNative(GVariant[] gva, long elemType); // TODO jni level impl
+    private static native long newArrayNative(long[] gvaPeers, long elemType);
 
     /**
      * Construct a new instance of type tuple of one int64.

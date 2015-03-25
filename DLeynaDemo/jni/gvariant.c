@@ -89,10 +89,17 @@ JNIEXPORT jlong JNICALL Java_com_intel_dleyna_GVariant_newObjectPathNative(
 }
 
 JNIEXPORT jlong JNICALL Java_com_intel_dleyna_GVariant_newArrayNative(
-    JNIEnv* env, jclass clazz, jobjectArray gva, jlong elemType)
+    JNIEnv* env, jclass clazz, jlongArray _gvElems, jlong elemType)
 {
-    // TODO
-    return 0;
+    jint n = (*env)->GetArrayLength(env, _gvElems);
+    GVariant** gvElems = g_malloc_n(n, sizeof(GVariant*));
+    int i;
+    for (i=0; i < n; i++) {
+        gvElems[i] = JLONG_TO_PTR(_gvElems);
+    }
+    GVariant* gva = g_variant_new_array(JLONG_TO_PTR(elemType), gvElems, (gsize)n);
+    g_free(gvElems);
+    return PTR_TO_JLONG(gva);
 }
 
 JNIEXPORT jlong JNICALL Java_com_intel_dleyna_GVariant_newTupleInt64Native(
