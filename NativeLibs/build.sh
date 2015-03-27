@@ -101,6 +101,7 @@ if ! test -d jhbuild; then
     git clone git://git.gnome.org/jhbuild
     pushd jhbuild
         # temporary hack
+        git checkout 3.12.0
         mkdir m4 && mkdir build-aux
         patch -p1 -i ../modulesets/patches/jhbuild/disable-clean-la-files.patch
         ./autogen.sh --prefix=$JHB_PREFIX
