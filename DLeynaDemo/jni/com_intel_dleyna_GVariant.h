@@ -74,10 +74,10 @@ JNIEXPORT jlong JNICALL Java_com_intel_dleyna_GVariant_newObjectPathNative
 /*
  * Class:     com_intel_dleyna_GVariant
  * Method:    newArrayNative
- * Signature: ([Lcom/intel/dleyna/GVariant;J)J
+ * Signature: ([JJ)J
  */
 JNIEXPORT jlong JNICALL Java_com_intel_dleyna_GVariant_newArrayNative
-  (JNIEnv *, jclass, jobjectArray, jlong);
+  (JNIEnv *, jclass, jlongArray, jlong);
 
 /*
  * Class:     com_intel_dleyna_GVariant
