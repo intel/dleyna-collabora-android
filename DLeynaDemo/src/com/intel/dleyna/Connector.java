@@ -25,6 +25,7 @@ import android.util.Log;
 import android.util.SparseArray;
 
 import com.intel.dleyna.lib.IRendererClient;
+import com.intel.dleyna.lib.IServerClient;
 
 
 /**
@@ -65,6 +66,13 @@ public class Connector {
     private static final boolean LOG = false;
     private static final String TAG = "Connector";
 
+    // for publish_subtree (callbacks)
+    private static final String IFACE_DBUS_PROP  = "org.freedesktop.DBus.Properties"; // [0]
+    private static final String IFACE_MEDIA_OBJECT = "org.gnome.MediaObject2"; // [1]
+    private static final String IFACE_CONTAINER  = "org.gnome.UPnP.MediaContainer2"; // [2]
+    private static final String IFACE_MEDIA_ITEM = "org.gnome.MediaItem2"; // [3]
+    private static final String IFACE_DEVICE  = "com.intel.dLeynaServer.MediaDevice"; // [4]
+
     /** The current set of remote objects */
     private RemoteObject.Store remoteObjects = new RemoteObject.Store();
 
@@ -91,13 +99,29 @@ public class Connector {
      * @param mgrIfaceName the manager objects' manager interface name
      */
     public Connector(IConnectorClient client, String mgrObjPath, String mgrIfaceName) {
+        if (LOG) Log.i(TAG, "Connector:ctor: client = " + client + ", mgrObjPath = " + mgrObjPath + ", mgrIfaceName = " + mgrIfaceName);
         this.client = client;
         this.mgrObjPath = mgrObjPath;
         this.mgrIfaceName = mgrIfaceName;
     }
 
     public RemoteObject getRemoteObject(String objectPath, String ifaceName) {
-        return remoteObjects.getByName(objectPath, ifaceName);
+        if (LOG) Log.i(TAG, "getRemoteObject:  objectPath = " + objectPath + ", ifaceName = " + ifaceName);
+        RemoteObject ro = remoteObjects.getByName(objectPath, ifaceName);
+        if (ro == null) {
+            // try the server part of the object path
+            String[] parts = objectPath.split("/");
+            if (parts.length > 5) {
+                //if (LOG) Log.i(TAG, "retry getRemoteObject: '" +  parts[0] + "' '" + parts[1] + "' '" + parts[2] + "' '" + parts[3] + "' '" + parts[4] + "' '" + parts[5] + "'");
+                objectPath = parts[0] + "/" + parts[1] + "/" + parts[2] + "/" + parts[3] + "/" + parts[4] + "/" + parts[5];
+                if (LOG) Log.i(TAG, "retry getRemoteObject:  objectPath = " + objectPath + ", ifaceName = " + ifaceName);
+                ro = remoteObjects.getByName(objectPath, ifaceName);
+            }
+        }
+        if (LOG && (ro == null)) {
+            Log.w(TAG, String.format("Remote Object not found: objPath=%s iface=%s", objectPath, ifaceName));
+        }
+        return ro;
     }
 
     public void waitForManagerObject() {
@@ -153,7 +177,7 @@ public class Connector {
      * @param disconnectedCb a native function to call down to when disconnected
      */
     public void connect(String serverName, long connectedCb, long disconnectedCb) {
-        if (LOG) Log.i(TAG, "connect");
+        if (LOG) Log.i(TAG, "connect: connectedCb = " + String.format("0x%08x", connectedCb) + ", disconnectedCb = " + String.format("0x%08x", disconnectedCb));
     }
 
     /**
@@ -189,7 +213,7 @@ public class Connector {
      * @param lostCb
      */
     public void setClientLostCallback(long lostCb) {
-        if (LOG) Log.i(TAG, "setClientLostCallback");
+        if (LOG) Log.i(TAG, "setClientLostCallback: lostCb = " + String.format("0x%08x", lostCb));
     }
 
     /**
@@ -203,7 +227,7 @@ public class Connector {
      */
     public int publishObject(String objectPath, boolean isRoot, String ifaceName,
             long dispatchCb) {
-        if (LOG) Log.i(TAG, "publishObject: " + objectPath + " " + isRoot + " " + ifaceName);
+        if (LOG) Log.i(TAG, "publishObject: " + objectPath + " " + isRoot + " " + ifaceName + " " + String.format("0x%08x", dispatchCb));
 
         // Add this object to the collection.
         lastAssignedObjectId++;
@@ -213,12 +237,13 @@ public class Connector {
 
         // If it's the manager object, unblock waitForManagerObject().
         if (objectPath.equals(mgrObjPath) && ifaceName.equals(mgrIfaceName)) {
+            if (LOG) Log.i(TAG, "publishObject: waiting for manager object " + mgrObjPath + " " + mgrIfaceName);
             synchronized (this) {
                 this.notify();
             }
         }
 
-       return ro.id;
+        return ro.id;
     }
 
     /**
@@ -230,8 +255,24 @@ public class Connector {
      * @return the id of the subtree
      */
     public int publishSubtree(String objectPath, long[] dispatchCb, long interfaceFilterCb) {
-        if (LOG) Log.i(TAG, "publishSubtree");
-        return 0;
+        if (LOG) {
+            Log.i(TAG, "publishSubtree: " + objectPath + " " + String.format("0x%08x", interfaceFilterCb));
+            for (int i = 0; i < dispatchCb.length; ++i) {
+                Log.i(TAG, "  publishSubtree dispatch cb[" + i + "] = " + String.format("0x%08x", dispatchCb[i]));
+            }
+        }
+
+        SubtreeRemoteObject ro0 = new SubtreeRemoteObject(++lastAssignedObjectId, objectPath, IFACE_DBUS_PROP, dispatchCb[0]); // dbus properties interface
+        SubtreeRemoteObject ro1 = new SubtreeRemoteObject(++lastAssignedObjectId, objectPath, IFACE_MEDIA_OBJECT, dispatchCb[1]); // media object interface
+        SubtreeRemoteObject ro2 = new SubtreeRemoteObject(++lastAssignedObjectId, objectPath, IFACE_CONTAINER, dispatchCb[2]); // media container interface
+        SubtreeRemoteObject ro3 = new SubtreeRemoteObject(++lastAssignedObjectId, objectPath, IFACE_MEDIA_ITEM, dispatchCb[3]); // media item interface
+        SubtreeRemoteObject ro4 = new SubtreeRemoteObject(++lastAssignedObjectId, objectPath, IFACE_DEVICE, dispatchCb[4]); // media device interface
+        remoteObjects.add(ro0);
+        remoteObjects.add(ro1);
+        remoteObjects.add(ro2);
+        remoteObjects.add(ro3);
+        remoteObjects.add(ro4);
+        return ro4.id;
     }
 
     /**
@@ -240,7 +281,7 @@ public class Connector {
      * @param objectId
      */
     public void unpublishObject(int objectId) {
-        if (LOG) Log.i(TAG, "unpublishObject");
+        if (LOG) Log.i(TAG, "unpublishObject id = " + objectId);
         remoteObjects.remove(objectId);
     }
 
@@ -250,7 +291,8 @@ public class Connector {
      * @param objectId
      */
     public void unpublishSubtree(int objectId) {
-        if (LOG) Log.i(TAG, "unpublishSubtree");
+        if (LOG) Log.i(TAG, "unpublishSubtree id = " + objectId);
+        remoteObjects.remove(objectId);
     }
 
     /**
@@ -288,7 +330,7 @@ public class Connector {
             pendingInvocations.append(invocation.id, invocation);
 
             if (LOG) Log.i(TAG, String.format(
-                    "dispatch: SCHEDUL id=%d meth=%s args=%s obj=%s iface=%s f=0x%08x",
+                    "dispatch: SCHEDULE id=%d meth=%s args=%s obj=%s iface=%s f=0x%08x",
                     invocation.id, meth, gvArgs == null ? "null" : gvArgs.getTypeString(),
                     obj.objectPath, iface, obj.dispatchCb));
 
@@ -297,6 +339,88 @@ public class Connector {
                 public void run() {
                     if (LOG) Log.i(TAG, "dispatch: RUNNING id=" + invocation.id);
                     dispatchNative(obj.dispatchCb, client.asBinder().toString(), obj.objectPath,
+                            iface, meth, args, invocation.id);
+                }
+            });
+        }
+
+        // Wait for the response.
+        if (LOG) Log.i(TAG, "dispatch: WAITING id=" + invocation.id);
+        synchronized (invocation) {
+            while (!invocation.done) {
+                try {
+                    invocation.wait();
+                } catch (InterruptedException e) {
+                }
+            }
+        }
+
+        if (LOG) Log.i(TAG, "dispatch: DONE!!! id=" + invocation.id);
+        return invocation;
+    }
+/*
+    public Invocation dispatch(final IServerClient client, final RemoteObject obj,
+            final String iface, final String meth, GVariant gvArgs) {
+
+        final long args = gvArgs == null ? 0 : gvArgs.getPeer();
+        final Invocation invocation;
+
+        synchronized(pendingInvocations) {
+            // Add a new Invocation to our list of pending Invocations.
+            invocation = new Invocation(++lastAssignedInvocationId);
+            pendingInvocations.append(invocation.id, invocation);
+
+            if (LOG) Log.i(TAG, String.format(
+                    "dispatch: SCHEDULE id=%d meth=%s args=%s obj=%s iface=%s f=0x%08x",
+                    invocation.id, meth, gvArgs == null ? "null" : gvArgs.getTypeString(),
+                    obj.objectPath, iface, obj.dispatchCb));
+
+            // Schedule the invocation to run on the g_main_loop.
+            gMainLoop.idleAdd(new Runnable() {
+                public void run() {
+                    if (LOG) Log.i(TAG, "dispatch: RUNNING id=" + invocation.id);
+                    dispatchNative(obj.dispatchCb, client.asBinder().toString(), obj.objectPath,
+                            iface, meth, args, invocation.id);
+                }
+            });
+        }
+
+        // Wait for the response.
+        if (LOG) Log.i(TAG, "dispatch: WAITING id=" + invocation.id);
+        synchronized (invocation) {
+            while (!invocation.done) {
+                try {
+                    invocation.wait();
+                } catch (InterruptedException e) {
+                }
+            }
+        }
+
+        if (LOG) Log.i(TAG, "dispatch: DONE!!! id=" + invocation.id);
+        return invocation;
+    }
+*/
+    public Invocation dispatch(final IServerClient client, final String objectPath, final RemoteObject obj,
+            final String iface, final String meth, GVariant gvArgs) {
+
+        final long args = gvArgs == null ? 0 : gvArgs.getPeer();
+        final Invocation invocation;
+
+        synchronized(pendingInvocations) {
+            // Add a new Invocation to our list of pending Invocations.
+            invocation = new Invocation(++lastAssignedInvocationId);
+            pendingInvocations.append(invocation.id, invocation);
+
+            if (LOG) Log.i(TAG, String.format(
+                    "dispatch: SCHEDULE id=%d meth=%s args=%s obj=%s iface=%s f=0x%08x",
+                    invocation.id, meth, gvArgs == null ? "null" : gvArgs.getTypeString(),
+                    objectPath, iface, obj.dispatchCb));
+
+            // Schedule the invocation to run on the g_main_loop.
+            gMainLoop.idleAdd(new Runnable() {
+                public void run() {
+                    if (LOG) Log.i(TAG, "dispatch: RUNNING id=" + invocation.id);
+                    dispatchNative(obj.dispatchCb, client.asBinder().toString(), objectPath,
                             iface, meth, args, invocation.id);
                 }
             });

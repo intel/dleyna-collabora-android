@@ -26,7 +26,17 @@ javadoc \
     src/com/intel/dleyna/lib/Renderer.java \
     src/com/intel/dleyna/lib/RendererControllerListener.java \
     src/com/intel/dleyna/lib/RendererManager.java \
-    src/com/intel/dleyna/lib/RendererManagerListener.java
+    src/com/intel/dleyna/lib/RendererManagerListener.java \
+    src/com/intel/dleyna/lib/IServerController.java \
+    src/com/intel/dleyna/lib/IServerControllerListener.java \
+    src/com/intel/dleyna/lib/IMediaDevice.java \
+    src/com/intel/dleyna/lib/IMediaDeviceListener.java \
+    src/com/intel/dleyna/lib/IMediaContainer2.java \
+    src/com/intel/dleyna/lib/IMediaObject2.java \
+    src/com/intel/dleyna/lib/Server.java \
+    src/com/intel/dleyna/lib/ServerControllerListener.java \
+    src/com/intel/dleyna/lib/ServerManager.java \
+    src/com/intel/dleyna/lib/ServerManagerListener.java
 
 cd $OUT_DIR
 tar czf $DOC_NAME.tgz $DOC_NAME

@@ -111,6 +111,12 @@ LOCAL_MODULE := dleyna-core
 LOCAL_SRC_FILES := ../../NativeLibs/install-$(TARGET_ARCH_ABI)-$(TARGET_PLATFORM)/lib/libdleyna-core-1.0.a
 include $(PREBUILT_STATIC_LIBRARY)
 
+# dleyna-server
+include $(CLEAR_VARS)
+LOCAL_MODULE := dleyna-server
+LOCAL_SRC_FILES := ../../NativeLibs/install-$(TARGET_ARCH_ABI)-$(TARGET_PLATFORM)/lib/dleyna-server/libdleyna-server-1.0.a
+include $(PREBUILT_STATIC_LIBRARY)
+
 # dleyna-renderer
 include $(CLEAR_VARS)
 LOCAL_MODULE := dleyna-renderer
@@ -149,8 +155,10 @@ LOCAL_SRC_FILES := \
     gvariant.c \
     gvarianttype.c \
     jni.c \
+    ifaddrs.c \
+    serverservice.c \
     rendererservice.c \
 
 LOCAL_LDLIBS := -llog -lz
-LOCAL_STATIC_LIBRARIES := dleyna-renderer dleyna-core gupnp-dlna gupnp-av gupnp gssdp libsoup libxml2 gthread gio gobject gmodule glib iconv libintl ffi
+LOCAL_STATIC_LIBRARIES := dleyna-server dleyna-renderer dleyna-core gupnp-dlna gupnp-av gupnp gssdp libsoup libxml2 gthread gio gobject gmodule glib iconv libintl ffi
 include $(BUILD_SHARED_LIBRARY)

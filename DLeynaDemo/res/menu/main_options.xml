@@ -27,4 +27,9 @@
         android:title="@string/settings"
         >
     </item>
+    <item
+        android:id="@+id/mi_dleyna_server"
+        android:title="@string/dleyna_server_demo"
+        >
+    </item>
 </menu>

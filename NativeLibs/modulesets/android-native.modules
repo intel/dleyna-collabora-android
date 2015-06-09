@@ -140,6 +140,20 @@
         </dependencies>
     </autotools>
 
+    <!-- dleyna-server -->
+
+    <autotools id="dleyna-server" autogen-sh="bootstrap-configure" autogenargs="--enable-lib-only --with-connector-name=android">
+        <branch repo="01org" module="dleyna-server.git">
+        </branch>
+        <dependencies>
+            <dep package="dleyna-core"/>
+            <dep package="gupnp-dlna"/>
+            <dep package="gupnp-av"/>
+            <dep package="gupnp"/>
+            <dep package="gssdp"/>
+        </dependencies>
+    </autotools>
+
     <!-- dleyna-renderer -->
 
     <autotools id="dleyna-renderer" autogen-sh="bootstrap-configure" autogenargs="--enable-lib-only --with-connector-name=android">

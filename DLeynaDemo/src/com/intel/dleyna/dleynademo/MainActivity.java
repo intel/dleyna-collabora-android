@@ -136,6 +136,9 @@ public class MainActivity extends Activity {
         case R.id.mi_settings:
             startActivity(new Intent(this, PrefsActivity.class));
             return true;
+        case R.id.mi_dleyna_server:
+            startActivity(new Intent(this, DleynaServerActivity.class));
+            return true;
         default:
             return super.onOptionsItemSelected(item);
         }
@@ -218,8 +221,13 @@ public class MainActivity extends Activity {
                                     publishProgress("\tSerialNumber: <NONE>");
                                 }
                                 Bundle metaData = r.getMetadata();
-                                publishProgress("\tMetaData: TrackID: " + metaData.getString(
-                                        IRendererController.META_DATA_KEY_TRACK_ID));
+                                try {
+                                    publishProgress("\tMetaData: TrackID: " + metaData.getString(
+                                            IRendererController.META_DATA_KEY_TRACK_ID));
+                                } catch  (Exception e) {
+                                    publishProgress("\tMetaData: TrackID: <NONE>");
+                                }
+
                                 try {
                                     publishProgress("\tPresentationURL: " + r.getPresentationURL());
                                 } catch (DLeynaUnknownPropertyException e) {
@@ -347,6 +355,9 @@ public class MainActivity extends Activity {
                 }
                 public void onTransportPlaySpeedsChanged(IRendererController c, double[] speeds) {
                     writeTty("(!) " + objPath + " TransportPlaySpeeds: " + speeds + "\n");
+                    for (double speed : speeds) {
+                        writeTty("  (!) " + speed + "\n");
+                    }
                 }
                 public void onCurrentTrackChanged(IRendererController c, int track) {
                     writeTty("(!) " + objPath + " CurrentTrack: " + track + "\n");
@@ -380,10 +391,11 @@ public class MainActivity extends Activity {
     }
 
     private static final String help =
-        "DLeyna Test App.\n\n" +
+        "DLeyna Renderer Test App.\n\n" +
         "Use the 'Conn' and 'Disc' buttons to connect/disconnect to/from the background service. " +
         "The 'List' button will list the properties of any known renderers. " +
         "The 'Scan' button will request a upnp rescan.\n\n" +
+        "From the options menu, DLeyna Server Demo is available.\n\n" +
         "For a more interesting user experience, go to the Gallery app, " +
         "share or play a video or photo, and choose DLeyna as the vehicle.\n\n";
 

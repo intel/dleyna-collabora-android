@@ -27,6 +27,7 @@
 #include "util.h"
 
 #define DLR_RENDERER_SERVICE_NAME "dleyna-renderer-service"
+#define DLS_SERVER_SERVICE_NAME "dleyna-server-service"
 
 static JNIEnv*      sEnv;
 static jobject      sPeer;
@@ -35,6 +36,7 @@ static jmethodID    sMIDConnect;
 static jmethodID    sMIDDisconnect;
 static jmethodID    sMIDSetClientLostCB;
 static jmethodID    sMIDPublishObject;
+static jmethodID    sMIDPublishSubtree;
 static jmethodID    sMIDReturnResponse;
 static jmethodID    sMIDReturnError;
 static jmethodID    sMIDNotify;
@@ -70,6 +72,7 @@ static gboolean initialize(
     sMIDDisconnect      = (*sEnv)->GetMethodID(sEnv, clazz, "disconnect", "()V");
     sMIDSetClientLostCB = (*sEnv)->GetMethodID(sEnv, clazz, "setClientLostCallback", "(J)V");
     sMIDPublishObject   = (*sEnv)->GetMethodID(sEnv, clazz, "publishObject", "(Ljava/lang/String;ZLjava/lang/String;J)I");
+    sMIDPublishSubtree  = (*sEnv)->GetMethodID(sEnv, clazz, "publishSubtree", "(Ljava/lang/String;[JJ)I");
     sMIDReturnResponse  = (*sEnv)->GetMethodID(sEnv, clazz, "returnResponse", "(JJ)V");
     sMIDReturnError     = (*sEnv)->GetMethodID(sEnv, clazz, "returnError", "(JJ)V");
     sMIDNotify          = (*sEnv)->GetMethodID(sEnv, clazz, "notify", "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;J)V");
@@ -104,7 +107,7 @@ static void connect(
     LOGI("connector.connect: server_name=%s ccb=%p dcb=%p", server_name, connected_cb, disconnected_cb);
 
     sSayConnected = connected_cb;
-    sSayDisconnected = connected_cb;
+    sSayDisconnected = disconnected_cb;
 
     g_idle_add(doConnect, NULL);
 
@@ -120,17 +123,17 @@ static void disconnect(void)
 
 static gboolean watch_client(const gchar *client_name)
 {
-    LOGI("connector.watch_client");
+    LOGI("connector.watch_client name=%s", client_name);
 }
 
 static void unwatch_client(const gchar *client_name)
 {
-    LOGI("connector.unwatch_client");
+    LOGI("connector.unwatch_client name=%s", client_name);
 }
 
 static void set_client_lost_cb(dleyna_connector_client_lost_cb_t lost_cb)
 {
-    LOGI("connector.set_client_lost_cb");
+    LOGI("connector.set_client_lost_cb: cb=%p", lost_cb);
     sSayClientLost = lost_cb;
     (*sEnv)->CallVoidMethod(sEnv, sPeer, sMIDSetClientLostCB, PTR_TO_JLONG(lost_cb));
 }
@@ -142,7 +145,7 @@ static guint publish_object(
     const gchar *iface_name,
     const dleyna_connector_dispatch_cb_t *cb_table_1)
 {
-    LOGI("connector.publish_object");
+    LOGI("connector.publish_object object_path=%s iface_name=%s", object_path, iface_name);
     jstring objectPath = (*sEnv)->NewStringUTF(sEnv, object_path);
     jstring ifaceName = (*sEnv)->NewStringUTF(sEnv, iface_name);
     return (*sEnv)->CallIntMethod(sEnv, sPeer, sMIDPublishObject, objectPath,
@@ -156,8 +159,18 @@ static guint publish_subtree(
     guint cb_table_size,
     dleyna_connector_interface_filter_cb_t cb)
 {
-    LOGI("connector.publish_subtree");
-    return 0;
+    LOGI("connector.publish_subtree: object_path=%s cb_table=%p cb_table_size=%d cb=%p", object_path, cb_table, cb_table_size, cb);
+    int i;
+    for (i = 0; i < cb_table_size; ++i) {
+        //LOGI("  connector.publish_subtree: cb_table[%d]=0x%llx", i, PTR_TO_JLONG(cb_table[i]));
+    }
+    jstring objectPath = (*sEnv)->NewStringUTF(sEnv, object_path);
+    jlong callbacks[] = { PTR_TO_JLONG(cb_table[0]), PTR_TO_JLONG(cb_table[1]), PTR_TO_JLONG(cb_table[2]), PTR_TO_JLONG(cb_table[3]), PTR_TO_JLONG(cb_table[4]) };
+    jlongArray dispatch_table;
+    dispatch_table = (*sEnv)->NewLongArray(sEnv, 5);
+    (*sEnv)->SetLongArrayRegion(sEnv, dispatch_table, 0, 5, callbacks);
+
+    return (*sEnv)->CallIntMethod(sEnv, sPeer, sMIDPublishSubtree, objectPath, dispatch_table, PTR_TO_JLONG(cb));
 }
 
 static void unpublish_object(
@@ -198,7 +211,7 @@ static gboolean notify(
     GVariant *parameters,
     GError **error)
 {
-    LOGI("connector.notify");
+    LOGI("connector.notify object_path=%s interface_name=%s notification_name=%s", object_path, interface_name, notification_name);
     jstring objPath = (*sEnv)->NewStringUTF(sEnv, object_path);
     jstring ifaceName = (*sEnv)->NewStringUTF(sEnv, interface_name);
     jstring notifName = (*sEnv)->NewStringUTF(sEnv, notification_name);
@@ -207,20 +220,20 @@ static gboolean notify(
 }
 
 static dleyna_connector_t connector = {
-	.initialize = initialize,
-	.shutdown = shutdown,
-	.connect = connect,
-	.disconnect = disconnect,
-	.watch_client = watch_client,
-	.unwatch_client = unwatch_client,
-	.set_client_lost_cb = set_client_lost_cb,
-	.publish_object = publish_object,
-	.publish_subtree = publish_subtree,
-	.unpublish_object = unpublish_object,
-	.unpublish_subtree = unpublish_subtree,
-	.return_response = return_response,
-	.return_error = return_error,
-	.notify = notify,
+    .initialize = initialize,
+    .shutdown = shutdown,
+    .connect = connect,
+    .disconnect = disconnect,
+    .watch_client = watch_client,
+    .unwatch_client = unwatch_client,
+    .set_client_lost_cb = set_client_lost_cb,
+    .publish_object = publish_object,
+    .publish_subtree = publish_subtree,
+    .unpublish_object = unpublish_object,
+    .unpublish_subtree = unpublish_subtree,
+    .return_response = return_response,
+    .return_error = return_error,
+    .notify = notify,
 };
 
 extern const dleyna_connector_t *dleyna_connector_get_interface(void)
@@ -243,6 +256,10 @@ JNIEXPORT void JNICALL Java_com_intel_dleyna_Connector_dispatchNative(
 
     LOGI("connector.dispatch: peer=%p sender=%s obj=%s iface=%s meth=%s args=%p msgId=%p",
             peer, senderC, objIdC, ifaceC, methodC, args, msgId);
+    if (args) {
+      LOGD("connector.dispatch: args type=%s n_children=%d is_floating=%s", g_variant_get_type_string((GVariant*)JLONG_TO_PTR(_args)),
+              g_variant_n_children((GVariant*)JLONG_TO_PTR(_args)), g_variant_is_floating((GVariant*)JLONG_TO_PTR(_args))?"true":"false");
+    }
 
     dispatchFunc(peer, senderC, objIdC, ifaceC, methodC, args, msgId);
 

@@ -168,6 +168,107 @@ JNIEXPORT jlong JNICALL Java_com_intel_dleyna_GVariant_newTupleObjPathInt64Nativ
     return PTR_TO_JLONG(gv);
 }
 
+JNIEXPORT jlong JNICALL Java_com_intel_dleyna_GVariant_newTupleStringArrayStringArrayNative(
+    JNIEnv* env, jclass clazz, jobjectArray sa1, jobjectArray sa2)
+{
+    GVariantBuilder tuple;
+    int i;
+
+    g_variant_builder_init(&tuple, G_VARIANT_TYPE("(aoas)"));
+    // build first array
+    g_variant_builder_open(&tuple, G_VARIANT_TYPE("ao"));
+    for (i = 0; i < (*env)->GetArrayLength(env, sa1); ++i) {
+        jstring str1 = (jstring)((*env)->GetObjectArrayElement(env, sa1, i));
+        const jbyte* utfChars1 = (*env)->GetStringUTFChars(env, str1, JNI_FALSE);
+        g_variant_builder_add(&tuple, "o", utfChars1);
+        (*env)->ReleaseStringUTFChars(env, str1, utfChars1);
+    }
+    g_variant_builder_close(&tuple);
+
+    // build second array
+    g_variant_builder_open(&tuple, G_VARIANT_TYPE("as"));
+    for (i = 0; i < (*env)->GetArrayLength(env, sa2); ++i) {
+        jstring str2 = (jstring)((*env)->GetObjectArrayElement(env, sa2, i));
+        const jbyte* utfChars2 = (*env)->GetStringUTFChars(env, str2, JNI_FALSE);
+        g_variant_builder_add(&tuple, "s", utfChars2);
+        (*env)->ReleaseStringUTFChars(env, str2, utfChars2);
+    }
+    g_variant_builder_close(&tuple);
+
+    GVariant* gv = g_variant_builder_end(&tuple);
+
+    //LOGD("newTupleStringArrayStringArray: gv=%p", gv);
+    //LOGD("newTupleStringArrayStringArray: gvType=%s", g_variant_get_type_string(gv));
+    return PTR_TO_JLONG(gv);
+}
+
+JNIEXPORT jlong JNICALL Java_com_intel_dleyna_GVariant_newTupleIntIntStringArrayStringNative(
+    JNIEnv* env, jclass clazz, jint i1, jint i2, jobjectArray sa, jstring s)
+{
+    GVariantBuilder tuple;
+    int i;
+
+    g_variant_builder_init(&tuple, G_VARIANT_TYPE("(uuass)"));
+    g_variant_builder_add(&tuple, "u", i1);
+    g_variant_builder_add(&tuple, "u", i2);
+
+    // build string array
+    g_variant_builder_open(&tuple, G_VARIANT_TYPE("as"));
+    for (i = 0; i < (*env)->GetArrayLength(env, sa); ++i) {
+        jstring str = (jstring)((*env)->GetObjectArrayElement(env, sa, i));
+        const jbyte* utfChars = (*env)->GetStringUTFChars(env, str, JNI_FALSE);
+        g_variant_builder_add(&tuple, "s", utfChars);
+        (*env)->ReleaseStringUTFChars(env, str, utfChars);
+    }
+    g_variant_builder_close(&tuple);
+
+    const jbyte* utfChars = (*env)->GetStringUTFChars(env, s, JNI_FALSE);
+    g_variant_builder_add(&tuple, "s", utfChars);
+    (*env)->ReleaseStringUTFChars(env, s, utfChars);
+
+    GVariant* gv = g_variant_builder_end(&tuple);
+
+    //LOGD("newTupleIntIntStringArrayString: gv=%p", gv);
+    //LOGD("newTupleIntIntStringArrayString: gvType=%s", g_variant_get_type_string(gv));
+    return PTR_TO_JLONG(gv);
+}
+
+JNIEXPORT jlong JNICALL Java_com_intel_dleyna_GVariant_newTupleStringIntIntStringArrayStringNative(
+    JNIEnv* env, jclass clazz, jstring s1, jint i1, jint i2, jobjectArray sa, jstring s2)
+{
+    GVariantBuilder tuple;
+    int i;
+
+    g_variant_builder_init(&tuple, G_VARIANT_TYPE("(suuass)"));
+
+    const jbyte* utfChars1 = (*env)->GetStringUTFChars(env, s1, JNI_FALSE);
+    g_variant_builder_add(&tuple, "s", utfChars1);
+    (*env)->ReleaseStringUTFChars(env, s1, utfChars1);
+
+    g_variant_builder_add(&tuple, "u", i1);
+    g_variant_builder_add(&tuple, "u", i2);
+
+    // build string array
+    g_variant_builder_open(&tuple, G_VARIANT_TYPE("as"));
+    for (i = 0; i < (*env)->GetArrayLength(env, sa); ++i) {
+        jstring str = (jstring)((*env)->GetObjectArrayElement(env, sa, i));
+        const jbyte* utfChars = (*env)->GetStringUTFChars(env, str, JNI_FALSE);
+        g_variant_builder_add(&tuple, "s", utfChars);
+        (*env)->ReleaseStringUTFChars(env, str, utfChars);
+    }
+    g_variant_builder_close(&tuple);
+
+    const jbyte* utfChars2 = (*env)->GetStringUTFChars(env, s2, JNI_FALSE);
+    g_variant_builder_add(&tuple, "s", utfChars2);
+    (*env)->ReleaseStringUTFChars(env, s2, utfChars2);
+
+    GVariant* gv = g_variant_builder_end(&tuple);
+
+    //LOGD("newTupleStringIntIntStringArrayString: gv=%p", gv);
+    //LOGD("newTupleStringIntIntStringArrayString: gvType=%s", g_variant_get_type_string(gv));
+    return PTR_TO_JLONG(gv);
+}
+
 JNIEXPORT jboolean JNICALL Java_com_intel_dleyna_GVariant_getBooleanNative(
     JNIEnv* env, jclass clazz, jlong _gv)
 {

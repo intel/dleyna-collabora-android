@@ -39,7 +39,8 @@ public class JNI {
 
     private static final String TEMP_DIR_BASENAME = "glib-tmp";
     private static final String CONF_DIR_BASENAME = ".config";
-    private static final String RENDERER_CONF_FILENAME = "dleyna-renderer-service.conf";
+    static final String RENDERER_CONF_FILENAME = "dleyna-renderer-service.conf";
+    static final String SERVER_CONF_FILENAME = "dleyna-server-service.conf";
 
     /** Then name of the home directory. */
     private static String homeDirName;
@@ -56,16 +57,16 @@ public class JNI {
      * Load the native libraries, and initialize them.
      * Every application process must call this before attempting to use any native methods.
      */
-    public static void initialize() {
+    public static void initialize(String confFilename) {
         if (!initialized) {
-            if (App.LOG) Log.i(App.TAG, "JNI: initialize");
+            if (App.LOG) Log.i(App.TAG, "JNI: initialize " + confFilename);
             System.loadLibrary("dleyna-jni");
             System.loadLibrary("dleyna-connector-android");
             homeDirName = App.getInstance().getFilesDir().getAbsolutePath();
             tempDirName = homeDirName + '/' + TEMP_DIR_BASENAME;
             setDirNames(homeDirName, tempDirName);
             confDirName = homeDirName + '/' + CONF_DIR_BASENAME;
-            writeConfigFiles();
+            writeConfigFiles(confFilename);
             initialized = true;
         }
     }
@@ -79,8 +80,8 @@ public class JNI {
      * even if the app has multiple processes.
      */
     public static void cleanTempDir() {
-        if (App.LOG) Log.i(App.TAG, "JNI: cleanTempDir");
-        initialize();
+        if (App.LOG) Log.i(App.TAG, "JNI: cleanTempDir " + tempDirName);
+        //initialize();
         File tempDir = new File(tempDirName);
         deleteTree(tempDir);
         tempDir.mkdirs();
@@ -97,16 +98,17 @@ public class JNI {
         }
     }
 
-    private static void writeConfigFiles() {
+    private static void writeConfigFiles(String confFilename) {
         if (App.LOG) Log.i(App.TAG, "JNI: writeConfigFiles");
         File confDir = new File(confDirName);
-        File rendererConfFile = new File(confDir, RENDERER_CONF_FILENAME);
-        if (!rendererConfFile.exists()) {
+        File confFile = new File(confDir, confFilename);
+        if (App.LOG) Log.i(App.TAG, "confFile = " + confFile.getAbsolutePath());
+        if (!confFile.exists()) {
             confDir.mkdirs();
             AssetManager am = App.getInstance().getResources().getAssets();
             try {
-                InputStream is = am.open(RENDERER_CONF_FILENAME);
-                OutputStream os = new FileOutputStream(rendererConfFile);
+                InputStream is = am.open(confFilename);
+                OutputStream os = new FileOutputStream(confFile);
                 copy(is, os);
                 is.close();
                 os.close();

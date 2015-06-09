@@ -58,10 +58,20 @@
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </activity>
+        <activity
+            android:name="com.intel.dleyna.dleynademo.DleynaServerActivity"
+            android:label="@string/dleyna_server_demo"
+            android:screenOrientation="portrait" >
+        </activity>
         <service
             android:name="com.intel.dleyna.RendererService"
             android:process=":Renderer"
             >
         </service>
-        </application>
+        <service
+            android:name="com.intel.dleyna.ServerService"
+            android:process=":Server"
+            >
+        </service>
+    </application>
 </manifest>

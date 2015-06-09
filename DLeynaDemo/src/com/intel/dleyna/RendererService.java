@@ -63,7 +63,7 @@ public class RendererService extends Service implements IConnectorClient {
             new RemoteCallbackList<IRendererClient>();
 
     public RendererService() {
-        JNI.initialize();
+        JNI.initialize(JNI.RENDERER_CONF_FILENAME);
         JNI.cleanTempDir();
         // FIXME: move the call to cleanTempDir() into the Application instance
         // of the service app when we split things up someday. You can't just
@@ -563,7 +563,7 @@ public class RendererService extends Service implements IConnectorClient {
     }
 
     private static void logDoMethod(String method, String objPath, String iface, String method2) {
-        Log.i(TAG, String.format("%s: method=%s obj=%s iface=%s", method, method2, objPath, iface));
+        if (LOG) Log.i(TAG, String.format("%s: method=%s obj=%s iface=%s", method, method2, objPath, iface));
     }
 
     /*------------------+

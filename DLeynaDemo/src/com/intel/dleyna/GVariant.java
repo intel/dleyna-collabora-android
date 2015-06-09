@@ -79,7 +79,7 @@ public class GVariant {
 
     protected void finalize() {
         if (peer != 0) {
-            Log.w("GVariant", "finalize: peer leakage");
+            Log.w("GVariant", "finalize: peer leakage (" + this.getTypeString() + ")");
             unref(peer);
             peer = 0;
         }
@@ -246,20 +246,20 @@ public class GVariant {
 
     /**
      * Construct a new instance of type tuple of two strings.
-     * @param s1 fist string
+     * @param s1 first string
      * @param s2 second string
      * @return the new instance
      */
+
     public static GVariant newTupleStringString(String s1, String s2) {
         return new GVariant(newTupleStringStringNative(s1, s2));
     }
 
     private static native long newTupleStringStringNative(String s1, String s2);
 
-
     /**
      * Construct a new instance of type tuple of two strings and a variant: (ssv).
-     * @param s1 fist string
+     * @param s1 first string
      * @param s2 second string
      * @param v the variant value
      * @return the new instance
@@ -281,6 +281,47 @@ public class GVariant {
     }
 
     private static native long newTupleObjPathInt64Native(String s, long l);
+
+    /**
+     * Construct a new instance of type tuple of two string arrays.
+     * @param sa1 first string array
+     * @param sa2 second string array
+     * @return the new instance
+     */
+    public static GVariant newTupleStringArrayStringArray(String[] sa1, String[] sa2) {
+        return new GVariant(newTupleStringArrayStringArrayNative(sa1, sa2));
+    }
+
+    private static native long newTupleStringArrayStringArrayNative(String[] sa1, String[] sa2);
+
+    /**
+     * Construct a new instance of type tuple of int, int, string array, string.
+     * @param i1 first int
+     * @param i2 second int
+     * @param sa string array
+     * @param s string
+     * @return the new instance
+     */
+    public static GVariant newTupleIntIntStringArrayString(int i1, int i2, String[] sa, String s) {
+        return new GVariant(newTupleIntIntStringArrayStringNative(i1, i2, sa, s));
+    }
+
+    private static native long newTupleIntIntStringArrayStringNative(int i1, int i2, String[] sa, String s);
+
+    /**
+     * Construct a new instance of type tuple of string, int, int, string array, string.
+     * @param s1 first string
+     * @param i1 first int
+     * @param i2 second int
+     * @param sa string array
+     * @param s2 second string
+     * @return the new instance
+     */
+    public static GVariant newTupleStringIntIntStringArrayString(String s1, int i1, int i2, String[] sa, String s2) {
+        return new GVariant(newTupleStringIntIntStringArrayStringNative(s1, i1, i2, sa, s2));
+    }
+
+    private static native long newTupleStringIntIntStringArrayStringNative(String s1, int i1, int i2, String[] sa, String s2);
 
     /**
      * @return the value of this object, which must be of type boolean.
