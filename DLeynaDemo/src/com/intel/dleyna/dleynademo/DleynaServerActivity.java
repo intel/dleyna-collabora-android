@@ -489,7 +489,7 @@ public class DleynaServerActivity extends Activity {
                 if ((iconUrl != null) && (iconUrl.length() > 0)) {
                     Bitmap bmp = null;
                     try {
-                        URL url = new URL(server.getIconUrl());
+                        URL url = new URL(iconUrl);
                         bmp = BitmapFactory.decodeStream(url.openConnection().getInputStream());
                     } catch (Exception e) {
                         if (App.LOG)
