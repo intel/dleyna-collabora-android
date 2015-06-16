@@ -44,7 +44,7 @@ import android.os.RemoteException;
  * Perhaps the simplest way to manage the required multi-threading is to use an
  * {@link android.os.AsyncTask}.
  */
-public class Server implements IMediaDevice, IMediaContainer2, IServerController {
+public class Server implements IMediaDevice, IMediaContainer2, IMediaObject2, IServerController {
 
     /** Our manager. */
     private ServerManager manager;
@@ -320,7 +320,7 @@ public class Server implements IMediaDevice, IMediaContainer2, IServerController
      | IMediaContainer2 |
      +------------------*/
 
-    public Bundle[] listChildrenEx() throws RemoteException, DLeynaException {
+    public Bundle[] listChildrenEx(String objectPath) throws RemoteException, DLeynaException {
         IServerService service = manager.getServerService();
         IServerClient client = manager.getServerClient();
         Bundle extras = new Bundle();
@@ -329,7 +329,7 @@ public class Server implements IMediaDevice, IMediaContainer2, IServerController
         return result;
     }
 
-    public Bundle[] searchObjectsEx() throws RemoteException, DLeynaException {
+    public Bundle[] searchObjectsEx(String objectPath) throws RemoteException, DLeynaException {
         IServerService service = manager.getServerService();
         IServerClient client = manager.getServerClient();
         Bundle extras = new Bundle();
@@ -344,7 +344,7 @@ public class Server implements IMediaDevice, IMediaContainer2, IServerController
      | IMediaObject2 |
      +---------------*/
 
-    public String getMetadata() throws RemoteException, DLeynaException {
+    public String getMetadata(String objectPath) throws RemoteException, DLeynaException {
         IServerService service = manager.getServerService();
         IServerClient client = manager.getServerClient();
         Bundle extras = new Bundle();

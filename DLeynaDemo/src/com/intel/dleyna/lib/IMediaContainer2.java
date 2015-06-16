@@ -47,7 +47,7 @@ public interface IMediaContainer2 {
      * @throws RemoteException no connection to the background server service
      * @throws DLeynaException failure reported by the background server service
      */
-    public Bundle[] listChildrenEx() throws RemoteException, DLeynaException;
+    public Bundle[] listChildrenEx(String objectPath) throws RemoteException, DLeynaException;
 
     /**
      * Get the Container's searched objects.
@@ -55,5 +55,5 @@ public interface IMediaContainer2 {
      * @throws RemoteException no connection to the background server service
      * @throws DLeynaException failure reported by the background server service
      */
-    public Bundle[] searchObjectsEx() throws RemoteException, DLeynaException;
+    public Bundle[] searchObjectsEx(String objectPath) throws RemoteException, DLeynaException;
 }

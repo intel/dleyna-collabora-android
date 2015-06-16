@@ -47,5 +47,5 @@ public interface IMediaObject2 {
      * @throws RemoteException no connection to the background server service
      * @throws DLeynaException failure reported by the background server service
      */
-    public String getMetadata() throws RemoteException, DLeynaException;
+    public String getMetadata(String objectPath) throws RemoteException, DLeynaException;
 }
