@@ -105,6 +105,36 @@ LOCAL_MODULE := gupnp-av
 LOCAL_SRC_FILES := ../../NativeLibs/install-$(TARGET_ARCH_ABI)-$(TARGET_PLATFORM)/lib/libgupnp-av-1.0.a
 include $(PREBUILT_STATIC_LIBRARY)
 
+# gee
+include $(CLEAR_VARS)
+LOCAL_MODULE := gee
+LOCAL_SRC_FILES := ../../NativeLibs/install-$(TARGET_ARCH_ABI)-$(TARGET_PLATFORM)/lib/libgee-0.8.a
+include $(PREBUILT_STATIC_LIBRARY)
+
+# uuid
+include $(CLEAR_VARS)
+LOCAL_MODULE := uuid
+LOCAL_SRC_FILES := ../../NativeLibs/install-$(TARGET_ARCH_ABI)-$(TARGET_PLATFORM)/lib/libuuid.a
+include $(PREBUILT_STATIC_LIBRARY)
+
+# rygel-core
+include $(CLEAR_VARS)
+LOCAL_MODULE := rygel-core
+LOCAL_SRC_FILES := ../../NativeLibs/install-$(TARGET_ARCH_ABI)-$(TARGET_PLATFORM)/lib/librygel-core-2.0.a
+include $(PREBUILT_STATIC_LIBRARY)
+
+# rygel-renderer
+include $(CLEAR_VARS)
+LOCAL_MODULE := rygel-renderer
+LOCAL_SRC_FILES := ../../NativeLibs/install-$(TARGET_ARCH_ABI)-$(TARGET_PLATFORM)/lib/librygel-renderer-2.0.a
+include $(PREBUILT_STATIC_LIBRARY)
+
+# rygel-server
+include $(CLEAR_VARS)
+LOCAL_MODULE := rygel-server
+LOCAL_SRC_FILES := ../../NativeLibs/install-$(TARGET_ARCH_ABI)-$(TARGET_PLATFORM)/lib/librygel-server-2.0.a
+include $(PREBUILT_STATIC_LIBRARY)
+
 # dleyna-jni
 include $(CLEAR_VARS)
 MY_GLIB := glib-2.34.3
@@ -114,6 +144,7 @@ MY_GSSDP := gssdp-0.14.4
 MY_GUPNP := gupnp-0.20.5
 MY_GUPNPDLNA := gupnp-dlna-0.10.1
 MY_GUPNPAV := gupnp-av-0.12.1
+MY_RYGEL := rygel-0.19.6
 
 LOCAL_MODULE := dleyna-jni
 
@@ -152,6 +183,11 @@ LOCAL_C_INCLUDES := \
     ../../NativeLibs/install-$(TARGET_ARCH_ABI)-$(TARGET_PLATFORM)/include/gupnp-av-1.0/libgupnp-av \
     ../../NativeLibs/sources-$(TARGET_ARCH_ABI)-$(TARGET_PLATFORM)/$(MY_GUPNPAV) \
     ../../NativeLibs/sources-$(TARGET_ARCH_ABI)-$(TARGET_PLATFORM)/$(MY_GUPNPAV)/tests \
+\
+    ../../NativeLibs/install-$(TARGET_ARCH_ABI)-$(TARGET_PLATFORM)/include/rygel-2.0 \
+    ../../NativeLibs/install-$(TARGET_ARCH_ABI)-$(TARGET_PLATFORM)/include/gee-0.8 \
+    ../../NativeLibs/sources-$(TARGET_ARCH_ABI)-$(TARGET_PLATFORM)/$(MY_RYGEL) \
+    ../../NativeLibs/sources-$(TARGET_ARCH_ABI)-$(TARGET_PLATFORM)/$(MY_RYGEL)/tests \
 \
     ../../NativeLibs/install-$(TARGET_ARCH_ABI)-$(TARGET_PLATFORM)/include/libxml2 \
     ../../NativeLibs/sources-$(TARGET_ARCH_ABI)-$(TARGET_PLATFORM)/$(MY_LIBXML2)
@@ -336,7 +372,10 @@ LOCAL_SRC_FILES := \
     $(MY_GUPNPAV)/tests/check-feature-list-parser.c \
     $(MY_GUPNPAV)/tests/check-search.c \
     $(MY_GUPNPAV)/tests/fragments.c \
-    $(MY_GUPNPAV)/tests/test-search-criteria-parser.c
+    $(MY_GUPNPAV)/tests/test-search-criteria-parser.c \
+\
+    $(MY_RYGEL)/tests/rygel-regression.c \
+    $(MY_RYGEL)/tests/rygel-searchable-container-test.c
 
 # DOES NOT LINK
 #   $(MY_GLIB)/tests/module-test.c $(MY_GLIB)/tests/libmoduletestplugin_a.c $(MY_GLIB)/tests/libmoduletestplugin_b.c \
@@ -348,13 +387,25 @@ LOCAL_SRC_FILES := \
 #   $(MY_LIBSOUP)/tests/xmlrpc-test.c \
 #   $(MY_LIBXML2)/nanoftp.c \
 #   $(MY_LIBXML2)/nanohttp.c \
+#   $(MY_RYGEL)/tests/rygel-album-art-spec-test.c \
+#   $(MY_RYGEL)/tests/rygel-http-byte-seek-test.c \
+#   $(MY_RYGEL)/tests/rygel-http-get-test.c \
+#   $(MY_RYGEL)/tests/rygel-http-item-uri-test.c \
+#   $(MY_RYGEL)/tests/rygel-http-post-test.c \
+#   $(MY_RYGEL)/tests/rygel-http-response-test.c \
+#   $(MY_RYGEL)/tests/rygel-http-time-seek-test.c \
+#   $(MY_RYGEL)/tests/rygel-object-creator-test.c \
+#   $(MY_RYGEL)/tests/rygel-user-config-test.c \
 
 # DOES NOT COMPILE
 #   $(MY_GLIB)/gio/tests/gdbus-test-codegen.c \
 #   $(MY_LIBXML2)/runtest.c \
 #   $(MY_LIBXML2)/testrecurse.c \
+#   $(MY_RYGEL)/tests/rygel-environment-test.c \
+#   $(MY_RYGEL)/tests/rygel-media-engine-test.c \
+#   $(MY_RYGEL)/tests/rygel-playbin-renderer-test.c \
 
 LOCAL_CFLAGS += -DSRCDIR=\"/data/data/com.intel.dleyna.testnativelibs/files/SRCDIR\"
 LOCAL_LDLIBS := -llog -landroid -lz
-LOCAL_STATIC_LIBRARIES := gupnp-av gupnp-dlna gupnp gssdp libsoup libxml2 gthread gio gobject gmodule glib iconv libintl ffi
+LOCAL_STATIC_LIBRARIES := rygel-renderer rygel-server rygel-core uuid gee gupnp-av gupnp-dlna gupnp gssdp libsoup libxml2 gthread gio gobject gmodule glib iconv libintl ffi
 include $(BUILD_SHARED_LIBRARY)

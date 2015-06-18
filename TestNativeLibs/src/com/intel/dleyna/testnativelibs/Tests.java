@@ -174,6 +174,25 @@ public class Tests {
     public static native void soupTldTest();
     public static native void soupUriParsing();
 
+    // libxml2
+    public static native void libxml2RunSuite();
+    public static native void libxml2RunXmlConf();
+    public static native void libxml2TestApi();
+    public static native void libxml2TestAutomata();
+    public static native void libxml2TestC14n();
+    public static native void libxml2TestHtml();
+    public static native void libxml2TestLimits();
+    public static native void libxml2TestModule();
+    public static native void libxml2TestReader();
+    public static native void libxml2TestRegexp();
+    public static native void libxml2TestRelax();
+    public static native void libxml2TestSax();
+    public static native void libxml2TestSchemas();
+    public static native void libxml2TestUri();
+    public static native void libxml2TestXpath();
+    public static native void libxml2XmlCatalog();
+    public static native void libxml2XmlLint();
+
     // gssdp
     public static native void gssdpBrowserTest();
     public static native void gssdpPublishTest();
@@ -193,6 +212,10 @@ public class Tests {
     public static native void gupnpavCheckSearchTest();
     public static native void gupnpavFragmentsTest();
     public static native void gupnpavCriteriaParserTest();
+
+    // rygel
+    public static native void rygelTestRegression();
+    public static native void rygelTestSearchableContainer();
 
     /**
      * Enumeration of the various test programs.
@@ -616,6 +639,57 @@ public class Tests {
             public void exec() { soupUriParsing(); }
         }),
 
+        // libxml2
+
+        LIBXML2_RUN_SUITE("", new Impl() {
+            public void exec() { libxml2RunSuite(); }
+        }),
+        LIBXML2_RUN_XML_CONF("", new Impl() {
+            public void exec() { libxml2RunXmlConf(); }
+        }),
+        LIBXML2_TEST_API("", new Impl() {
+            public void exec() { libxml2TestApi(); }
+        }),
+        LIBXML2_TEST_AUTOMATA("", new Impl() {
+            public void exec() { libxml2TestAutomata(); }
+        }),
+        LIBXML2_TEST_C14N("", new Impl() {
+            public void exec() { libxml2TestC14n(); }
+        }),
+        LIBXML2_TEST_HTML("", new Impl() {
+            public void exec() { libxml2TestHtml(); }
+        }),
+        LIBXML2_TEST_LIMITS("", new Impl() {
+            public void exec() { libxml2TestLimits(); }
+        }),
+        LIBXML2_TEST_MODULE("", new Impl() {
+            public void exec() { libxml2TestModule(); }
+        }),
+        LIBXML2_TEST_READER("", new Impl() {
+            public void exec() { libxml2TestReader(); }
+        }),
+        LIBXML2_TEST_RELAX("", new Impl() {
+            public void exec() { libxml2TestRelax(); }
+        }),
+        LIBXML2_TEST_SAX("", new Impl() {
+            public void exec() { libxml2TestSax(); }
+        }),
+        LIBXML2_TEST_SCHEMAS("", new Impl() {
+            public void exec() { libxml2TestSchemas(); }
+        }),
+        LIBXML2_TEST_URI("", new Impl() {
+            public void exec() { libxml2TestUri(); }
+        }),
+        LIBXML2_TEST_XPATH("", new Impl() {
+            public void exec() { libxml2TestXpath(); }
+        }),
+        LIBXML2_XML_CATALOG("", new Impl() {
+            public void exec() { libxml2XmlCatalog(); }
+        }),
+        LIBXML2_XML_LINT("", new Impl() {
+            public void exec() { libxml2XmlLint(); }
+        }),
+
         // gssdp
 
         GSSDP_BROWSER_TEST("", new Impl() {
@@ -662,7 +736,17 @@ public class Tests {
         }),
         GUPNPAV_CRITERIA_PARSER_TEST("", new Impl() {
             public void exec() { gupnpavCriteriaParserTest(); }
+        }),
+
+        // rygel
+        RYGEL_TEST_REGRESSION("", new Impl() {
+            public void exec() { rygelTestRegression(); }
+        }),
+        RYGEL_TEST_SEARCHABLE_CONTAINER("", new Impl() {
+            public void exec() { rygelTestSearchableContainer(); }
         });
+
+
 
         /** Short description of the test. */
         public String desc;
